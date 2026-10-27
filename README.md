@@ -57,3 +57,4 @@ Las pantallas usan las funcionalidades y la capa compartida; las funcionalidades
 ## Estado
 
 Las diez rutas existen como pantallas temporales. Ya funcionan la protección de rutas por sesión, el cliente HTTP con manejo de `{code, message}` y del 401, el almacenamiento cifrado del token y la validación GS1 (con pruebas).
+"# inventory-mobile" 
