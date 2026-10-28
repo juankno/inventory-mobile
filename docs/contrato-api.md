@@ -26,12 +26,20 @@ Estos son los endpoints que consume la app móvil, todos bajo `/api/v1`. Se defi
 | `GET /products/lookup?code=…` | | `Product` o `404` con `code: "PRODUCT_NOT_FOUND"` |
 | `POST /products` | `{ name, unit, codeType, code?, initialStock, minStock, salePrice }` | `Product` |
 | `PATCH /products/:id` | `{ name, unit, minStock, salePrice }` | `Product` |
+| `DELETE /products/:id` | | `204`. Desactiva el producto (`isActive = false`) |
 
 Detalles de `POST /products`:
 
 - Con `codeType: "INTERNAL"` la app no envía `code`. El backend lo genera con `Base32IdGenerator` (`INV-` y 10 caracteres).
 - El backend registra `initialStock` como el primer movimiento `INBOUND`. El historial lo muestra como "Existencia inicial".
 - Si el código ya existe en el negocio, debe responder `409` con un mensaje claro.
+
+Detalles de `DELETE /products/:id` (RF-08):
+
+- El producto desactivado deja de salir en `GET /products`, en `GET /products/lookup` y en `GET /inventory/alerts`.
+- `GET /products/:id` y su historial siguen respondiendo, para conservar los movimientos.
+- No se le pueden registrar movimientos: responde `404`.
+- Su código sigue ocupado por la restricción única. Si se intenta registrar de nuevo, el backend responde `409` y debe explicar que el código es de un producto eliminado.
 
 `Product` tiene estos campos: `{ id, name, unit, salePrice, stock, minStock, codeType, code, createdAt, updatedAt }`.
 

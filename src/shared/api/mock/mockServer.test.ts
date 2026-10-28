@@ -79,6 +79,16 @@ describe('API de demostración', () => {
     expect(found.id).toBe(product.id);
   });
 
+  it('elimina un producto sin borrar su historial', async () => {
+    const pan = await findByName('Pan del día');
+    await mockRequest('DELETE', `/products/${pan.id}`);
+    expect(await findByName('Pan del día')).toBeUndefined();
+    await expect(mockRequest('GET', `/products/lookup?code=${pan.code}`)).rejects.toMatchObject({
+      code: 'PRODUCT_NOT_FOUND',
+    });
+    expect(await mockRequest<Movement[]>('GET', `/products/${pan.id}/movements`)).toHaveLength(1);
+  });
+
   it('responde PRODUCT_NOT_FOUND con un código desconocido', async () => {
     await expect(mockRequest('GET', '/products/lookup?code=7702354948016')).rejects.toBeInstanceOf(ApiError);
   });

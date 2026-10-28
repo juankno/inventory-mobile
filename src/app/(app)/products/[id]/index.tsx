@@ -4,7 +4,7 @@ import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-nativ
 
 import { MovementHistory } from '@/features/movements/components/MovementHistory';
 import { useMovements } from '@/features/movements/hooks/useMovements';
-import { useProduct } from '@/features/products/hooks/useProducts';
+import { useDeleteProduct, useProduct } from '@/features/products/hooks/useProducts';
 import { errorMessage } from '@/shared/api/errors';
 import type { MovementType } from '@/shared/api/types';
 import { formatMoney } from '@/shared/format/dates';
@@ -26,7 +26,13 @@ export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const product = useProduct(id);
   const movements = useMovements(id);
-  const [optionsOpen, setOptionsOpen] = useState(false);
+  const deleteMutation = useDeleteProduct(id);
+  // Una sola hoja inferior que muestra las opciones o la confirmación de eliminar.
+  const [sheet, setSheet] = useState<'options' | 'confirmDelete' | null>(null);
+  const closeSheet = () => {
+    setSheet(null);
+    deleteMutation.reset();
+  };
 
   const back = <IconButton icon="chevronLeft" accessibilityLabel={messages.common.back} onPress={() => router.back()} />;
 
@@ -47,7 +53,7 @@ export default function ProductDetailScreen() {
   const registerMovement = (type: MovementType) =>
     router.push({ pathname: '/products/[id]/movement', params: { id, type } });
   const openFromMenu = (path: '/products/[id]/edit' | '/products/[id]/qr') => {
-    setOptionsOpen(false);
+    setSheet(null);
     router.push({ pathname: path, params: { id } });
   };
 
@@ -55,7 +61,7 @@ export default function ProductDetailScreen() {
     <PageLayout
       left={back}
       title={t.title}
-      right={<IconButton icon="more" accessibilityLabel={t.options} onPress={() => setOptionsOpen(true)} />}
+      right={<IconButton icon="more" accessibilityLabel={t.options} onPress={() => setSheet('options')} />}
       header={
         <>
           <AppText variant="display" accessibilityRole="header">
@@ -118,13 +124,43 @@ export default function ProductDetailScreen() {
         <ActivityIndicator color={theme.colors.ink} />
       ) : null}
 
-      <BottomSheet visible={optionsOpen} onClose={() => setOptionsOpen(false)}>
-        <AppText variant="heading">{item.name}</AppText>
-        <SheetAction icon="pencil" label={t.edit} onPress={() => openFromMenu('/products/[id]/edit')} />
-        {item.codeType === 'INTERNAL' ? (
-          <SheetAction icon="qrCode" label={t.viewQr} onPress={() => openFromMenu('/products/[id]/qr')} />
-        ) : null}
-        <Button label={messages.common.close} variant="secondary" onPress={() => setOptionsOpen(false)} />
+      <BottomSheet visible={sheet !== null} onClose={closeSheet}>
+        {sheet === 'confirmDelete' ? (
+          <>
+            <AppText variant="heading">{t.deleteTitle(item.name)}</AppText>
+            <AppText variant="lead" tone="secondary">
+              {t.deleteBody}
+            </AppText>
+            {deleteMutation.error ? (
+              <Banner message={errorMessage(deleteMutation.error, messages.errors.unexpected)} />
+            ) : null}
+            <Button
+              label={t.deleteConfirm}
+              variant="danger"
+              icon="trash"
+              loading={deleteMutation.isPending}
+              onPress={() =>
+                deleteMutation.mutate(undefined, {
+                  onSuccess: () => {
+                    setSheet(null);
+                    router.dismissTo('/');
+                  },
+                })
+              }
+            />
+            <Button label={messages.common.cancel} variant="secondary" onPress={closeSheet} />
+          </>
+        ) : (
+          <>
+            <AppText variant="heading">{item.name}</AppText>
+            <SheetAction icon="pencil" label={t.edit} onPress={() => openFromMenu('/products/[id]/edit')} />
+            {item.codeType === 'INTERNAL' ? (
+              <SheetAction icon="qrCode" label={t.viewQr} onPress={() => openFromMenu('/products/[id]/qr')} />
+            ) : null}
+            <SheetAction icon="trash" label={t.delete} destructive onPress={() => setSheet('confirmDelete')} />
+            <Button label={messages.common.close} variant="secondary" onPress={closeSheet} />
+          </>
+        )}
       </BottomSheet>
     </PageLayout>
   );

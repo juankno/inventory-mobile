@@ -160,6 +160,11 @@ export const messages = {
     options: 'Opciones del producto',
     edit: 'Editar producto',
     viewQr: 'Ver e imprimir código QR',
+    delete: 'Eliminar producto',
+    deleteTitle: (name: string) => `¿Eliminar ${name}?`,
+    deleteBody:
+      'Ya no aparecerá en tu inventario ni en las alertas. Su historial de movimientos se conserva.',
+    deleteConfirm: 'Sí, eliminar',
   },
   productForm: {
     newTitle: 'Nuevo producto',
