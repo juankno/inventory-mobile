@@ -232,4 +232,42 @@ export const messages = {
     shareUnavailable: 'Este celular no permite compartir archivos.',
     gtinNotice: 'Este producto ya tiene código de barras; escanéalo directamente.',
   },
+  onboarding: {
+    skip: 'Saltar',
+    next: 'Siguiente',
+    start: 'Empezar',
+    step: (current: number, total: number) => `Paso ${current} de ${total}`,
+    slides: [
+      {
+        strong: 'Tu inventario,',
+        soft: 'en orden.',
+        body: 'Lleva las existencias de tu tienda desde el celular, sin cuadernos ni cuentas a mano.',
+      },
+      {
+        strong: 'Escanea',
+        soft: 'y listo.',
+        body: 'Apunta la cámara al código de barras y registra entradas, ventas y ajustes en segundos.',
+      },
+      {
+        strong: '¿Sin código?',
+        soft: 'Te damos uno.',
+        body: 'Para lo que vendes a granel o empacas tú, la app crea una etiqueta QR para pegar en el estante.',
+      },
+      {
+        strong: 'Te avisamos',
+        soft: 'a tiempo.',
+        body: 'Cuando un producto llega a su mínimo aparece en Alertas, para que nunca te quedes sin surtido.',
+      },
+    ],
+    illustrations: {
+      registered: 'Productos registrados',
+      toRestock: 'Por reponer',
+      codeRead: 'Código leído',
+      bulkProduct: 'Fríjol a granel',
+      outName: 'Panela',
+      outDetail: 'Quedan 0 · mínimo 4',
+      lowName: 'Atún en lata',
+      lowDetail: 'Quedan 3 · mínimo 4',
+    },
+  },
 } as const;
