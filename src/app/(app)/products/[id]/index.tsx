@@ -18,6 +18,7 @@ import { Banner, StatusBadge } from '@/shared/ui/Feedback';
 import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { theme } from '@/shared/ui/theme';
+import { useToast } from '@/shared/ui/Toast';
 
 const t = messages.product;
 
@@ -27,6 +28,7 @@ export default function ProductDetailScreen() {
   const product = useProduct(id);
   const movements = useMovements(id);
   const deleteMutation = useDeleteProduct(id);
+  const showToast = useToast();
   // Una sola hoja inferior que muestra las opciones o la confirmación de eliminar.
   const [sheet, setSheet] = useState<'options' | 'confirmDelete' | null>(null);
   const closeSheet = () => {
@@ -143,6 +145,7 @@ export default function ProductDetailScreen() {
                 deleteMutation.mutate(undefined, {
                   onSuccess: () => {
                     setSheet(null);
+                    showToast({ message: messages.toast.productDeleted });
                     router.dismissTo('/');
                   },
                 })
