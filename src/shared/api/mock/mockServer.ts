@@ -53,11 +53,12 @@ function generateInternalCode(): string {
   return code;
 }
 
-// "lucia.tienda@correo.com" → "Lucia"
-function nameFromEmail(email: string): string {
-  const first = email.split('@')[0]?.split(/[._-]/)[0] ?? '';
-  return first ? first[0].toUpperCase() + first.slice(1) : 'Comerciante';
-}
+// Cuenta de demostración del backend (prisma/seed.ts) para quien ingresa sin registrarse.
+const DEMO_OWNER = 'Comerciante de prueba';
+const DEMO_BUSINESS = 'Tienda de demostración';
+
+// Cuentas creadas con "Crear cuenta", para saludar con el nombre que se escribió.
+const accounts = new Map<string, { ownerName: string; businessName: string }>();
 
 function authResponse(ownerName: string, email: string, businessName: string): AuthResponse {
   return { token: `mock-${newId()}`, user: { ownerName, email }, business: { name: businessName } };
@@ -79,11 +80,15 @@ function handle(method: Method, path: string, body: Body): unknown {
 
   // Autenticación: cualquier correo y contraseña sirven.
   if (route === 'POST /auth/login') {
-    const email = String(body.email);
-    return authResponse(nameFromEmail(email), email, 'Tienda de demostración');
+    const email = String(body.email).toLowerCase();
+    const account = accounts.get(email);
+    return authResponse(account?.ownerName ?? DEMO_OWNER, email, account?.businessName ?? DEMO_BUSINESS);
   }
   if (route === 'POST /auth/register') {
-    return authResponse(String(body.ownerName), String(body.email), String(body.businessName));
+    const email = String(body.email).toLowerCase();
+    const account = { ownerName: String(body.ownerName), businessName: String(body.businessName) };
+    accounts.set(email, account);
+    return authResponse(account.ownerName, email, account.businessName);
   }
   if (route === 'POST /auth/password-reset/request' || route === 'POST /auth/password-reset/confirm') {
     return undefined;

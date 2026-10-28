@@ -12,7 +12,23 @@ describe('API de demostración', () => {
       password: 'x',
     });
     expect(response.token).toBeTruthy();
-    expect(response.user.ownerName).toBe('Lucia');
+    expect(response.user.ownerName).toBe('Comerciante de prueba');
+  });
+
+  it('saluda con el nombre de quien se registró, no con su correo', async () => {
+    await mockRequest('POST', '/auth/register', {
+      businessName: 'Tienda La Esquina',
+      ownerName: 'Lucía Gómez',
+      email: 'juanes0202@correo.com',
+      password: '12345678',
+      dataPolicyAccepted: true,
+    });
+    const response = await mockRequest<AuthResponse>('POST', '/auth/login', {
+      email: 'Juanes0202@correo.com',
+      password: 'x',
+    });
+    expect(response.user.ownerName).toBe('Lucía Gómez');
+    expect(response.business.name).toBe('Tienda La Esquina');
   });
 
   it('carga el inventario de demostración con 4 alertas', async () => {
