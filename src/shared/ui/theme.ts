@@ -34,6 +34,9 @@ export const theme = {
   spacing: { xs: 4, sm: 8, md: 16, lg: 20, xl: 24, xxl: 32 },
   radius: { md: 16, lg: 24, sheet: 32, pill: 999 },
   fontSize: { caption: 16, body: 16, label: 16, lead: 17, title: 19, heading: 24, display: 32 },
+  // Con la letra grande del sistema, los números y títulos enormes crecen hasta
+  // este factor; el resto del texto crece sin límite.
+  maxFontScale: { display: 1.4, number: 1.25 },
   minTouchSize: 48,
   controlHeight: 56,
   buttonHeight: 60,

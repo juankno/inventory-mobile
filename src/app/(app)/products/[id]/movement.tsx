@@ -155,7 +155,7 @@ export default function MovementScreen() {
           {params.scanned ? <Tag icon="check" label={t.codeRead} /> : null}
           <AppText variant="heading">{item.name}</AppText>
           <View style={styles.stock}>
-            <AppText style={styles.stockNumber}>{formatNumber(item.stock)}</AppText>
+            <AppText maxFontSizeMultiplier={theme.maxFontScale.number} style={styles.stockNumber}>{formatNumber(item.stock)}</AppText>
             <AppText variant="title" tone="secondary" style={styles.stockUnit}>
               {t.inStock(unitWord(item.stock, item.unit))}
             </AppText>
@@ -240,7 +240,7 @@ export default function MovementScreen() {
 const styles = StyleSheet.create({
   group: { gap: theme.spacing.md },
   bold: { fontFamily: theme.fonts.bold, color: theme.colors.text },
-  stock: { flexDirection: 'row', alignItems: 'flex-end', gap: theme.spacing.sm },
+  stock: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', columnGap: theme.spacing.sm },
   stockNumber: { fontFamily: theme.fonts.medium, fontSize: 64, lineHeight: 72, color: theme.colors.text },
   stockUnit: { marginBottom: theme.spacing.md, fontFamily: theme.fonts.medium },
 });

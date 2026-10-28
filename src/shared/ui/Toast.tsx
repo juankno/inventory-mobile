@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { AccessibilityInfo, Animated, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { messages } from '@/shared/i18n/messages';
 import { AppText } from './AppText';
 import { Icon } from './Icon';
 import { theme } from './theme';
@@ -18,6 +19,11 @@ type ToastState = ToastOptions & { id: number };
 const ToastContext = createContext<((options: ToastOptions) => void) | null>(null);
 
 const DEFAULT_DURATION_MS = 3500;
+// El aviso es pasajero y no es texto de lectura: va en 14 sp para que quepa en
+// una o dos líneas. Los botones se ven compactos pero conservan 48 dp de área
+// táctil con hitSlop.
+const BUTTON_SIZE = 36;
+const BUTTON_SLOP = (theme.minTouchSize - BUTTON_SIZE) / 2;
 const WITH_ACTION_DURATION_MS = 6000;
 
 // Aviso breve al pie de la pantalla que confirma una acción (registrar, guardar,
@@ -67,8 +73,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               },
             ]}
           >
-            <Icon name="check" size={22} color={theme.colors.onInk} />
-            <AppText variant="bodyStrong" tone="inverse" style={styles.message}>
+            <Icon name="check" size={18} color={theme.colors.onInk} />
+            <AppText tone="inverse" style={styles.message} numberOfLines={2}>
               {toast.message}
             </AppText>
             {toast.action ? (
@@ -78,13 +84,23 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                   toast.action?.onPress();
                   hide();
                 }}
+                hitSlop={BUTTON_SLOP}
                 style={styles.action}
               >
-                <AppText variant="bodyStrong" style={styles.actionText}>
+                <AppText style={styles.actionText}>
                   {toast.action.label}
                 </AppText>
               </Pressable>
             ) : null}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={messages.common.close}
+              onPress={hide}
+              hitSlop={BUTTON_SLOP}
+              style={styles.close}
+            >
+              <Icon name="close" size={18} color={theme.colors.onInk} />
+            </Pressable>
           </Animated.View>
         </View>
       ) : null}
@@ -103,12 +119,12 @@ const styles = StyleSheet.create({
   toast: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.md,
-    minHeight: 56,
-    paddingLeft: theme.spacing.lg,
-    paddingRight: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.radius.lg,
+    gap: theme.spacing.sm,
+    minHeight: 48,
+    paddingLeft: theme.spacing.md,
+    paddingRight: 6,
+    paddingVertical: 6,
+    borderRadius: theme.radius.md,
     backgroundColor: theme.colors.ink,
     elevation: 8,
     shadowColor: '#000',
@@ -116,12 +132,19 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },
   },
-  message: { flex: 1, paddingVertical: theme.spacing.sm },
+  message: { flex: 1, fontFamily: theme.fonts.semibold, fontSize: 14, lineHeight: 19 },
   action: {
-    minHeight: theme.minTouchSize,
-    paddingHorizontal: theme.spacing.md,
+    minHeight: BUTTON_SIZE,
+    paddingHorizontal: theme.spacing.sm,
     justifyContent: 'center',
     borderRadius: theme.radius.pill,
   },
-  actionText: { color: theme.colors.warningDot, fontFamily: theme.fonts.extrabold },
+  actionText: { color: theme.colors.warningDot, fontFamily: theme.fonts.extrabold, fontSize: 14, lineHeight: 19 },
+  close: {
+    width: BUTTON_SIZE,
+    height: BUTTON_SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 0.7,
+  },
 });

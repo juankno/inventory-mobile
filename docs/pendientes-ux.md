@@ -53,4 +53,5 @@ Esto también resuelve la parte de "buscar por escaneo" de RF-14.
 - **Inventario vacío con acciones:** botones para escanear o agregar un producto en el mensaje "Aún no tienes productos".
 - **Carga con tarjetas de esqueleto** en lugar del indicador girando.
 - **Volver a ver la presentación:** una opción "Cómo usar la app" en el menú ☰.
+- **Tablets:** limitar el ancho del contenido (por ejemplo, 600 dp centrados). Hoy campos y botones se estiran a todo el ancho; es de baja prioridad porque la app está pensada para celular.
 - **Deshacer con un endpoint propio:** hoy "Deshacer" registra un ajuste. Si el ERS pide que el historial no muestre la corrección, el backend necesitaría anular movimientos.
