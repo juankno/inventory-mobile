@@ -18,11 +18,11 @@ export function WelcomeIllustration() {
       <View style={styles.stats}>
         <View style={[styles.stat, styles.statNeutral]}>
           <AppText variant="caption">{t.registered}</AppText>
-          <AppText style={styles.statNumber}>20</AppText>
+          <AppText maxFontSizeMultiplier={theme.maxFontScale.number} style={styles.statNumber}>20</AppText>
         </View>
         <View style={[styles.stat, styles.statWarning]}>
           <AppText variant="caption">{t.toRestock}</AppText>
-          <AppText style={styles.statNumber}>4</AppText>
+          <AppText maxFontSizeMultiplier={theme.maxFontScale.number} style={styles.statNumber}>4</AppText>
         </View>
       </View>
     </View>

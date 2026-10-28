@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    height: CHIP_HEIGHT,
+    minHeight: CHIP_HEIGHT,
     paddingLeft: 14,
     paddingRight: 6,
     borderRadius: theme.radius.pill,
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   selectedText: { color: theme.colors.onInk },
   count: {
     minWidth: 26,
-    height: 28,
+    minHeight: 28,
     justifyContent: 'center',
     paddingHorizontal: 6,
     borderRadius: theme.radius.pill,

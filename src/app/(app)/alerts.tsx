@@ -12,6 +12,7 @@ import { Banner } from '@/shared/ui/Feedback';
 import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { theme } from '@/shared/ui/theme';
+import { useScreenSize } from '@/shared/ui/useScreenSize';
 
 const t = messages.alerts;
 
@@ -32,7 +33,7 @@ export default function AlertsScreen() {
         alerts.data ? (
           <>
             <View style={styles.headline}>
-              <AppText style={styles.count}>{total}</AppText>
+              <AppText maxFontSizeMultiplier={theme.maxFontScale.number} style={styles.count}>{total}</AppText>
               <AppText variant="heading" style={styles.headlineText}>
                 {total === 1 ? t.headlineOne : t.headline}
               </AppText>
@@ -71,6 +72,7 @@ export default function AlertsScreen() {
 
 function AlertGroup({ title, tone, products }: { title: string; tone: 'danger' | 'warning'; products: Product[] }) {
   const isDanger = tone === 'danger';
+  const { narrow } = useScreenSize();
   return (
     <View style={styles.group}>
       <View style={styles.groupTitle}>
@@ -78,7 +80,10 @@ function AlertGroup({ title, tone, products }: { title: string; tone: 'danger' |
         <AppText variant="title" accessibilityRole="header">{`${title} · ${products.length}`}</AppText>
       </View>
       {products.map((product) => (
-        <View key={product.id} style={[styles.card, isDanger ? styles.cardDanger : styles.cardWarning]}>
+        <View
+          key={product.id}
+          style={[styles.card, narrow && styles.cardStacked, isDanger ? styles.cardDanger : styles.cardWarning]}
+        >
           <View style={styles.cardText}>
             <AppText
               variant="title"
@@ -119,8 +124,9 @@ const styles = StyleSheet.create({
     paddingLeft: theme.spacing.lg,
     borderRadius: theme.radius.lg,
   },
+  cardStacked: { flexDirection: 'column', alignItems: 'stretch', padding: theme.spacing.lg },
   cardDanger: { backgroundColor: theme.colors.dangerBg },
   cardWarning: { borderWidth: 1, borderColor: theme.colors.border },
-  cardText: { flex: 1 },
+  cardText: { flexGrow: 1, flexShrink: 1 },
   cardButton: { minHeight: 48, paddingHorizontal: theme.spacing.lg },
 });

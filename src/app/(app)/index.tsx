@@ -107,7 +107,7 @@ export default function InventoryScreen() {
       <View style={styles.stats}>
         <View style={[styles.stat, styles.statNeutral]}>
           <AppText variant="lead">{t.registered}</AppText>
-          <AppText style={styles.statNumber}>{products.data?.length ?? '–'}</AppText>
+          <AppText maxFontSizeMultiplier={theme.maxFontScale.number} style={styles.statNumber}>{products.data?.length ?? '–'}</AppText>
         </View>
         <Pressable
           accessibilityRole="button"
@@ -121,7 +121,7 @@ export default function InventoryScreen() {
             </AppText>
             <Icon name="arrowUpRight" color={theme.colors.warningText} />
           </View>
-          <AppText style={styles.statNumber}>{alerts.data ? toRestock : '–'}</AppText>
+          <AppText maxFontSizeMultiplier={theme.maxFontScale.number} style={styles.statNumber}>{alerts.data ? toRestock : '–'}</AppText>
         </Pressable>
       </View>
 
@@ -195,7 +195,11 @@ export default function InventoryScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top + theme.spacing.md }]}>
       <View style={styles.topBar}>
-        <AppText style={styles.greeting} accessibilityRole="header">
+        <AppText
+          style={styles.greeting}
+          accessibilityRole="header"
+          maxFontSizeMultiplier={theme.maxFontScale.display}
+        >
           {greeting()}
           {firstName ? <AppText style={[styles.greeting, styles.greetingName]}>{`\n${firstName}`}</AppText> : null}
         </AppText>
@@ -325,7 +329,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: theme.spacing.xl,
   },
-  greeting: { fontFamily: theme.fonts.extrabold, fontSize: 30, lineHeight: 36, letterSpacing: -1, color: theme.colors.text },
+  greeting: { flexShrink: 1, fontFamily: theme.fonts.extrabold, fontSize: 30, lineHeight: 36, letterSpacing: -1, color: theme.colors.text },
   greetingName: { color: theme.colors.muted },
   topActions: { flexDirection: 'row', gap: theme.spacing.md },
   sheet: {

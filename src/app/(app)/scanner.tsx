@@ -2,7 +2,7 @@ import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'ex
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useCodeResolver } from '@/features/scanner/hooks/useCodeResolver';
@@ -24,6 +24,7 @@ import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { TextField } from '@/shared/ui/TextField';
 import { theme } from '@/shared/ui/theme';
+import { useScreenSize } from '@/shared/ui/useScreenSize';
 
 const t = messages.scanner;
 const NO_READ_TIMEOUT_MS = 10_000;
@@ -53,10 +54,19 @@ export default function ScannerScreen() {
   return <CameraScanner />;
 }
 
+// El visor ocupa el 78 % del ancho (68 % con un aviso abierto), sin pasar de
+// una parte del alto: en pantallas bajas se achica para dejar sitio al panel.
+const FRAME_RATIO = 1.3;
+
 function CameraScanner() {
   const insets = useSafeAreaInsets();
+  const { width, height, short } = useScreenSize();
   const resolver = useCodeResolver();
   const [panel, setPanel] = useState<Panel>('idle');
+  const frameWidth = Math.min(
+    width * (panel === 'idle' ? 0.78 : 0.68),
+    height * (short ? 0.22 : 0.3) * FRAME_RATIO,
+  );
   const [torch, setTorch] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualCode, setManualCode] = useState('');
@@ -144,13 +154,13 @@ function CameraScanner() {
         )}
       </View>
 
-      <View style={styles.viewfinderArea}>
+      <View style={[styles.viewfinderArea, short && styles.viewfinderAreaShort]}>
         {panel === 'idle' ? (
-          <AppText variant="heading" tone="inverse" style={styles.aim}>
+          <AppText variant={short ? 'title' : 'heading'} tone="inverse" style={styles.aim}>
             {t.aim}
           </AppText>
         ) : null}
-        <View style={[styles.frame, panel !== 'idle' && styles.frameSmall]}>
+        <View style={[styles.frame, { width: frameWidth }]}>
           <CameraView
             style={StyleSheet.absoluteFill}
             facing="back"
@@ -162,7 +172,7 @@ function CameraScanner() {
           {panel === 'idle' ? <View style={styles.scanLine} /> : null}
           <Corners dimmed={panel !== 'idle'} />
         </View>
-        {panel === 'idle' ? (
+        {panel === 'idle' && !short ? (
           <AppText variant="lead" style={styles.autoRead}>
             {t.autoRead}
           </AppText>
@@ -170,55 +180,63 @@ function CameraScanner() {
       </View>
 
       <View style={[styles.panel, { paddingBottom: Math.max(insets.bottom, theme.spacing.md) + theme.spacing.sm }]}>
-        {panel === 'idle' ? (
-          <>
-            <OptionRow icon="plus" label={t.noCode} onPress={() => router.replace('/products/new')} />
-            <OptionRow icon="keyboard" label={t.manual} onPress={() => setManualOpen(true)} />
-          </>
-        ) : null}
+        {/* Si los consejos o avisos no caben en pantallas bajas, el panel se desplaza. */}
+        <ScrollView
+          style={{ maxHeight: height * 0.6 }}
+          contentContainerStyle={styles.panelContent}
+          bounces={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {panel === 'idle' ? (
+            <>
+              <OptionRow icon="plus" label={t.noCode} onPress={() => router.replace('/products/new')} />
+              <OptionRow icon="keyboard" label={t.manual} onPress={() => setManualOpen(true)} />
+            </>
+          ) : null}
 
-        {panel === 'searching' ? (
-          <View style={styles.searching}>
-            <ActivityIndicator color={theme.colors.ink} />
-            <AppText variant="lead">{t.searching}</AppText>
-          </View>
-        ) : null}
-
-        {panel === 'noRead' ? (
-          <>
-            <AppText variant="heading">{t.noReadTitle}</AppText>
-            <AppText variant="lead" tone="secondary">
-              {t.noReadIntro}
-            </AppText>
-            <Tip icon="resize" text={t.tipDistance} />
-            <Tip icon="sun" text={t.tipLight} />
-            <Tip icon="barcode" text={t.tipStraight} />
-            <Button label={t.keepTrying} onPress={keepTrying} style={styles.firstAction} />
-            <Button label={t.searchByName} variant="secondary" onPress={searchByName} />
-          </>
-        ) : null}
-
-        {panel === 'foreign' ? (
-          <>
-            <View style={styles.alertIcon}>
-              <Icon name="alert" size={30} color={theme.colors.dangerDot} />
+          {panel === 'searching' ? (
+            <View style={styles.searching}>
+              <ActivityIndicator color={theme.colors.ink} />
+              <AppText variant="lead">{t.searching}</AppText>
             </View>
-            <AppText variant="heading">{t.foreignTitle}</AppText>
-            <AppText variant="lead" tone="secondary">
-              {t.foreignBody}
-            </AppText>
-            <Button label={t.scanAnother} onPress={keepTrying} style={styles.firstAction} />
-            <Button label={t.searchByName} variant="secondary" onPress={searchByName} />
-          </>
-        ) : null}
+          ) : null}
 
-        {panel === 'error' ? (
-          <>
-            <Banner message={errorText} />
-            <Button label={t.keepTrying} onPress={keepTrying} />
-            <Button label={t.searchByName} variant="secondary" onPress={searchByName} />
-          </>
-        ) : null}
+          {panel === 'noRead' ? (
+            <>
+              <AppText variant="heading">{t.noReadTitle}</AppText>
+              <AppText variant="lead" tone="secondary">
+                {t.noReadIntro}
+              </AppText>
+              <Tip icon="resize" text={t.tipDistance} />
+              <Tip icon="sun" text={t.tipLight} />
+              <Tip icon="barcode" text={t.tipStraight} />
+              <Button label={t.keepTrying} onPress={keepTrying} style={styles.firstAction} />
+              <Button label={t.searchByName} variant="secondary" onPress={searchByName} />
+            </>
+          ) : null}
+
+          {panel === 'foreign' ? (
+            <>
+              <View style={styles.alertIcon}>
+                <Icon name="alert" size={30} color={theme.colors.dangerDot} />
+              </View>
+              <AppText variant="heading">{t.foreignTitle}</AppText>
+              <AppText variant="lead" tone="secondary">
+                {t.foreignBody}
+              </AppText>
+              <Button label={t.scanAnother} onPress={keepTrying} style={styles.firstAction} />
+              <Button label={t.searchByName} variant="secondary" onPress={searchByName} />
+            </>
+          ) : null}
+
+          {panel === 'error' ? (
+            <>
+              <Banner message={errorText} />
+              <Button label={t.keepTrying} onPress={keepTrying} />
+              <Button label={t.searchByName} variant="secondary" onPress={searchByName} />
+            </>
+          ) : null}
+        </ScrollView>
       </View>
 
       <BottomSheet visible={manualOpen} onClose={() => setManualOpen(false)}>
@@ -355,16 +373,15 @@ const styles = StyleSheet.create({
   slot: { width: 52 },
   title: { flex: 1, textAlign: 'center', fontFamily: theme.fonts.bold },
   viewfinderArea: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: theme.spacing.xl, padding: theme.spacing.lg },
+  viewfinderAreaShort: { gap: theme.spacing.md, padding: theme.spacing.md },
   aim: { textAlign: 'center' },
   frame: {
-    width: '78%',
-    aspectRatio: 1.3,
+    aspectRatio: FRAME_RATIO,
     borderRadius: theme.radius.lg,
     overflow: 'hidden',
     backgroundColor: theme.colors.scannerSurface,
     justifyContent: 'center',
   },
-  frameSmall: { width: '68%' },
   paused: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(22,22,22,0.85)' },
   scanLine: { height: 2, marginHorizontal: '10%', backgroundColor: theme.colors.onInk, opacity: 0.9 },
   autoRead: { color: '#C9C8C3', textAlign: 'center' },
@@ -385,8 +402,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: theme.radius.sheet,
     padding: theme.spacing.lg,
     paddingTop: theme.spacing.xl,
-    gap: theme.spacing.md,
   },
+  panelContent: { gap: theme.spacing.md },
   option: {
     flexDirection: 'row',
     alignItems: 'center',

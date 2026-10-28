@@ -10,14 +10,15 @@ type Props = TextProps & { variant?: Variant; tone?: Tone };
 // Texto con la tipografía del diseño (Manrope). En Android las fuentes
 // personalizadas no combinan con fontWeight, por eso cada peso es una familia.
 export function AppText({ variant = 'body', tone = 'default', style, ...props }: Props) {
-  return <Text style={[styles[variant], tones[tone], style]} {...props} />;
+  const maxScale = variant === 'display' ? theme.maxFontScale.display : undefined;
+  return <Text maxFontSizeMultiplier={maxScale} style={[styles[variant], tones[tone], style]} {...props} />;
 }
 
 // Título en dos tonos del diseño: primera línea negra, segunda gris.
 export function Headline({ strong, soft, size = 'display' }: { strong: string; soft?: string; size?: 'display' | 'hero' }) {
   const style = size === 'hero' ? styles.hero : styles.display;
   return (
-    <Text accessibilityRole="header" style={[style, tones.default]}>
+    <Text accessibilityRole="header" maxFontSizeMultiplier={theme.maxFontScale.display} style={[style, tones.default]}>
       {strong}
       {soft ? <Text style={tones.muted}>{`\n${soft}`}</Text> : null}
     </Text>

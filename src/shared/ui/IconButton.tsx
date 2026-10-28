@@ -31,7 +31,7 @@ export function IconButton({ icon, onPress, accessibilityLabel, variant = 'light
       <Icon name={icon} size={24} color={color} />
       {badge ? (
         <View style={styles.badge}>
-          <AppText variant="caption" tone="inverse" style={styles.badgeText}>
+          <AppText variant="caption" tone="inverse" style={styles.badgeText} maxFontSizeMultiplier={theme.maxFontScale.number}>
             {badge > 99 ? '99+' : badge}
           </AppText>
         </View>
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     top: -2,
     right: -2,
     minWidth: 22,
-    height: 22,
+    minHeight: 22,
     paddingHorizontal: 5,
     borderRadius: 11,
     backgroundColor: theme.colors.dangerDot,

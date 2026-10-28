@@ -28,8 +28,8 @@ export function ChipGroup<T extends string>({ options, value, onChange, accessib
           >
             <AppText
               variant="lead"
-              style={selected ? styles.selectedText : styles.text}
-              numberOfLines={1}
+              style={[selected ? styles.selectedText : styles.text, styles.center]}
+              numberOfLines={2}
             >
               {option.label}
             </AppText>
@@ -50,9 +50,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
   },
   selected: { backgroundColor: theme.colors.ink },
   pressed: { opacity: 0.85 },
   text: { fontFamily: theme.fonts.medium },
+  center: { textAlign: 'center' },
   selectedText: { fontFamily: theme.fonts.bold, color: theme.colors.onInk },
 });

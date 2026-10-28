@@ -81,7 +81,7 @@ export default function ProductDetailScreen() {
             )}
           </View>
           <View style={styles.stock}>
-            <AppText style={styles.stockNumber}>{formatNumber(item.stock)}</AppText>
+            <AppText maxFontSizeMultiplier={theme.maxFontScale.number} style={styles.stockNumber}>{formatNumber(item.stock)}</AppText>
             <AppText variant="heading" tone="secondary" style={styles.stockUnit}>
               {unitWord(item.stock, item.unit)}
             </AppText>
@@ -185,7 +185,7 @@ function Fact({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   stockLabel: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, marginTop: theme.spacing.sm },
-  stock: { flexDirection: 'row', alignItems: 'flex-end', gap: theme.spacing.sm },
+  stock: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', columnGap: theme.spacing.sm },
   stockNumber: { fontFamily: theme.fonts.medium, fontSize: 72, lineHeight: 80, color: theme.colors.text },
   stockUnit: { marginBottom: theme.spacing.md, fontFamily: theme.fonts.medium },
   facts: { flexDirection: 'row', gap: theme.spacing.sm },

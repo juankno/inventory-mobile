@@ -46,6 +46,7 @@ export function QuantityStepper({ value, onChange, step = 1, min = 0, allowDecim
         keyboardType={allowDecimals ? 'decimal-pad' : 'number-pad'}
         style={styles.input}
         selectTextOnFocus
+        maxFontSizeMultiplier={theme.maxFontScale.number}
       />
       <Pressable
         accessibilityRole="button"

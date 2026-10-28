@@ -23,6 +23,7 @@ import { messages } from '@/shared/i18n/messages';
 import { AppText, Headline } from '@/shared/ui/AppText';
 import { Button } from '@/shared/ui/Button';
 import { theme } from '@/shared/ui/theme';
+import { useScreenSize } from '@/shared/ui/useScreenSize';
 
 const t = messages.onboarding;
 
@@ -35,6 +36,8 @@ type Slide = (typeof slides)[number];
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  // En pantallas bajas las ilustraciones se reducen y el texto no reserva alto mínimo.
+  const { short } = useScreenSize();
   const { finish } = useOnboarding();
   const listRef = useRef<FlatList<Slide>>(null);
   const [scrollX] = useState(() => new Animated.Value(0));
@@ -81,10 +84,12 @@ export default function OnboardingScreen() {
         getItemLayout={(_, itemIndex) => ({ length: width, offset: width * itemIndex, index: itemIndex })}
         renderItem={({ item }) => (
           <View style={[styles.slide, { width }]}>
-            <View style={styles.illustration}>
-              <item.Illustration />
+            <View style={[styles.illustration, short && styles.illustrationShort]}>
+              <View style={short ? styles.scaledDown : undefined}>
+                <item.Illustration />
+              </View>
             </View>
-            <View style={styles.text}>
+            <View style={[styles.text, short && styles.textShort]}>
               <Headline strong={item.strong} soft={item.soft} />
               <AppText variant="lead" tone="secondary">
                 {item.body}
@@ -130,6 +135,8 @@ const styles = StyleSheet.create({
   skip: { minHeight: theme.minTouchSize, minWidth: theme.minTouchSize, alignItems: 'center', justifyContent: 'center' },
   slide: { flex: 1 },
   illustration: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: theme.spacing.xl },
+  illustrationShort: { padding: theme.spacing.sm },
+  scaledDown: { transform: [{ scale: 0.8 }] },
   text: {
     backgroundColor: theme.colors.surface,
     borderTopLeftRadius: theme.radius.sheet,
@@ -140,6 +147,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
     minHeight: 230,
   },
+  textShort: { minHeight: 0, paddingTop: theme.spacing.xl },
   controls: {
     backgroundColor: theme.colors.surface,
     paddingHorizontal: theme.spacing.lg,
