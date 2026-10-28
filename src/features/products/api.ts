@@ -30,3 +30,6 @@ export const createProduct = async (input: CreateProductInput) =>
 
 export const updateProduct = async (id: string, input: UpdateProductInput) =>
   toProduct(await apiRequest<ProductDto>('PATCH', `/products/${id}`, input));
+
+// Desactiva el producto: sale de la lista y de las alertas, pero conserva su historial (RF-08).
+export const deleteProduct = (id: string) => apiRequest<void>('DELETE', `/products/${id}`);

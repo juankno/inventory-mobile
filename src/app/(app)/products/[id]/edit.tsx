@@ -113,7 +113,7 @@ export default function EditProductScreen() {
         <Pressable
           accessibilityRole="link"
           onPress={() => router.replace({ pathname: '/products/[id]/movement', params: { id } })}
-          hitSlop={8}
+          style={styles.touch}
         >
           <AppText variant="bodyStrong" style={styles.link}>
             {t.registerMovement}
@@ -134,5 +134,6 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     gap: theme.spacing.lg,
   },
+  touch: { alignSelf: 'flex-start', minHeight: theme.minTouchSize, justifyContent: 'center' },
   link: { textDecorationLine: 'underline', fontSize: theme.fontSize.lead },
 });

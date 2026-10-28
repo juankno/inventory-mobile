@@ -212,6 +212,6 @@ function ConfirmStep({ email, onBack }: { email: string; onBack: () => void }) {
 
 const styles = StyleSheet.create({
   code: { letterSpacing: 8, fontFamily: theme.fonts.semibold },
-  resend: { alignSelf: 'flex-start', paddingVertical: theme.spacing.sm },
+  resend: { alignSelf: 'flex-start', minHeight: theme.minTouchSize, justifyContent: 'center' },
   underline: { textDecorationLine: 'underline' },
 });

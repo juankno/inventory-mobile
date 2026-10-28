@@ -102,6 +102,13 @@ export default function MovementScreen() {
 
   const stockText = `${formatNumber(item.stock)} ${unitWord(item.stock, item.unit)}`;
   const mutationError = createMutation.error;
+  // Una salida mayor a la existencia se rechaza y se ofrece un ajuste por conteo (RF-12).
+  const offerAdjustment =
+    type === 'OUTBOUND' && (insufficient || hasErrorCode(mutationError, 'INSUFFICIENT_STOCK'));
+  const switchToAdjustment = () => {
+    createMutation.reset();
+    chooseType('ADJUSTMENT');
+  };
 
   return (
     <PageLayout
@@ -165,7 +172,7 @@ export default function MovementScreen() {
             {quantityError}
           </AppText>
         ) : insufficient ? (
-          <AppText variant="body" tone="danger">
+          <AppText variant="body" tone="danger" accessibilityLiveRegion="polite">
             {t.insufficient(stockText)}
           </AppText>
         ) : after !== null ? (
@@ -173,6 +180,9 @@ export default function MovementScreen() {
             {type === 'ADJUSTMENT' ? `${t.countedHint} ` : ''}
             {t.resulting(`${formatNumber(after)} ${unitWord(after, item.unit)}`)}
           </AppText>
+        ) : null}
+        {offerAdjustment ? (
+          <Button label={t.switchToAdjustment} variant="secondary" icon="pencil" onPress={switchToAdjustment} />
         ) : null}
       </View>
 

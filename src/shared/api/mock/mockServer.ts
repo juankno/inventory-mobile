@@ -17,6 +17,9 @@ type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 const products = new Map<string, Product>();
 const movements: Movement[] = [];
 const idempotencyKeys = new Map<string, Movement>();
+// Productos eliminados (desactivados): no se borran para conservar su historial (RF-08).
+const inactive = new Set<string>();
+const activeProducts = () => [...products.values()].filter((product) => !inactive.has(product.id));
 
 let lastId = 0;
 const newId = () => `mock-${++lastId}`;
@@ -95,12 +98,12 @@ function handle(method: Method, path: string, body: Body): unknown {
   }
 
   if (route === 'GET /products') {
-    return [...products.values()].sort((a, b) => a.name.localeCompare(b.name, 'es'));
+    return activeProducts().sort((a, b) => a.name.localeCompare(b.name, 'es'));
   }
 
   if (route === 'GET /products/lookup') {
     const code = query.get('code') ?? '';
-    const product = [...products.values()].find((item) => item.code === code);
+    const product = activeProducts().find((item) => item.code === code);
     if (!product) throw notFound();
     return product;
   }
@@ -108,8 +111,15 @@ function handle(method: Method, path: string, body: Body): unknown {
   if (route === 'POST /products') {
     const codeType = body.codeType as Product['codeType'];
     const code = codeType === 'GTIN' ? String(body.code) : generateInternalCode();
-    if ([...products.values()].some((item) => item.code === code)) {
-      throw new ApiError(409, 'DUPLICATE_CODE', 'Ya tienes un producto con este código.');
+    const existing = [...products.values()].find((item) => item.code === code);
+    if (existing) {
+      throw new ApiError(
+        409,
+        'DUPLICATE_CODE',
+        inactive.has(existing.id)
+          ? 'Este código es de un producto que eliminaste.'
+          : 'Ya tienes un producto con este código.',
+      );
     }
     const unit = body.unit as Unit;
     const initialStock = Number(body.initialStock);
@@ -164,6 +174,10 @@ function handle(method: Method, path: string, body: Body): unknown {
       products.set(updated.id, updated);
       return updated;
     }
+    if (method === 'DELETE') {
+      inactive.add(product.id);
+      return undefined;
+    }
   }
 
   if (route === 'POST /movements') {
@@ -172,6 +186,7 @@ function handle(method: Method, path: string, body: Body): unknown {
     if (repeated) return repeated;
 
     const product = getProductOrThrow(String(body.productId));
+    if (inactive.has(product.id)) throw notFound();
     const type = body.type as MovementType;
     const quantity = Number(body.quantity);
     checkWholeUnits(product.unit, quantity);
@@ -197,7 +212,7 @@ function handle(method: Method, path: string, body: Body): unknown {
   }
 
   if (route === 'GET /inventory/alerts') {
-    return [...products.values()]
+    return activeProducts()
       .filter((product) => product.minStock !== null && product.stock <= product.minStock)
       .sort((a, b) => a.stock - b.stock || a.name.localeCompare(b.name, 'es'));
   }

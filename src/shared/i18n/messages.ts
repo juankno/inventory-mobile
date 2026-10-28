@@ -53,6 +53,7 @@ export const messages = {
     tryAgain: 'Intentar de nuevo',
     policyAccept: 'Acepto la ',
     policyLink: 'política de tratamiento de datos',
+    policyRead: 'Leer la política',
     policyTitle: 'Tratamiento de datos personales',
     policyBody:
       'Usamos tu nombre y tu correo solo para crear tu cuenta, permitirte ingresar y recuperar tu contraseña. ' +
@@ -160,6 +161,11 @@ export const messages = {
     options: 'Opciones del producto',
     edit: 'Editar producto',
     viewQr: 'Ver e imprimir código QR',
+    delete: 'Eliminar producto',
+    deleteTitle: (name: string) => `¿Eliminar ${name}?`,
+    deleteBody:
+      'Ya no aparecerá en tu inventario ni en las alertas. Su historial de movimientos se conserva.',
+    deleteConfirm: 'Sí, eliminar',
   },
   productForm: {
     newTitle: 'Nuevo producto',
@@ -206,7 +212,8 @@ export const messages = {
     chooseReason: 'Elige el motivo de la salida',
     noChange: 'La cantidad contada es igual a la actual',
     submit: { INBOUND: 'Registrar entrada', OUTBOUND: 'Registrar salida', ADJUSTMENT: 'Registrar ajuste' },
-    insufficient: (quantity: string) => `Solo hay ${quantity} en existencias. Revisa la cantidad o registra un ajuste por conteo.`,
+    insufficient: (quantity: string) => `Solo hay ${quantity} en existencias. Revisa la cantidad o, si contaste otra cifra, haz un ajuste.`,
+    switchToAdjustment: 'Hacer un ajuste por conteo',
     help: 'Qué es cada movimiento',
     helpTitle: 'Qué es cada movimiento',
     helpInbound: ['Entrada', ': llegó mercancía (compra o reposición). Suma a las existencias.'],

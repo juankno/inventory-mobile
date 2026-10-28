@@ -104,7 +104,12 @@ export default function InventoryScreen() {
           accessibilityLabel={t.search}
         />
         {query ? (
-          <Pressable accessibilityRole="button" accessibilityLabel={messages.common.close} onPress={() => setQuery('')} hitSlop={8}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={messages.common.close}
+            onPress={() => setQuery('')}
+            style={styles.clear}
+          >
             <Icon name="close" size={20} color={theme.colors.secondary} />
           </Pressable>
         ) : null}
@@ -114,7 +119,7 @@ export default function InventoryScreen() {
         <AppText variant="heading" accessibilityRole="header">
           {t.listTitle}
         </AppText>
-        <Pressable accessibilityRole="button" onPress={() => setAscending((value) => !value)} hitSlop={8}>
+        <Pressable accessibilityRole="button" onPress={() => setAscending((value) => !value)} style={styles.touch}>
           <AppText variant="lead" tone="secondary">
             {ascending ? t.sortAsc : t.sortDesc}
           </AppText>
@@ -308,6 +313,8 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.lead,
     color: theme.colors.text,
   },
+  clear: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', marginRight: -12 },
+  touch: { minHeight: theme.minTouchSize, justifyContent: 'center' },
   listTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   separator: { height: theme.spacing.sm },
   row: {

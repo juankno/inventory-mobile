@@ -4,6 +4,7 @@ import { queryKeys } from '@/shared/api/queryKeys';
 import type { Product } from '@/shared/api/types';
 import {
   createProduct,
+  deleteProduct,
   getProduct,
   listProducts,
   updateProduct,
@@ -43,6 +44,18 @@ export function useUpdateProduct(id: string) {
     mutationFn: (input: UpdateProductInput) => updateProduct(id, input),
     onSuccess: (product) => {
       queryClient.setQueryData(queryKeys.product(id), product);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.products });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.alerts });
+    },
+  });
+}
+
+export function useDeleteProduct(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => deleteProduct(id),
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: queryKeys.product(id), exact: true });
       void queryClient.invalidateQueries({ queryKey: queryKeys.products });
       void queryClient.invalidateQueries({ queryKey: queryKeys.alerts });
     },

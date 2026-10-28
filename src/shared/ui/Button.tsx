@@ -7,18 +7,18 @@ import { theme } from './theme';
 type Props = {
   label: string;
   onPress?: () => void;
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'danger';
   icon?: IconName;
   disabled?: boolean;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
-// Botón tipo píldora: negro (principal) o gris claro (secundario).
+// Botón tipo píldora: negro (principal), gris claro (secundario) o rojo (eliminar).
 export function Button({ label, onPress, variant = 'primary', icon, disabled, loading, style }: Props) {
   const isPrimary = variant === 'primary';
   const inactive = disabled || loading;
-  const foreground = isPrimary ? theme.colors.onInk : theme.colors.ink;
+  const foreground = variant === 'secondary' ? theme.colors.ink : theme.colors.onInk;
 
   return (
     <Pressable
@@ -28,7 +28,7 @@ export function Button({ label, onPress, variant = 'primary', icon, disabled, lo
       disabled={inactive}
       style={({ pressed }) => [
         styles.base,
-        isPrimary ? styles.primary : styles.secondary,
+        styles[variant],
         disabled && isPrimary && styles.primaryDisabled,
         pressed && styles.pressed,
         style,
@@ -59,6 +59,7 @@ const styles = StyleSheet.create({
   primary: { backgroundColor: theme.colors.ink },
   primaryDisabled: { backgroundColor: theme.colors.disabled },
   secondary: { backgroundColor: theme.colors.field },
+  danger: { backgroundColor: theme.colors.dangerDot },
   pressed: { opacity: 0.85 },
   content: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   label: { fontFamily: theme.fonts.bold },

@@ -143,16 +143,17 @@ export default function RegisterScreen() {
               accessibilityLabel={messages.auth.policyAccept + messages.auth.policyLink}
               onPress={() => field.onChange(!field.value)}
               style={styles.policyRow}
-              hitSlop={6}
             >
               <View style={[styles.checkbox, field.value && styles.checkboxChecked]}>
                 {field.value ? <Icon name="check" size={18} color={theme.colors.onInk} strokeWidth={3} /> : null}
               </View>
               <AppText variant="body" style={styles.policyText}>
-                {messages.auth.policyAccept}
-                <AppText variant="bodyStrong" style={styles.underline} onPress={() => setPolicyOpen(true)}>
-                  {messages.auth.policyLink}
-                </AppText>
+                {messages.auth.policyAccept + messages.auth.policyLink}
+              </AppText>
+            </Pressable>
+            <Pressable accessibilityRole="link" onPress={() => setPolicyOpen(true)} style={styles.policyLink}>
+              <AppText variant="bodyStrong" style={styles.underline}>
+                {messages.auth.policyRead}
               </AppText>
             </Pressable>
             {errors.dataPolicyAccepted ? (
@@ -189,5 +190,6 @@ const styles = StyleSheet.create({
   },
   checkboxChecked: { backgroundColor: theme.colors.ink },
   policyText: { flex: 1 },
+  policyLink: { alignSelf: 'flex-start', minHeight: theme.minTouchSize, justifyContent: 'center', marginLeft: 44 },
   underline: { textDecorationLine: 'underline' },
 });
