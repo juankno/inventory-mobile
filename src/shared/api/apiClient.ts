@@ -1,9 +1,14 @@
 import { messages } from '@/shared/i18n/messages';
 import { ApiError, type ApiErrorBody } from './errors';
+import { mockRequest } from './mock/mockServer';
 
 // Cliente HTTP único sobre fetch (M-04): agrega la URL base y el token,
 // y convierte las respuestas de error en ApiError.
 const baseUrl = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:3000/api/v1';
+
+// Modo demostración: mientras no haya backend, las peticiones las responde una
+// API simulada en memoria. Se desactiva con EXPO_PUBLIC_USE_MOCK_API=false.
+export const isMockApi = process.env.EXPO_PUBLIC_USE_MOCK_API !== 'false';
 
 let getToken: () => string | null = () => null;
 let onUnauthorized: () => void = () => {};
@@ -19,6 +24,8 @@ export function configureApiClient(options: {
 type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
 export async function apiRequest<T>(method: Method, path: string, body?: unknown): Promise<T> {
+  if (isMockApi) return mockRequest<T>(method, path, body);
+
   const headers: Record<string, string> = { Accept: 'application/json' };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   const token = getToken();

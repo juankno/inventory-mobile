@@ -49,12 +49,21 @@ inventory-mobile/
         ├── session/           contexto de sesión y expo-secure-store (M-05)
         ├── ui/                componentes base y tema (M-12)
         ├── gs1/               dígito de control y normalización GTIN (M-09)
+        ├── format/            unidades, existencias, fechas y precios
         └── i18n/              textos en español (RIU-01)
 ```
 
 Las pantallas usan las funcionalidades y la capa compartida; las funcionalidades solo usan la capa compartida, y ninguna importa código de otra.
 
+## Diseño
+
+La interfaz sigue las imágenes de [docs/diseno](docs/diseno): fondo hueso, hojas blancas redondeadas, controles tipo píldora y la tipografía Manrope. El nombre de la app es **Surtido**. Los colores y tamaños están en `src/shared/ui/theme.ts`.
+
+## Modo demostración
+
+Mientras el backend no tenga los endpoints, la app usa una API simulada en memoria (`src/shared/api/mock/`). Con ella se puede ingresar con cualquier correo y contraseña, y se usan los 20 productos del inventario de demostración. Los datos se reinician cada vez que se recarga la app. Para conectarla al backend real, pon `EXPO_PUBLIC_USE_MOCK_API=false` en `.env` y reinicia Expo.
+
 ## Estado
 
-Las diez rutas existen como pantallas temporales. Ya funcionan la protección de rutas por sesión, el cliente HTTP con manejo de `{code, message}` y del 401, el almacenamiento cifrado del token y la validación GS1 (con pruebas).
+Las diez rutas tienen su pantalla final, conectada a la API según [docs/contrato-api.md](docs/contrato-api.md). Ese contrato todavía no está implementado en `inventory-backend`. Además funcionan la protección de rutas por sesión, el cliente HTTP con manejo de `{code, message}` y del 401, el almacenamiento cifrado del token y la validación GS1 y de los códigos escaneados (con pruebas).
 "# inventory-mobile" 

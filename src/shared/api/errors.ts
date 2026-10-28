@@ -11,3 +11,12 @@ export class ApiError extends Error {
 }
 
 export type ApiErrorBody = { code: string; message: string };
+
+export const isNetworkError = (error: unknown) => error instanceof ApiError && error.code === 'NETWORK_ERROR';
+
+export const hasErrorCode = (error: unknown, code: string) => error instanceof ApiError && error.code === code;
+
+// Mensaje en español para mostrar al usuario: el de la API o uno genérico.
+export function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof ApiError ? error.message : fallback;
+}
