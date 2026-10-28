@@ -293,4 +293,7 @@ export const messages = {
     confirm: 'Descartar',
     keepEditing: 'Seguir editando',
   },
+  exit: {
+    pressAgain: 'Presiona atrás otra vez para salir',
+  },
 } as const;

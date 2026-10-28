@@ -16,6 +16,7 @@ import { useAlerts } from '@/features/inventory/hooks/useAlerts';
 import { useProducts } from '@/features/products/hooks/useProducts';
 import { errorMessage } from '@/shared/api/errors';
 import type { Product } from '@/shared/api/types';
+import { useConfirmExit } from '@/shared/device/useConfirmExit';
 import { greeting } from '@/shared/format/dates';
 import { stockStatus, stockStatusLabel } from '@/shared/format/stock';
 import { formatQuantity } from '@/shared/format/units';
@@ -49,6 +50,7 @@ export default function InventoryScreen() {
   const [ascending, setAscending] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const searchRef = useRef<TextInputInstance>(null);
+  useConfirmExit();
 
   useEffect(() => {
     if (focusSearch) searchRef.current?.focus();
