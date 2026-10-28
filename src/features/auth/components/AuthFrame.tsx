@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { isMockApi } from '@/shared/api/apiClient';
 import { messages } from '@/shared/i18n/messages';
 import { AppText, Headline } from '@/shared/ui/AppText';
 import { AppLogo } from '@/shared/ui/Icon';
@@ -21,7 +22,16 @@ export function AuthFrame({ tab, children, footer }: Props) {
     <PageLayout
       header={
         <View style={styles.header}>
-          <AppLogo size={56} />
+          <View style={styles.logoRow}>
+            <AppLogo size={56} />
+            {isMockApi ? (
+              <View accessibilityLabel={messages.auth.demoLabel} style={styles.demo}>
+                <AppText variant="caption" tone="inverse" style={styles.demoText}>
+                  {messages.auth.demoTag}
+                </AppText>
+              </View>
+            ) : null}
+          </View>
           <Headline strong={messages.auth.headlineStrong} soft={messages.auth.headlineSoft} />
           <AppText variant="bodyStrong" tone="secondary" style={styles.brand}>
             {messages.app.name.toUpperCase()}
@@ -56,6 +66,14 @@ function Tab({ label, selected, onPress }: { label: string; selected: boolean; o
 
 const styles = StyleSheet.create({
   header: { gap: theme.spacing.lg },
+  logoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  demo: {
+    backgroundColor: theme.colors.warningDot,
+    borderRadius: theme.radius.pill,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+  },
+  demoText: { fontFamily: theme.fonts.extrabold, letterSpacing: 1.5 },
   brand: { letterSpacing: 1 },
   tabs: {
     flexDirection: 'row',

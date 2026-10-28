@@ -7,7 +7,6 @@ import { StyleSheet, type TextInputInstance } from 'react-native';
 import { AuthFrame } from '@/features/auth/components/AuthFrame';
 import { useLogin } from '@/features/auth/hooks/useAuthMutations';
 import { loginSchema, type LoginForm } from '@/features/auth/schemas';
-import { isMockApi } from '@/shared/api/apiClient';
 import { errorMessage, isNetworkError } from '@/shared/api/errors';
 import { messages } from '@/shared/i18n/messages';
 import { AppText } from '@/shared/ui/AppText';
@@ -44,8 +43,6 @@ export default function LoginScreen() {
         <Banner message={errorMessage(error, messages.errors.unexpected)} />
       ) : reset ? (
         <Banner tone="success" message={messages.auth.passwordChanged} />
-      ) : isMockApi ? (
-        <Banner tone="info" message={messages.auth.demoMode} />
       ) : null}
 
       <Controller

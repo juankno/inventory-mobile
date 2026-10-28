@@ -59,7 +59,8 @@ export const messages = {
       'Los datos de tu inventario son de tu negocio: no los vendemos ni los compartimos con terceros. ' +
       'Puedes pedir que eliminemos tu cuenta y tus datos cuando quieras (Ley 1581 de 2012).',
     passwordChanged: 'Tu contraseña se cambió. Ingresa con la nueva.',
-    demoMode: 'Modo demostración: ingresa con cualquier correo y contraseña. Los datos se reinician al cerrar la app.',
+    demoTag: 'DEMO',
+    demoLabel: 'Modo demostración: cualquier correo y contraseña sirven',
   },
   forgotPassword: {
     step: (step: number) => `Paso ${step} de 2`,
