@@ -122,7 +122,9 @@ export function PageLayout({ left, title, right, header, children, footer, refre
           >
             <View ref={contentRef} collapsable={false} style={styles.scrollContent}>
               {header ? <View style={styles.header}>{header}</View> : null}
-              <View style={[styles.sheet, !footer && styles.sheetUntilBottom]}>{children}</View>
+              <View style={[styles.sheet, !footer && { paddingBottom: insets.bottom + theme.spacing.xxl }]}>
+                {children}
+              </View>
             </View>
           </ScrollView>
           {footer ? <View style={[styles.footer, { paddingBottom: bottomPadding }]}>{footer}</View> : null}
@@ -156,8 +158,6 @@ const styles = StyleSheet.create({
     paddingTop: theme.spacing.xl,
     gap: theme.spacing.lg,
   },
-  // Sin pie, la hoja blanca debe llegar hasta abajo aunque el contenido sea corto.
-  sheetUntilBottom: { paddingBottom: theme.spacing.xxl },
   footer: {
     backgroundColor: theme.colors.surface,
     paddingHorizontal: theme.spacing.lg,
