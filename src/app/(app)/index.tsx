@@ -1,13 +1,18 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   FlatList,
+  Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
   TextInput,
+  useWindowDimensions,
   View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   type TextInputInstance,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -40,6 +45,9 @@ const normalize = (text: string) =>
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase();
 
+// Pantallas que hay que bajar para mostrar el botón "Volver arriba".
+const BACK_TO_TOP_SCREENS = 1.5;
+
 type StatusFilter = 'all' | Exclude<StockStatus, 'ok'>;
 
 // Coincide por nombre o por código (de barras o INV-), para encontrar un
@@ -63,6 +71,27 @@ export default function InventoryScreen() {
   const [menuOpen, setMenuOpen] = useState(false);
   const searchRef = useRef<TextInputInstance>(null);
   useConfirmExit();
+
+  // Botón "Volver arriba": aparece después de bajar pantalla y media.
+  const listRef = useRef<FlatList<Product>>(null);
+  const { height } = useWindowDimensions();
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [backToTopProgress] = useState(() => new Animated.Value(0));
+
+  const onListScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const shouldShow = event.nativeEvent.contentOffset.y > height * BACK_TO_TOP_SCREENS;
+    if (shouldShow !== showBackToTop) setShowBackToTop(shouldShow);
+  };
+
+  useEffect(() => {
+    Animated.timing(backToTopProgress, {
+      toValue: showBackToTop ? 1 : 0,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [showBackToTop, backToTopProgress]);
+
+  const scrollToTop = () => listRef.current?.scrollToOffset({ offset: 0, animated: true });
 
   useEffect(() => {
     if (focusSearch) searchRef.current?.focus();
@@ -217,9 +246,19 @@ export default function InventoryScreen() {
 
       <View style={styles.sheet}>
         <FlatList
+          ref={listRef}
           data={visible}
           keyExtractor={(product) => product.id}
           renderItem={({ item }) => <ProductRow product={item} />}
+          onScroll={onListScroll}
+          scrollEventThrottle={100}
+          // Listas largas: se dibujan pocas filas por tanda y, en Android, se
+          // liberan las que salen de la pantalla. No se usa getItemLayout porque
+          // las filas crecen con la letra grande del sistema.
+          initialNumToRender={12}
+          maxToRenderPerBatch={12}
+          windowSize={9}
+          removeClippedSubviews={Platform.OS === 'android'}
           ListHeaderComponent={header}
           ListEmptyComponent={empty ?? undefined}
           contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 120 }]}
@@ -231,6 +270,29 @@ export default function InventoryScreen() {
           }
         />
       </View>
+
+      <Animated.View
+        pointerEvents={showBackToTop ? 'auto' : 'none'}
+        style={[
+          styles.backToTop,
+          {
+            bottom: Math.max(insets.bottom, theme.spacing.md) + theme.spacing.sm + 64 + theme.spacing.md,
+            opacity: backToTopProgress,
+            transform: [{ scale: backToTopProgress.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }],
+          },
+        ]}
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t.backToTop}
+          accessibilityElementsHidden={!showBackToTop}
+          importantForAccessibility={showBackToTop ? 'auto' : 'no-hide-descendants'}
+          onPress={scrollToTop}
+          style={({ pressed }) => [styles.backToTopButton, pressed && styles.pressed]}
+        >
+          <Icon name="arrowUp" />
+        </Pressable>
+      </Animated.View>
 
       <View style={[styles.actions, { bottom: Math.max(insets.bottom, theme.spacing.md) + theme.spacing.sm }]}>
         <Pressable
@@ -289,7 +351,8 @@ function Separator() {
   return <View style={styles.separator} />;
 }
 
-function ProductRow({ product }: { product: Product }) {
+// Solo se vuelve a dibujar si cambia su producto (listas largas).
+const ProductRow = memo(function ProductRow({ product }: { product: Product }) {
   const status = stockStatus(product);
   const quantity = formatQuantity(product.stock, product.unit);
   return (
@@ -317,7 +380,7 @@ function ProductRow({ product }: { product: Product }) {
       )}
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.background },
@@ -388,6 +451,22 @@ const styles = StyleSheet.create({
   },
   loading: { marginTop: theme.spacing.xxl },
   empty: { gap: theme.spacing.sm, paddingVertical: theme.spacing.lg },
+  backToTop: { position: 'absolute', right: theme.spacing.lg },
+  backToTopButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+  },
   actions: {
     position: 'absolute',
     left: theme.spacing.lg,

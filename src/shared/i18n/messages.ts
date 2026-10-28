@@ -89,6 +89,7 @@ export const messages = {
     sortDesc: 'De la Z a la A',
     scan: 'Escanear código',
     add: 'Agregar producto sin código',
+    backToTop: 'Volver arriba',
     menu: 'Menú',
     alerts: (count: number) => `Alertas: ${count} productos por reponer`,
     emptyTitle: 'Aún no tienes productos',

@@ -26,6 +26,7 @@ const icons = {
   close: [{ d: 'M18 6 6 18' }, { d: 'm6 6 12 12' }],
   plus: [{ d: 'M5 12h14' }, { d: 'M12 5v14' }],
   minus: [{ d: 'M5 12h14' }],
+  arrowUp: [{ d: 'm5 12 7-7 7 7' }, { d: 'M12 19V5' }],
   arrowUpRight: [{ d: 'M7 7h10v10' }, { d: 'M7 17 17 7' }],
   alert: [{ circle: [12, 12, 10] }, { d: 'M12 8v4' }, { d: 'M12 16h.01' }],
   eye: [
