@@ -39,7 +39,10 @@ function RootNavigator() {
   return (
     <>
       <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.background } }}>
+      {/* Entrar o cerrar sesión cambia de sección con un fundido. */}
+      <Stack
+        screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: theme.colors.background } }}
+      >
         {/* Sin redirectTo el router busca "/" dentro de (auth), que no existe, y muestra "Unmatched route". */}
         <Stack.Protected guard={!!session} redirectTo="/login">
           <Stack.Screen name="(app)" />
