@@ -13,11 +13,13 @@ type Props = {
   tab: 'login' | 'register';
   children: ReactNode;
   footer: ReactNode;
+  // Mientras se envía el formulario no se puede cambiar de pestaña.
+  busy?: boolean;
 };
 
 // Encabezado de marca y pestañas Ingresar / Crear cuenta (diseño "Inicio de sesión y registro").
 // Cada pestaña es su propia ruta; al cambiar se reemplaza la pantalla.
-export function AuthFrame({ tab, children, footer }: Props) {
+export function AuthFrame({ tab, children, footer, busy = false }: Props) {
   return (
     <PageLayout
       header={
@@ -41,21 +43,34 @@ export function AuthFrame({ tab, children, footer }: Props) {
       footer={footer}
     >
       <View accessibilityRole="tablist" style={styles.tabs}>
-        <Tab label={messages.auth.tabLogin} selected={tab === 'login'} onPress={() => router.replace('/login')} />
-        <Tab label={messages.auth.tabRegister} selected={tab === 'register'} onPress={() => router.replace('/register')} />
+        <Tab
+          label={messages.auth.tabLogin}
+          selected={tab === 'login'}
+          disabled={busy}
+          onPress={() => router.replace('/login')}
+        />
+        <Tab
+          label={messages.auth.tabRegister}
+          selected={tab === 'register'}
+          disabled={busy}
+          onPress={() => router.replace('/register')}
+        />
       </View>
       {children}
     </PageLayout>
   );
 }
 
-function Tab({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+type TabProps = { label: string; selected: boolean; disabled: boolean; onPress: () => void };
+
+function Tab({ label, selected, disabled, onPress }: TabProps) {
   return (
     <Pressable
       accessibilityRole="tab"
-      accessibilityState={{ selected }}
+      accessibilityState={{ selected, disabled }}
       onPress={selected ? undefined : onPress}
-      style={[styles.tab, selected && styles.tabSelected]}
+      disabled={disabled}
+      style={[styles.tab, selected && styles.tabSelected, disabled && !selected && styles.tabDisabled]}
     >
       <AppText variant="lead" style={selected ? styles.tabTextSelected : styles.tabText}>
         {label}
@@ -83,6 +98,7 @@ const styles = StyleSheet.create({
   },
   tab: { flex: 1, minHeight: 48, borderRadius: theme.radius.pill, alignItems: 'center', justifyContent: 'center' },
   tabSelected: { backgroundColor: theme.colors.ink },
+  tabDisabled: { opacity: 0.4 },
   tabText: { fontFamily: theme.fonts.semibold },
   tabTextSelected: { fontFamily: theme.fonts.bold, color: theme.colors.onInk },
 });

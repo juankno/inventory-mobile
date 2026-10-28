@@ -25,17 +25,21 @@ export default function LoginScreen() {
     defaultValues: { email: '', password: '' },
   });
 
-  const onSubmit = handleSubmit((form) => loginMutation.mutate(form));
+  const busy = loginMutation.isPending;
+  const onSubmit = handleSubmit((form) => {
+    if (!busy) loginMutation.mutate(form);
+  });
   const error = loginMutation.error;
 
   return (
     <AuthFrame
       tab="login"
+      busy={busy}
       footer={
         <Button
           label={isNetworkError(error) ? messages.auth.tryAgain : messages.auth.login}
           onPress={onSubmit}
-          loading={loginMutation.isPending}
+          loading={busy}
         />
       }
     >
@@ -61,6 +65,7 @@ export default function LoginScreen() {
             autoComplete="email"
             textContentType="emailAddress"
             returnKeyType="next"
+            submitBehavior="submit"
             onSubmitEditing={() => passwordRef.current?.focus()}
           />
         )}
@@ -85,7 +90,7 @@ export default function LoginScreen() {
           />
         )}
       />
-      <Link href="/forgot-password" style={styles.link}>
+      <Link href="/forgot-password" disabled={busy} style={[styles.link, busy && styles.disabled]}>
         <AppText variant="bodyStrong" style={styles.linkText}>
           {messages.auth.forgot}
         </AppText>
@@ -96,5 +101,6 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   link: { alignSelf: 'flex-start', paddingVertical: theme.spacing.sm },
+  disabled: { opacity: 0.4 },
   linkText: { textDecorationLine: 'underline', fontSize: theme.fontSize.lead },
 });
