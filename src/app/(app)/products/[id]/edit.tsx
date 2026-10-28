@@ -23,6 +23,8 @@ import { Icon } from '@/shared/ui/Icon';
 import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { theme } from '@/shared/ui/theme';
+import { useToast } from '@/shared/ui/Toast';
+import { useDiscardGuard } from '@/shared/ui/useDiscardGuard';
 
 const t = messages.productForm;
 
@@ -41,6 +43,7 @@ export default function EditProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const product = useProduct(id);
   const updateMutation = useUpdateProduct(id);
+  const showToast = useToast();
   const { control, handleSubmit, formState, reset } = useForm<ProductForm>({
     resolver: zodResolver(productFormSchema),
     defaultValues: product.data ? toForm(product.data) : undefined,
@@ -50,6 +53,8 @@ export default function EditProductScreen() {
   useEffect(() => {
     if (product.data && !formState.isDirty) reset(toForm(product.data));
   }, [product.data, formState.isDirty, reset]);
+
+  const { allowLeave, discardSheet } = useDiscardGuard(formState.isDirty && !updateMutation.isSuccess);
 
   const close = <IconButton icon="close" accessibilityLabel={messages.common.close} onPress={() => router.back()} />;
 
@@ -76,7 +81,13 @@ export default function EditProductScreen() {
         minStock: parseOptionalQuantity(form.minStock),
         salePrice: parsePrice(form.salePrice),
       },
-      { onSuccess: () => router.back() },
+      {
+        onSuccess: () => {
+          allowLeave();
+          showToast({ message: messages.toast.productUpdated });
+          router.back();
+        },
+      },
     ),
   );
 
@@ -120,6 +131,7 @@ export default function EditProductScreen() {
           </AppText>
         </Pressable>
       </View>
+      {discardSheet}
     </PageLayout>
   );
 }

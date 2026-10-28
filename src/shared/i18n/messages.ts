@@ -287,4 +287,10 @@ export const messages = {
     productUpdated: 'Cambios guardados',
     productDeleted: 'Producto eliminado',
   },
+  discard: {
+    title: '¿Descartar los cambios?',
+    body: 'Lo que escribiste en este formulario se perderá.',
+    confirm: 'Descartar',
+    keepEditing: 'Seguir editando',
+  },
 } as const;
