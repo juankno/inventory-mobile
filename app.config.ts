@@ -2,7 +2,7 @@ import type { ExpoConfig } from 'expo/config';
 
 // Configuración de Expo. La URL de la API se lee de EXPO_PUBLIC_API_URL (G-06).
 const config: ExpoConfig = {
-  name: 'Inventario',
+  name: 'Surtido',
   slug: 'inventory-mobile',
   scheme: 'inventory',
   version: '0.1.0',
@@ -12,7 +12,7 @@ const config: ExpoConfig = {
   android: {
     package: 'co.edu.poligran.inventory',
     adaptiveIcon: {
-      backgroundColor: '#E6F4FE',
+      backgroundColor: '#1F1F1E',
       foregroundImage: './assets/android-icon-foreground.png',
       backgroundImage: './assets/android-icon-background.png',
       monochromeImage: './assets/android-icon-monochrome.png',
@@ -22,6 +22,15 @@ const config: ExpoConfig = {
   plugins: [
     'expo-router',
     'expo-secure-store',
+    'expo-font',
+    [
+      'expo-splash-screen',
+      {
+        image: './assets/splash-icon.png',
+        imageWidth: 120,
+        backgroundColor: '#F1F0EC',
+      },
+    ],
     [
       'expo-camera',
       {
