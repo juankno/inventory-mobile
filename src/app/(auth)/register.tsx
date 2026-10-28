@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, type TextInputInstance } from 'react-native';
 
 import { AuthFrame } from '@/features/auth/components/AuthFrame';
 import { useRegister } from '@/features/auth/hooks/useAuthMutations';
@@ -20,23 +20,30 @@ import { theme } from '@/shared/ui/theme';
 export default function RegisterScreen() {
   const registerMutation = useRegister();
   const [policyOpen, setPolicyOpen] = useState(false);
+  const ownerRef = useRef<TextInputInstance>(null);
+  const emailRef = useRef<TextInputInstance>(null);
+  const passwordRef = useRef<TextInputInstance>(null);
   const { control, handleSubmit, formState } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
     defaultValues: { businessName: '', ownerName: '', email: '', password: '', dataPolicyAccepted: false },
   });
 
-  const onSubmit = handleSubmit((form) => registerMutation.mutate({ ...form, dataPolicyAccepted: true }));
+  const busy = registerMutation.isPending;
+  const onSubmit = handleSubmit((form) => {
+    if (!busy) registerMutation.mutate({ ...form, dataPolicyAccepted: true });
+  });
   const error = registerMutation.error;
   const { errors } = formState;
 
   return (
     <AuthFrame
       tab="register"
+      busy={busy}
       footer={
         <Button
           label={isNetworkError(error) ? messages.auth.tryAgain : messages.auth.register}
           onPress={onSubmit}
-          loading={registerMutation.isPending}
+          loading={busy}
         />
       }
     >
@@ -55,6 +62,9 @@ export default function RegisterScreen() {
             error={errors.businessName?.message}
             autoCapitalize="words"
             maxLength={80}
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => ownerRef.current?.focus()}
           />
         )}
       />
@@ -63,6 +73,7 @@ export default function RegisterScreen() {
         name="ownerName"
         render={({ field }) => (
           <TextField
+            ref={ownerRef}
             label={messages.auth.ownerName}
             placeholder={messages.auth.ownerPlaceholder}
             value={field.value}
@@ -72,6 +83,9 @@ export default function RegisterScreen() {
             autoCapitalize="words"
             autoComplete="name"
             maxLength={80}
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => emailRef.current?.focus()}
           />
         )}
       />
@@ -80,6 +94,7 @@ export default function RegisterScreen() {
         name="email"
         render={({ field }) => (
           <TextField
+            ref={emailRef}
             label={messages.auth.email}
             placeholder={messages.auth.emailPlaceholder}
             value={field.value}
@@ -89,6 +104,9 @@ export default function RegisterScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => passwordRef.current?.focus()}
           />
         )}
       />
@@ -97,6 +115,7 @@ export default function RegisterScreen() {
         name="password"
         render={({ field }) => (
           <TextField
+            ref={passwordRef}
             label={messages.auth.password}
             value={field.value}
             onChangeText={field.onChange}
@@ -107,6 +126,9 @@ export default function RegisterScreen() {
             autoCapitalize="none"
             autoComplete="new-password"
             textContentType="newPassword"
+            // Último campo: cierra el teclado para dejar a la vista la política de datos.
+            returnKeyType="done"
+            submitBehavior="blurAndSubmit"
           />
         )}
       />

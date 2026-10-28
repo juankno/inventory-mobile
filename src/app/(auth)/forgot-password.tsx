@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, type TextInputInstance } from 'react-native';
 
 import {
   useConfirmPasswordReset,
@@ -95,6 +95,8 @@ function RequestStep({ onSent, onBack }: { onSent: (email: string) => void; onBa
 function ConfirmStep({ email, onBack }: { email: string; onBack: () => void }) {
   const confirmMutation = useConfirmPasswordReset();
   const resendMutation = useRequestPasswordReset();
+  const newPasswordRef = useRef<TextInputInstance>(null);
+  const confirmRef = useRef<TextInputInstance>(null);
   const { control, handleSubmit, formState } = useForm<ConfirmResetForm>({
     resolver: zodResolver(confirmResetSchema),
     defaultValues: { code: '', newPassword: '', confirmPassword: '' },
@@ -147,6 +149,9 @@ function ConfirmStep({ email, onBack }: { email: string; onBack: () => void }) {
             textContentType="oneTimeCode"
             maxLength={6}
             style={styles.code}
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => newPasswordRef.current?.focus()}
           />
         )}
       />
@@ -155,6 +160,7 @@ function ConfirmStep({ email, onBack }: { email: string; onBack: () => void }) {
         name="newPassword"
         render={({ field }) => (
           <TextField
+            ref={newPasswordRef}
             label={t.newPassword}
             value={field.value}
             onChangeText={field.onChange}
@@ -165,6 +171,9 @@ function ConfirmStep({ email, onBack }: { email: string; onBack: () => void }) {
             autoCapitalize="none"
             autoComplete="new-password"
             textContentType="newPassword"
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => confirmRef.current?.focus()}
           />
         )}
       />
@@ -173,6 +182,7 @@ function ConfirmStep({ email, onBack }: { email: string; onBack: () => void }) {
         name="confirmPassword"
         render={({ field }) => (
           <TextField
+            ref={confirmRef}
             label={t.confirmPassword}
             value={field.value}
             onChangeText={field.onChange}
@@ -181,6 +191,8 @@ function ConfirmStep({ email, onBack }: { email: string; onBack: () => void }) {
             secureToggle
             autoCapitalize="none"
             autoComplete="new-password"
+            returnKeyType="go"
+            onSubmitEditing={() => void onSubmit()}
           />
         )}
       />
