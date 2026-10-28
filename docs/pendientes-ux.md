@@ -11,6 +11,9 @@ Mejoras que salieron de revisar la app pensando en un tendero que la usa en el m
   - cada producto adicional queda en escanear + 1 toque.
 - **Vibración al leer un código** y de advertencia si el código no es del negocio (`expo-haptics`).
 - **Confirmar antes de descartar** lo escrito en "Nuevo producto" y "Editar producto".
+- **Filtros del buscador:**
+  - filtro por estado bajo el buscador (*Todos · Por agotarse · Agotados*), con el número de cada uno;
+  - el buscador también encuentra productos por código de barras o `INV-`.
 
 ## Pendientes
 
@@ -23,7 +26,18 @@ En una tienda de barrio la señal falla, y hoy sin internet no se puede registra
 
 Conviene hacerlo cuando el backend exista, para probarlo con datos reales. Hay que definir qué pasa si al reenviar una salida ya no alcanza la existencia.
 
-### 2. Ver un producto escaneándolo (impacto medio)
+### 2. Más opciones del buscador (impacto bajo)
+
+El filtro por estado y la búsqueda por código ya están. Una tienda de barrio maneja decenas o unos cientos de productos, y cada opción suma complejidad para un usuario poco técnico (afecta el SUS), así que lo que queda es opcional:
+
+- **Ordenar por existencia:** "Menos existencias primero", junto a A-Z. Si se agrega, el texto que alterna el orden pasaría a ser un menú pequeño.
+
+Por ahora no se recomiendan:
+
+- **Por unidad o por precio:** no responden ninguna pregunta del día a día de la tienda.
+- **Categorías:** el modelo de datos no las tiene. Agregarlas implica backend, formulario y migración; solo valen la pena si el inventario crece mucho.
+
+### 3. Ver un producto escaneándolo (impacto medio)
 
 Desde el inicio, escanear siempre lleva a registrar un movimiento, pero a veces el tendero solo quiere saber cuánto le queda. Hay dos opciones:
 
@@ -32,12 +46,11 @@ Desde el inicio, escanear siempre lleva a registrar un movimiento, pero a veces 
 
 Esto también resuelve la parte de "buscar por escaneo" de RF-14.
 
-### 3. Detalles de uso diario (impacto bajo a medio)
+### 4. Detalles de uso diario (impacto bajo a medio)
 
 - **Precio con separadores:** que se vea "12.500" mientras se escribe, en lugar de "12500".
 - **Cantidades a granel:** atajos de ½ kg, 1 kg y 2 kg, porque los botones − y + van de 1 en 1.
 - **Inventario vacío con acciones:** botones para escanear o agregar un producto en el mensaje "Aún no tienes productos".
-- **Filtros en la lista:** ver solo agotados o por agotarse sin ir a Alertas.
 - **Carga con tarjetas de esqueleto** en lugar del indicador girando.
 - **Volver a ver la presentación:** una opción "Cómo usar la app" en el menú ☰.
 - **Deshacer con un endpoint propio:** hoy "Deshacer" registra un ajuste. Si el ERS pide que el historial no muestre la corrección, el backend necesitaría anular movimientos.

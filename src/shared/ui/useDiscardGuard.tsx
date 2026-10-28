@@ -11,12 +11,20 @@ import { Button } from './Button';
 // pantalla y allowLeave para salir sin preguntar después de guardar.
 export function useDiscardGuard(hasChanges: boolean) {
   const [leave, setLeave] = useState<(() => void) | null>(null);
-  const allowLeave = usePreventRemove(hasChanges, ({ repeat }) => setLeave(() => repeat));
+  // Al descartar o guardar se marca la salida como permitida en el mismo
+  // manejador, para que preventRemove pase a false junto con la protección.
+  const [released, setReleased] = useState(false);
+  const disablePrevention = usePreventRemove(hasChanges && !released, ({ repeat }) => setLeave(() => repeat));
+
+  const allowLeave = () => {
+    setReleased(true);
+    disablePrevention();
+  };
 
   const discard = () => {
     const repeat = leave;
     setLeave(null);
-    allowLeave();
+    setReleased(true);
     repeat?.();
   };
 
