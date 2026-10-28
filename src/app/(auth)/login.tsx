@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { StyleSheet, type TextInputInstance } from 'react-native';
+import { Pressable, StyleSheet, type TextInputInstance } from 'react-native';
 
 import { AuthFrame } from '@/features/auth/components/AuthFrame';
 import { useLogin } from '@/features/auth/hooks/useAuthMutations';
@@ -90,17 +90,24 @@ export default function LoginScreen() {
           />
         )}
       />
-      <Link href="/forgot-password" disabled={busy} style={[styles.link, busy && styles.disabled]}>
-        <AppText variant="bodyStrong" style={styles.linkText}>
-          {messages.auth.forgot}
-        </AppText>
+      {/* Dentro de <Link asChild> el estilo debe ser un solo objeto, no un arreglo. */}
+      <Link href="/forgot-password" asChild>
+        <Pressable
+          accessibilityRole="link"
+          disabled={busy}
+          style={StyleSheet.flatten([styles.link, busy && styles.disabled])}
+        >
+          <AppText variant="bodyStrong" style={styles.linkText}>
+            {messages.auth.forgot}
+          </AppText>
+        </Pressable>
       </Link>
     </AuthFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  link: { alignSelf: 'flex-start', paddingVertical: theme.spacing.sm },
+  link: { alignSelf: 'flex-start', minHeight: theme.minTouchSize, justifyContent: 'center' },
   disabled: { opacity: 0.4 },
   linkText: { textDecorationLine: 'underline', fontSize: theme.fontSize.lead },
 });

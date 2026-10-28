@@ -59,7 +59,7 @@ export default function OnboardingScreen() {
           {t.step(index + 1, slides.length)}
         </AppText>
         {isLast ? null : (
-          <Pressable accessibilityRole="button" onPress={() => void finish()} hitSlop={12} style={styles.skip}>
+          <Pressable accessibilityRole="button" onPress={() => void finish()} style={styles.skip}>
             <AppText variant="bodyStrong">{t.skip}</AppText>
           </Pressable>
         )}
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.xl,
     minHeight: 48,
   },
-  skip: { paddingVertical: theme.spacing.sm, paddingHorizontal: theme.spacing.xs },
+  skip: { minHeight: theme.minTouchSize, minWidth: theme.minTouchSize, alignItems: 'center', justifyContent: 'center' },
   slide: { flex: 1 },
   illustration: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: theme.spacing.xl },
   text: {

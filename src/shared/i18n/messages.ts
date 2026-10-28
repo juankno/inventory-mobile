@@ -53,6 +53,7 @@ export const messages = {
     tryAgain: 'Intentar de nuevo',
     policyAccept: 'Acepto la ',
     policyLink: 'política de tratamiento de datos',
+    policyRead: 'Leer la política',
     policyTitle: 'Tratamiento de datos personales',
     policyBody:
       'Usamos tu nombre y tu correo solo para crear tu cuenta, permitirte ingresar y recuperar tu contraseña. ' +

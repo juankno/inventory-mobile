@@ -47,5 +47,5 @@ const styles = StyleSheet.create({
   body: { fontFamily: theme.fonts.regular, fontSize: theme.fontSize.body, lineHeight: 23 },
   bodyStrong: { fontFamily: theme.fonts.semibold, fontSize: theme.fontSize.body, lineHeight: 23 },
   label: { fontFamily: theme.fonts.semibold, fontSize: theme.fontSize.label, lineHeight: 22 },
-  caption: { fontFamily: theme.fonts.regular, fontSize: theme.fontSize.caption, lineHeight: 20 },
+  caption: { fontFamily: theme.fonts.regular, fontSize: theme.fontSize.caption, lineHeight: 22 },
 });
