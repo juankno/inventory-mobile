@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import { OnboardingProvider, useOnboarding } from '@/features/onboarding/OnboardingProvider';
 import { SessionProvider, useSession } from '@/shared/session/SessionProvider';
 import { theme } from '@/shared/ui/theme';
+import { ToastProvider } from '@/shared/ui/Toast';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -73,7 +74,9 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
         <OnboardingProvider>
-          <RootNavigator />
+          <ToastProvider>
+            <RootNavigator />
+          </ToastProvider>
         </OnboardingProvider>
       </SessionProvider>
     </QueryClientProvider>

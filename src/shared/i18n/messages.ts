@@ -277,4 +277,23 @@ export const messages = {
       lowDetail: 'Quedan 3 · mínimo 4',
     },
   },
+  toast: {
+    registered: { INBOUND: 'Entrada registrada', OUTBOUND: 'Salida registrada', ADJUSTMENT: 'Ajuste registrado' },
+    remaining: (registered: string, quantity: string) => `${registered} · quedan ${quantity}`,
+    undo: 'Deshacer',
+    undone: 'Movimiento deshecho',
+    undoFailed: 'No pudimos deshacer el movimiento. Revisa el historial del producto.',
+    productCreated: 'Producto guardado',
+    productUpdated: 'Cambios guardados',
+    productDeleted: 'Producto eliminado',
+  },
+  discard: {
+    title: '¿Descartar los cambios?',
+    body: 'Lo que escribiste en este formulario se perderá.',
+    confirm: 'Descartar',
+    keepEditing: 'Seguir editando',
+  },
+  exit: {
+    pressAgain: 'Presiona atrás otra vez para salir',
+  },
 } as const;

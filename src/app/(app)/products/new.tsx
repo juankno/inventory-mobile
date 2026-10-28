@@ -18,6 +18,8 @@ import { Button } from '@/shared/ui/Button';
 import { Banner, Tag } from '@/shared/ui/Feedback';
 import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
+import { useToast } from '@/shared/ui/Toast';
+import { useDiscardGuard } from '@/shared/ui/useDiscardGuard';
 
 const t = messages.productForm;
 
@@ -27,6 +29,7 @@ export default function NewProductScreen() {
   const { code } = useLocalSearchParams<{ code?: string }>();
   const hasBarcode = !!code;
   const createMutation = useCreateProduct();
+  const showToast = useToast();
   const { control, handleSubmit, formState } = useForm<ProductForm>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
@@ -38,6 +41,8 @@ export default function NewProductScreen() {
       salePrice: '',
     },
   });
+
+  const { allowLeave, discardSheet } = useDiscardGuard(formState.isDirty && !createMutation.isSuccess);
 
   const onSubmit = handleSubmit((form) =>
     createMutation.mutate(
@@ -51,10 +56,15 @@ export default function NewProductScreen() {
         salePrice: parsePrice(form.salePrice),
       },
       {
-        onSuccess: (product) =>
-          product.codeType === 'INTERNAL'
-            ? router.replace({ pathname: '/products/[id]/qr', params: { id: product.id, created: '1' } })
-            : router.replace({ pathname: '/products/[id]', params: { id: product.id } }),
+        onSuccess: (product) => {
+          allowLeave();
+          showToast({ message: messages.toast.productCreated });
+          if (product.codeType === 'INTERNAL') {
+            router.replace({ pathname: '/products/[id]/qr', params: { id: product.id, created: '1' } });
+          } else {
+            router.replace({ pathname: '/products/[id]', params: { id: product.id } });
+          }
+        },
       },
     ),
   );
@@ -88,6 +98,7 @@ export default function NewProductScreen() {
         mode="create"
         namePlaceholder={hasBarcode ? t.namePlaceholderCode : t.namePlaceholderBulk}
       />
+      {discardSheet}
     </PageLayout>
   );
 }

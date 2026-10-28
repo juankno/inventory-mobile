@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { isMockApi } from '@/shared/api/apiClient';
+import { useConfirmExit } from '@/shared/device/useConfirmExit';
 import { messages } from '@/shared/i18n/messages';
 import { AppText, Headline } from '@/shared/ui/AppText';
 import { AppLogo } from '@/shared/ui/Icon';
@@ -20,6 +21,8 @@ type Props = {
 // Encabezado de marca y pestañas Ingresar / Crear cuenta (diseño "Inicio de sesión y registro").
 // Cada pestaña es su propia ruta; al cambiar se reemplaza la pantalla.
 export function AuthFrame({ tab, children, footer, busy = false }: Props) {
+  // Login y registro son la primera pantalla sin sesión: atrás saldría de la app.
+  useConfirmExit();
   return (
     <PageLayout
       header={

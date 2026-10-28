@@ -18,6 +18,7 @@ import {
   WelcomeIllustration,
 } from '@/features/onboarding/components/Illustrations';
 import { useOnboarding } from '@/features/onboarding/OnboardingProvider';
+import { useConfirmExit } from '@/shared/device/useConfirmExit';
 import { messages } from '@/shared/i18n/messages';
 import { AppText, Headline } from '@/shared/ui/AppText';
 import { Button } from '@/shared/ui/Button';
@@ -39,6 +40,7 @@ export default function OnboardingScreen() {
   const [scrollX] = useState(() => new Animated.Value(0));
   const [index, setIndex] = useState(0);
   const isLast = index === slides.length - 1;
+  useConfirmExit();
 
   const onMomentumEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) =>
     setIndex(Math.round(event.nativeEvent.contentOffset.x / width));
