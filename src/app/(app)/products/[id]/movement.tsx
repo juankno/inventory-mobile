@@ -3,10 +3,12 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import { useCreateMovement } from '@/features/movements/hooks/useMovements';
+import { useCreateMovement, useUndoMovement } from '@/features/movements/hooks/useMovements';
+import { getLastChoice, rememberChoice } from '@/features/movements/lastChoice';
 import { movementQuantitySchema, resultingStock } from '@/features/movements/schemas';
 import { useProduct } from '@/features/products/hooks/useProducts';
 import { errorMessage, hasErrorCode } from '@/shared/api/errors';
+import { hapticSuccess } from '@/shared/device/haptics';
 import type { MovementType, OutboundReason } from '@/shared/api/types';
 import { allowsDecimals, formatNumber, unitWord } from '@/shared/format/units';
 import { messages } from '@/shared/i18n/messages';
@@ -19,6 +21,7 @@ import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { QuantityStepper } from '@/shared/ui/QuantityStepper';
 import { theme } from '@/shared/ui/theme';
+import { useToast } from '@/shared/ui/Toast';
 
 const t = messages.movement;
 
@@ -37,14 +40,26 @@ const reasonOptions = [
 const isMovementType = (value: string | undefined): value is MovementType =>
   typeOptions.some((option) => option.value === value);
 
+// Elección inicial: el tipo pedido por la pantalla anterior o, si viene del
+// escáner, el último tipo y motivo usados (venta continua, RU-01).
+function initialChoice(typeParam: string | undefined, scanned: boolean) {
+  if (isMovementType(typeParam)) return { type: typeParam, reason: null };
+  return (scanned ? getLastChoice() : null) ?? { type: null, reason: null };
+}
+
 // Entrada, salida o ajuste (RF-11 a RF-13, RU-01).
-// ?type= preselecciona el tipo (desde el detalle o las alertas); ?scanned=1 indica que viene del escáner.
+// ?type= preselecciona el tipo (desde el detalle o las alertas); ?scanned=1 indica que viene del escáner,
+// y al registrar se vuelve a él para seguir con el siguiente producto.
 export default function MovementScreen() {
   const params = useLocalSearchParams<{ id: string; type?: string; scanned?: string }>();
+  const scanned = params.scanned === '1';
   const product = useProduct(params.id);
   const createMutation = useCreateMovement();
-  const [type, setType] = useState<MovementType | null>(isMovementType(params.type) ? params.type : null);
-  const [reason, setReason] = useState<OutboundReason | null>(null);
+  const undoMovement = useUndoMovement();
+  const showToast = useToast();
+  const [initial] = useState(() => initialChoice(params.type, scanned));
+  const [type, setType] = useState<MovementType | null>(initial.type);
+  const [reason, setReason] = useState<OutboundReason | null>(initial.reason);
   const [quantity, setQuantity] = useState('1');
   const [helpOpen, setHelpOpen] = useState(false);
   // La misma clave en cada reintento evita registrar dos veces el movimiento (RU-01).
@@ -94,9 +109,29 @@ export default function MovementScreen() {
 
   const submit = () => {
     if (!type || value === null || !canSubmit) return;
+    const previousStock = item.stock;
+    const movementReason = type === 'OUTBOUND' ? reason : null;
     createMutation.mutate(
-      { productId: item.id, type, reason: type === 'OUTBOUND' ? reason : null, quantity: value, idempotencyKey },
-      { onSuccess: () => router.back() },
+      { productId: item.id, type, reason: movementReason, quantity: value, idempotencyKey },
+      {
+        onSuccess: (movement) => {
+          hapticSuccess();
+          if (scanned) rememberChoice({ type, reason: movementReason });
+          const remaining = `${formatNumber(movement.resultingStock)} ${unitWord(movement.resultingStock, item.unit)}`;
+          showToast({
+            message: messages.toast.remaining(messages.toast.registered[type], remaining),
+            action: {
+              label: messages.toast.undo,
+              onPress: () =>
+                undoMovement(movement, previousStock)
+                  .then(() => showToast({ message: messages.toast.undone }))
+                  .catch(() => showToast({ message: messages.toast.undoFailed })),
+            },
+          });
+          if (scanned) router.replace('/scanner');
+          else router.back();
+        },
+      },
     );
   };
 

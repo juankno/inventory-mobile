@@ -13,6 +13,7 @@ import {
   type ScannedCode,
 } from '@/features/scanner/schemas';
 import { errorMessage } from '@/shared/api/errors';
+import { hapticSuccess, hapticWarning } from '@/shared/device/haptics';
 import { messages } from '@/shared/i18n/messages';
 import { AppText, Headline } from '@/shared/ui/AppText';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
@@ -78,7 +79,10 @@ function CameraScanner() {
       setPanel('searching');
       resolver.mutate(scanned, {
         onSuccess: (outcome) => {
-          if (outcome !== 'navigated') setPanel('foreign');
+          if (outcome !== 'navigated') {
+            hapticWarning();
+            setPanel('foreign');
+          }
         },
         onError: (error) => {
           setErrorText(errorMessage(error, messages.errors.unexpected));
@@ -98,6 +102,8 @@ function CameraScanner() {
       const scanned = classifyScan(type, data);
       // Una lectura con dígito de control incorrecto suele ser un error de la cámara: se sigue leyendo.
       if (scanned.kind === 'invalid') return;
+      // Vibra al leer, para saber que tomó el código sin mirar la pantalla.
+      hapticSuccess();
       resolve(scanned);
     },
     [resolve],
