@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, TextInput, View, type TextInputInstance, type Te
 
 import { AppText } from './AppText';
 import { Icon } from './Icon';
+import { useScrollToFocusedInput } from './PageLayout';
 import { theme } from './theme';
 
 type Props = TextInputProps & {
@@ -15,11 +16,12 @@ type Props = TextInputProps & {
 
 // Campo de texto tipo píldora con etiqueta, ayuda y mensaje de error.
 export const TextField = forwardRef<TextInputInstance, Props>(function TextField(
-  { label, error, hint, prefix, secureToggle, secureTextEntry, style, ...props },
+  { label, error, hint, prefix, secureToggle, secureTextEntry, style, onFocus, ...props },
   ref,
 ) {
   const [hidden, setHidden] = useState(true);
   const isSecure = secureToggle ? hidden : secureTextEntry;
+  const scrollToFocused = useScrollToFocusedInput();
 
   return (
     <View style={styles.container}>
@@ -38,6 +40,10 @@ export const TextField = forwardRef<TextInputInstance, Props>(function TextField
           secureTextEntry={isSecure}
           style={[styles.input, style]}
           aria-invalid={!!error}
+          onFocus={(event) => {
+            onFocus?.(event);
+            scrollToFocused?.();
+          }}
           {...props}
         />
         {secureToggle ? (
