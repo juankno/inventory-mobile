@@ -11,6 +11,9 @@ Mejoras que salieron de revisar la app pensando en un tendero que la usa en el m
   - cada producto adicional queda en escanear + 1 toque.
 - **Vibración al leer un código** y de advertencia si el código no es del negocio (`expo-haptics`).
 - **Confirmar antes de descartar** lo escrito en "Nuevo producto" y "Editar producto".
+- **Filtros del buscador:**
+  - filtro por estado bajo el buscador (*Todos · Por agotarse · Agotados*), con el número de cada uno;
+  - el buscador también encuentra productos por código de barras o `INV-`.
 
 ## Pendientes
 
@@ -23,17 +26,11 @@ En una tienda de barrio la señal falla, y hoy sin internet no se puede registra
 
 Conviene hacerlo cuando el backend exista, para probarlo con datos reales. Hay que definir qué pasa si al reenviar una salida ya no alcanza la existencia.
 
-### 2. Filtros del buscador (impacto medio, esfuerzo bajo)
+### 2. Más opciones del buscador (impacto bajo)
 
-Hoy el buscador del inicio filtra por nombre, sin importar tildes, y ordena de la A a la Z o al revés. Una tienda de barrio maneja decenas o unos cientos de productos, y cada filtro suma complejidad para un usuario poco técnico (afecta el SUS), así que conviene agregar pocos:
+El filtro por estado y la búsqueda por código ya están. Una tienda de barrio maneja decenas o unos cientos de productos, y cada opción suma complejidad para un usuario poco técnico (afecta el SUS), así que lo que queda es opcional:
 
-1. **Filtro por estado (recomendado):** tres opciones bajo el buscador, *Todos · Por agotarse · Agotados*, con el número de cada uno.
-   - Responde la pregunta más común, "¿qué tengo que pedir?", sin ir a Alertas.
-   - Se calcula con `stockStatus` sobre la lista que ya está cargada; no necesita backend.
-2. **Buscar también por código (recomendado):** al escribir números o `INV-`, encontrar el producto por su código de barras o de QR.
-   - Sirve cuando la cámara no lee y no se recuerda el nombre exacto.
-   - La lista ya trae el campo `code`.
-3. **Ordenar por existencia (opcional):** "Menos existencias primero", junto a A-Z. Si se agrega, el texto que alterna el orden pasaría a ser un menú pequeño.
+- **Ordenar por existencia:** "Menos existencias primero", junto a A-Z. Si se agrega, el texto que alterna el orden pasaría a ser un menú pequeño.
 
 Por ahora no se recomiendan:
 

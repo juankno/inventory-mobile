@@ -18,7 +18,7 @@ import { errorMessage } from '@/shared/api/errors';
 import type { Product } from '@/shared/api/types';
 import { useConfirmExit } from '@/shared/device/useConfirmExit';
 import { greeting } from '@/shared/format/dates';
-import { stockStatus, stockStatusLabel } from '@/shared/format/stock';
+import { stockStatus, stockStatusLabel, type StockStatus } from '@/shared/format/stock';
 import { formatQuantity } from '@/shared/format/units';
 import { messages } from '@/shared/i18n/messages';
 import { useSession } from '@/shared/session/SessionProvider';
@@ -26,6 +26,7 @@ import { AppText } from '@/shared/ui/AppText';
 import { BottomSheet, SheetAction } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
 import { Banner, StatusBadge } from '@/shared/ui/Feedback';
+import { FilterChips } from '@/shared/ui/FilterChips';
 import { Icon } from '@/shared/ui/Icon';
 import { IconButton } from '@/shared/ui/IconButton';
 import { theme } from '@/shared/ui/theme';
@@ -39,6 +40,16 @@ const normalize = (text: string) =>
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase();
 
+type StatusFilter = 'all' | Exclude<StockStatus, 'ok'>;
+
+// Coincide por nombre o por código (de barras o INV-), para encontrar un
+// producto cuando la cámara no lee y no se recuerda el nombre exacto.
+function matchesQuery(product: Product, term: string): boolean {
+  if (!term) return true;
+  const compactTerm = term.replace(/\s/g, '');
+  return normalize(product.name).includes(term) || product.code.toLowerCase().includes(compactTerm);
+}
+
 // Inventario: lista, búsqueda, contador de alertas y acceso al escáner (RF-03, RF-14, RIU-03).
 export default function InventoryScreen() {
   const insets = useSafeAreaInsets();
@@ -48,6 +59,7 @@ export default function InventoryScreen() {
   const alerts = useAlerts();
   const [query, setQuery] = useState('');
   const [ascending, setAscending] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [menuOpen, setMenuOpen] = useState(false);
   const searchRef = useRef<TextInputInstance>(null);
   useConfirmExit();
@@ -56,11 +68,31 @@ export default function InventoryScreen() {
     if (focusSearch) searchRef.current?.focus();
   }, [focusSearch]);
 
+  // Cuántos productos hay en cada estado, para los números de los filtros.
+  const statusCounts = useMemo(() => {
+    const counts = { all: 0, low: 0, out: 0 };
+    for (const product of products.data ?? []) {
+      counts.all += 1;
+      const status = stockStatus(product);
+      if (status !== 'ok') counts[status] += 1;
+    }
+    return counts;
+  }, [products.data]);
+
+  const filterOptions = [
+    { value: 'all', label: t.filterAll, count: statusCounts.all },
+    { value: 'low', label: t.filterLow, count: statusCounts.low },
+    { value: 'out', label: t.filterOut, count: statusCounts.out },
+  ] as const;
+
   const visible = useMemo(() => {
     const term = normalize(query.trim());
-    const list = (products.data ?? []).filter((product) => normalize(product.name).includes(term));
+    const list = (products.data ?? []).filter(
+      (product) =>
+        matchesQuery(product, term) && (statusFilter === 'all' || stockStatus(product) === statusFilter),
+    );
     return list.sort((a, b) => (ascending ? 1 : -1) * a.name.localeCompare(b.name, 'es'));
-  }, [products.data, query, ascending]);
+  }, [products.data, query, ascending, statusFilter]);
 
   const toRestock = alerts.data?.total ?? 0;
   const firstName = session?.ownerName.split(' ')[0] ?? '';
@@ -117,6 +149,15 @@ export default function InventoryScreen() {
         ) : null}
       </View>
 
+      {products.data && products.data.length > 0 ? (
+        <FilterChips
+          accessibilityLabel={t.filterLabel}
+          options={filterOptions}
+          value={statusFilter}
+          onChange={setStatusFilter}
+        />
+      ) : null}
+
       <View style={styles.listTitle}>
         <AppText variant="heading" accessibilityRole="header">
           {t.listTitle}
@@ -144,6 +185,10 @@ export default function InventoryScreen() {
   ) : query ? (
     <AppText variant="body" tone="secondary" style={styles.empty}>
       {t.noResults(query.trim())}
+    </AppText>
+  ) : statusFilter !== 'all' ? (
+    <AppText variant="body" tone="secondary" style={styles.empty}>
+      {t.noFilterResults[statusFilter]}
     </AppText>
   ) : null;
 
