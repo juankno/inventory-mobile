@@ -7,7 +7,7 @@ import { AppText } from '@/shared/ui/AppText';
 import { ChipGroup } from '@/shared/ui/ChipGroup';
 import { TextField } from '@/shared/ui/TextField';
 import { theme } from '@/shared/ui/theme';
-import type { ProductForm } from '../schemas';
+import { formatPriceInput, type ProductForm } from '../schemas';
 
 type Props = {
   control: Control<ProductForm>;
@@ -60,7 +60,7 @@ export function ProductFormFields({ control, errors, mode, namePlaceholder }: Pr
           prefix="$"
           placeholder="0"
           value={field.value}
-          onChangeText={field.onChange}
+          onChangeText={(text) => field.onChange(formatPriceInput(text))}
           onBlur={field.onBlur}
           error={errors.salePrice?.message}
           keyboardType="number-pad"

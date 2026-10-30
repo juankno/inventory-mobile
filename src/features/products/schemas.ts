@@ -43,6 +43,13 @@ export const productFormSchema = z
 
 export type ProductForm = z.infer<typeof productFormSchema>;
 
+// Mientras se escribe el precio, deja solo dígitos y agrega los puntos de miles:
+// "12500" → "12.500". Los pesos colombianos no llevan decimales.
+export function formatPriceInput(text: string): string {
+  const digits = text.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
 // El precio se escribe en pesos con puntos de miles ("12.500").
 export const parsePrice = (text: string) => (text.trim() === '' ? null : parseQuantity(text.replace(/\./g, '')));
 
