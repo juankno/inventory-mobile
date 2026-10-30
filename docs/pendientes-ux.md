@@ -14,6 +14,9 @@ Mejoras que salieron de revisar la app pensando en un tendero que la usa en el m
 - **Filtros del buscador:**
   - filtro por estado bajo el buscador (*Todos · Por agotarse · Agotados*), con el número de cada uno;
   - el buscador también encuentra productos por código de barras o `INV-`.
+- **Consultar un producto escaneándolo (RF-14):** el botón de escáner en el buscador abre el escáner en modo consulta y lleva al detalle del producto. Al escanear para registrar un movimiento, el enlace "Ver detalle" junto a "Código leído" también lleva al detalle.
+- **Inventario vacío con acciones:** el mensaje "Aún no tienes productos" trae los botones "Escanear un producto" y "Agregar sin código".
+- **Precio con separadores:** se ve "12.500" mientras se escribe.
 
 ## Pendientes
 
@@ -37,20 +40,9 @@ Por ahora no se recomiendan:
 - **Por unidad o por precio:** no responden ninguna pregunta del día a día de la tienda.
 - **Categorías:** el modelo de datos no las tiene. Agregarlas implica backend, formulario y migración; solo valen la pena si el inventario crece mucho.
 
-### 3. Ver un producto escaneándolo (impacto medio)
+### 3. Detalles de uso diario (impacto bajo a medio)
 
-Desde el inicio, escanear siempre lleva a registrar un movimiento, pero a veces el tendero solo quiere saber cuánto le queda. Hay dos opciones:
-
-- un enlace "Ver detalle" en la pantalla del movimiento;
-- un botón de escáner en la barra de búsqueda que abra el detalle.
-
-Esto también resuelve la parte de "buscar por escaneo" de RF-14.
-
-### 4. Detalles de uso diario (impacto bajo a medio)
-
-- **Precio con separadores:** que se vea "12.500" mientras se escribe, en lugar de "12500".
 - **Cantidades a granel:** atajos de ½ kg, 1 kg y 2 kg, porque los botones − y + van de 1 en 1.
-- **Inventario vacío con acciones:** botones para escanear o agregar un producto en el mensaje "Aún no tienes productos".
 - **Carga con tarjetas de esqueleto** en lugar del indicador girando.
 - **Volver a ver la presentación:** una opción "Cómo usar la app" en el menú ☰.
 - **Tablets:** limitar el ancho del contenido (por ejemplo, 600 dp centrados). Hoy campos y botones se estiran a todo el ancho; es de baja prioridad porque la app está pensada para celular.

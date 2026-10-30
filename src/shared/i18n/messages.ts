@@ -90,6 +90,9 @@ export const messages = {
     scan: 'Escanear código',
     add: 'Agregar producto sin código',
     backToTop: 'Volver arriba',
+    searchByScan: 'Buscar un producto escaneando su código',
+    emptyScan: 'Escanear un producto',
+    emptyAdd: 'Agregar sin código',
     menu: 'Menú',
     alerts: (count: number) => `Alertas: ${count} productos por reponer`,
     emptyTitle: 'Aún no tienes productos',
@@ -117,6 +120,8 @@ export const messages = {
   },
   scanner: {
     title: 'Escanear código',
+    lookupTitle: 'Buscar por código',
+    lookupAim: 'Apunta al código del producto\nque quieres consultar',
     aim: 'Apunta al código de barras\no al código QR',
     autoRead: 'Se lee solo, no tienes que tocar nada.',
     noCode: 'Mi producto no tiene código',
@@ -201,6 +206,7 @@ export const messages = {
   movement: {
     title: 'Nuevo movimiento',
     codeRead: 'Código leído',
+    viewDetail: 'Ver detalle',
     inStock: (unit: string) => `${unit} en existencias`,
     question: '¿Qué quieres registrar?',
     inbound: 'Entrada',

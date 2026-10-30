@@ -7,6 +7,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { ProductFormFields } from '@/features/products/components/ProductFormFields';
 import { useProduct, useUpdateProduct } from '@/features/products/hooks/useProducts';
 import {
+  formatPriceInput,
   parseOptionalQuantity,
   parsePrice,
   productFormSchema,
@@ -34,8 +35,8 @@ const toForm = (product: Product): ProductForm => ({
   stock: '',
   requireStock: false,
   minStock: product.minStock === null ? '' : String(product.minStock),
-  // Pesos sin decimales: el punto del campo se lee como separador de miles.
-  salePrice: product.salePrice === null ? '' : String(Math.round(product.salePrice)),
+  // Pesos sin decimales, con puntos de miles como al escribir.
+  salePrice: product.salePrice === null ? '' : formatPriceInput(String(Math.round(product.salePrice))),
 });
 
 // Edición del producto (RF-07, RF-16). El código y las existencias no se editan aquí.

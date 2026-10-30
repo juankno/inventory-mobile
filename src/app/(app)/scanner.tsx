@@ -1,11 +1,11 @@
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useCodeResolver } from '@/features/scanner/hooks/useCodeResolver';
+import { useCodeResolver, type ScanPurpose } from '@/features/scanner/hooks/useCodeResolver';
 import {
   classifyManualEntry,
   classifyScan,
@@ -54,6 +54,13 @@ export default function ScannerScreen() {
   return <CameraScanner />;
 }
 
+// ?mode=lookup abre el escáner para consultar un producto (desde el buscador):
+// al leer un código conocido muestra su detalle en lugar de registrar un movimiento.
+function useScanPurpose(): ScanPurpose {
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
+  return mode === 'lookup' ? 'lookup' : 'movement';
+}
+
 // El visor ocupa el 78 % del ancho (68 % con un aviso abierto), sin pasar de
 // una parte del alto: en pantallas bajas se achica para dejar sitio al panel.
 const FRAME_RATIO = 1.3;
@@ -61,7 +68,8 @@ const FRAME_RATIO = 1.3;
 function CameraScanner() {
   const insets = useSafeAreaInsets();
   const { width, height, short } = useScreenSize();
-  const resolver = useCodeResolver();
+  const purpose = useScanPurpose();
+  const resolver = useCodeResolver(purpose);
   const [panel, setPanel] = useState<Panel>('idle');
   const frameWidth = Math.min(
     width * (panel === 'idle' ? 0.78 : 0.68),
@@ -139,7 +147,7 @@ function CameraScanner() {
       <View style={styles.topBar}>
         <IconButton icon="close" variant="scanner" accessibilityLabel={messages.common.close} onPress={close} />
         <AppText variant="title" tone="inverse" style={styles.title}>
-          {t.title}
+          {purpose === 'lookup' ? t.lookupTitle : t.title}
         </AppText>
         {panel === 'foreign' ? (
           <View style={styles.slot} />
@@ -157,7 +165,7 @@ function CameraScanner() {
       <View style={[styles.viewfinderArea, short && styles.viewfinderAreaShort]}>
         {panel === 'idle' ? (
           <AppText variant={short ? 'title' : 'heading'} tone="inverse" style={styles.aim}>
-            {t.aim}
+            {purpose === 'lookup' ? t.lookupAim : t.aim}
           </AppText>
         ) : null}
         <View style={[styles.frame, { width: frameWidth }]}>
@@ -189,7 +197,9 @@ function CameraScanner() {
         >
           {panel === 'idle' ? (
             <>
-              <OptionRow icon="plus" label={t.noCode} onPress={() => router.replace('/products/new')} />
+              {purpose === 'movement' ? (
+                <OptionRow icon="plus" label={t.noCode} onPress={() => router.replace('/products/new')} />
+              ) : null}
               <OptionRow icon="keyboard" label={t.manual} onPress={() => setManualOpen(true)} />
             </>
           ) : null}

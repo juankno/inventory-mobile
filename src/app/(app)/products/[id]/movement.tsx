@@ -1,7 +1,7 @@
 import * as Crypto from 'expo-crypto';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { useCreateMovement, useUndoMovement } from '@/features/movements/hooks/useMovements';
 import { getLastChoice, rememberChoice } from '@/features/movements/lastChoice';
@@ -152,7 +152,20 @@ export default function MovementScreen() {
       right={help}
       header={
         <>
-          {params.scanned ? <Tag icon="check" label={t.codeRead} /> : null}
+          {params.scanned ? (
+            <View style={styles.scannedRow}>
+              <Tag icon="check" label={t.codeRead} />
+              <Pressable
+                accessibilityRole="link"
+                onPress={() => router.push({ pathname: '/products/[id]', params: { id: item.id } })}
+                style={styles.detailLink}
+              >
+                <AppText variant="bodyStrong" style={styles.underline}>
+                  {t.viewDetail}
+                </AppText>
+              </Pressable>
+            </View>
+          ) : null}
           <AppText variant="heading">{item.name}</AppText>
           <View style={styles.stock}>
             <AppText maxFontSizeMultiplier={theme.maxFontScale.number} style={styles.stockNumber}>{formatNumber(item.stock)}</AppText>
@@ -239,6 +252,9 @@ export default function MovementScreen() {
 
 const styles = StyleSheet.create({
   group: { gap: theme.spacing.md },
+  scannedRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: theme.spacing.md },
+  detailLink: { minHeight: theme.minTouchSize, justifyContent: 'center' },
+  underline: { textDecorationLine: 'underline' },
   bold: { fontFamily: theme.fonts.bold, color: theme.colors.text },
   stock: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', columnGap: theme.spacing.sm },
   stockNumber: { fontFamily: theme.fonts.medium, fontSize: 64, lineHeight: 72, color: theme.colors.text },
