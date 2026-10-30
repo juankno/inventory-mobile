@@ -175,7 +175,17 @@ export default function InventoryScreen() {
           >
             <Icon name="close" size={20} color={theme.colors.secondary} />
           </Pressable>
-        ) : null}
+        ) : (
+          // Buscar escaneando: abre el escáner en modo consulta y muestra el detalle (RF-14).
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t.searchByScan}
+            onPress={() => router.push({ pathname: '/scanner', params: { mode: 'lookup' } })}
+            style={styles.clear}
+          >
+            <Icon name="scanBarcode" size={22} color={theme.colors.ink} />
+          </Pressable>
+        )}
       </View>
 
       {products.data && products.data.length > 0 ? (
@@ -210,6 +220,16 @@ export default function InventoryScreen() {
       <AppText variant="body" tone="secondary">
         {t.emptyBody}
       </AppText>
+      {/* Primer uso: los dos caminos para empezar, en el mismo mensaje. */}
+      <View style={styles.emptyActions}>
+        <Button label={t.emptyScan} icon="scanBarcode" onPress={() => router.push('/scanner')} />
+        <Button
+          label={t.emptyAdd}
+          icon="plus"
+          variant="secondary"
+          onPress={() => router.push('/products/new')}
+        />
+      </View>
     </View>
   ) : query ? (
     <AppText variant="body" tone="secondary" style={styles.empty}>
@@ -451,6 +471,7 @@ const styles = StyleSheet.create({
   },
   loading: { marginTop: theme.spacing.xxl },
   empty: { gap: theme.spacing.sm, paddingVertical: theme.spacing.lg },
+  emptyActions: { gap: theme.spacing.sm, marginTop: theme.spacing.md },
   backToTop: { position: 'absolute', right: theme.spacing.lg },
   backToTopButton: {
     width: 52,
