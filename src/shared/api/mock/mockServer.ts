@@ -10,6 +10,10 @@ import { seedProducts } from './seed';
 
 const LATENCY_MS = 350;
 const DAY_MS = 86_400_000;
+const HOUR_MS = 3_600_000;
+// Tamaño de página del historial si no llega ?limit, y el máximo permitido.
+const DEFAULT_PAGE_SIZE = 20;
+const MAX_PAGE_SIZE = 100;
 const CROCKFORD = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
 type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
@@ -24,20 +28,57 @@ const activeProducts = () => [...products.values()].filter((product) => !inactiv
 let lastId = 0;
 const newId = () => `mock-${++lastId}`;
 
+// Producto con historial largo, para ver la paginación en el modo demostración.
+const BUSY_PRODUCT = 'Gaseosa 400 ml';
+
+// Una semana en la que cada mañana se surte lo que se vende en el día, así la
+// existencia termina en la del seed.
+function busyHistory(productId: string, finalStock: number, start: number): Omit<Movement, 'id'>[] {
+  const history: Omit<Movement, 'id'>[] = [];
+  let stock = 0;
+  const add = (type: 'INBOUND' | 'OUTBOUND', quantity: number, at: number) => {
+    const previousStock = stock;
+    stock += type === 'INBOUND' ? quantity : -quantity;
+    history.push({
+      productId,
+      type,
+      reason: type === 'OUTBOUND' ? 'SALE' : null,
+      quantity,
+      previousStock,
+      resultingStock: stock,
+      createdAt: new Date(at).toISOString(),
+    });
+  };
+  add('INBOUND', finalStock, start);
+  for (let day = 1; day <= 7; day++) {
+    const morning = start + day * DAY_MS + 8 * HOUR_MS;
+    add('INBOUND', 12, morning);
+    for (let sale = 1; sale <= 6; sale++) add('OUTBOUND', 2, morning + sale * HOUR_MS);
+  }
+  return history;
+}
+
 function seed() {
-  const created = new Date(Date.now() - 7 * DAY_MS).toISOString();
+  const start = Date.now() - 9 * DAY_MS;
+  const created = new Date(start).toISOString();
   for (const item of seedProducts) {
     const id = newId();
     products.set(id, { id, ...item, createdAt: created, updatedAt: created });
-    movements.push({
-      id: newId(),
-      productId: id,
-      type: 'INBOUND',
-      reason: null,
-      quantity: item.stock,
-      resultingStock: item.stock,
-      createdAt: created,
-    });
+    const history =
+      item.name === BUSY_PRODUCT
+        ? busyHistory(id, item.stock, start)
+        : [
+            {
+              productId: id,
+              type: 'INBOUND' as const,
+              reason: null,
+              quantity: item.stock,
+              previousStock: 0,
+              resultingStock: item.stock,
+              createdAt: created,
+            },
+          ];
+    for (const movement of history) movements.push({ id: newId(), ...movement });
   }
 }
 seed();
@@ -144,6 +185,7 @@ function handle(method: Method, path: string, body: Body): unknown {
       type: 'INBOUND',
       reason: null,
       quantity: initialStock,
+      previousStock: 0,
       resultingStock: initialStock,
       createdAt: now,
     });
@@ -152,9 +194,16 @@ function handle(method: Method, path: string, body: Body): unknown {
 
   if ((match = pathname.match(/^\/products\/([^/]+)\/movements$/)) && method === 'GET') {
     getProductOrThrow(match[1]);
-    return movements
-      .filter((movement) => movement.productId === match![1])
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    // Se guardan en orden de registro: al revés quedan del más reciente al más antiguo.
+    const history = movements.filter((movement) => movement.productId === match![1]).reverse();
+    const limit = Math.min(Math.max(Number(query.get('limit')) || DEFAULT_PAGE_SIZE, 1), MAX_PAGE_SIZE);
+    // El cursor es el id del último movimiento de la página anterior.
+    const cursor = query.get('cursor');
+    const start = cursor ? history.findIndex((movement) => movement.id === cursor) + 1 : 0;
+    if (cursor && start === 0) throw new ApiError(400, 'INVALID_CURSOR', 'No pudimos cargar más movimientos.');
+    const items = history.slice(start, start + limit);
+    const hasMore = start + limit < history.length;
+    return { items, nextCursor: hasMore ? items[items.length - 1].id : null };
   }
 
   if ((match = pathname.match(/^\/products\/([^/]+)$/))) {
@@ -202,6 +251,7 @@ function handle(method: Method, path: string, body: Body): unknown {
       type,
       reason: type === 'OUTBOUND' ? (body.reason as OutboundReason) : null,
       quantity,
+      previousStock: product.stock,
       resultingStock,
       createdAt: now,
     };
