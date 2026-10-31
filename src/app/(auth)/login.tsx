@@ -34,6 +34,8 @@ export default function LoginScreen() {
   return (
     <AuthFrame
       tab="login"
+      headline={{ strong: messages.auth.headlineStrong, soft: messages.auth.headlineSoft }}
+      subtitle={messages.auth.loginSubtitle}
       busy={busy}
       footer={
         <Button

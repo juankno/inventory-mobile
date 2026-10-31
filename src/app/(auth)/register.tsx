@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Pressable, StyleSheet, View, type TextInputInstance } from 'react-native';
 
@@ -38,6 +38,8 @@ export default function RegisterScreen() {
   return (
     <AuthFrame
       tab="register"
+      headline={{ strong: messages.auth.registerTitle }}
+      subtitle={messages.auth.registerSubtitle}
       busy={busy}
       footer={
         <Button
@@ -49,121 +51,126 @@ export default function RegisterScreen() {
     >
       {error ? <Banner message={errorMessage(error, messages.errors.unexpected)} /> : null}
 
-      <Controller
-        control={control}
-        name="businessName"
-        render={({ field }) => (
-          <TextField
-            label={messages.auth.businessName}
-            placeholder={messages.auth.businessPlaceholder}
-            value={field.value}
-            onChangeText={field.onChange}
-            onBlur={field.onBlur}
-            error={errors.businessName?.message}
-            autoCapitalize="words"
-            maxLength={80}
-            returnKeyType="next"
-            submitBehavior="submit"
-            onSubmitEditing={() => ownerRef.current?.focus()}
-          />
-        )}
-      />
-      <Controller
-        control={control}
-        name="ownerName"
-        render={({ field }) => (
-          <TextField
-            ref={ownerRef}
-            label={messages.auth.ownerName}
-            placeholder={messages.auth.ownerPlaceholder}
-            value={field.value}
-            onChangeText={field.onChange}
-            onBlur={field.onBlur}
-            error={errors.ownerName?.message}
-            autoCapitalize="words"
-            autoComplete="name"
-            maxLength={80}
-            returnKeyType="next"
-            submitBehavior="submit"
-            onSubmitEditing={() => emailRef.current?.focus()}
-          />
-        )}
-      />
-      <Controller
-        control={control}
-        name="email"
-        render={({ field }) => (
-          <TextField
-            ref={emailRef}
-            label={messages.auth.email}
-            placeholder={messages.auth.emailPlaceholder}
-            value={field.value}
-            onChangeText={field.onChange}
-            onBlur={field.onBlur}
-            error={errors.email?.message}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-            returnKeyType="next"
-            submitBehavior="submit"
-            onSubmitEditing={() => passwordRef.current?.focus()}
-          />
-        )}
-      />
-      <Controller
-        control={control}
-        name="password"
-        render={({ field }) => (
-          <TextField
-            ref={passwordRef}
-            label={messages.auth.password}
-            value={field.value}
-            onChangeText={field.onChange}
-            onBlur={field.onBlur}
-            error={errors.password?.message}
-            hint={messages.auth.passwordHint}
-            secureToggle
-            autoCapitalize="none"
-            autoComplete="new-password"
-            textContentType="newPassword"
-            // Último campo: cierra el teclado para dejar a la vista la política de datos.
-            returnKeyType="done"
-            submitBehavior="blurAndSubmit"
-          />
-        )}
-      />
-      <Controller
-        control={control}
-        name="dataPolicyAccepted"
-        render={({ field }) => (
-          <View style={styles.policy}>
-            <Pressable
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: field.value }}
-              accessibilityLabel={messages.auth.policyAccept + messages.auth.policyLink}
-              onPress={() => field.onChange(!field.value)}
-              style={styles.policyRow}
-            >
-              <View style={[styles.checkbox, field.value && styles.checkboxChecked]}>
-                {field.value ? <Icon name="check" size={18} color={theme.colors.onInk} strokeWidth={3} /> : null}
-              </View>
-              <AppText variant="body" style={styles.policyText}>
-                {messages.auth.policyAccept + messages.auth.policyLink}
-              </AppText>
-            </Pressable>
-            <Pressable accessibilityRole="link" onPress={() => setPolicyOpen(true)} style={styles.policyLink}>
-              <AppText variant="bodyStrong" style={styles.underline}>
-                {messages.auth.policyRead}
-              </AppText>
-            </Pressable>
-            {errors.dataPolicyAccepted ? (
-              <AppText variant="caption" tone="danger">
-                {errors.dataPolicyAccepted.message}
-              </AppText>
-            ) : null}
-          </View>
-        )}
-      />
+      <Section title={messages.auth.sectionBusiness}>
+        <Controller
+          control={control}
+          name="businessName"
+          render={({ field }) => (
+            <TextField
+              label={messages.auth.businessName}
+              placeholder={messages.auth.businessPlaceholder}
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              error={errors.businessName?.message}
+              autoCapitalize="words"
+              maxLength={80}
+              returnKeyType="next"
+              submitBehavior="submit"
+              onSubmitEditing={() => ownerRef.current?.focus()}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="ownerName"
+          render={({ field }) => (
+            <TextField
+              ref={ownerRef}
+              label={messages.auth.ownerName}
+              placeholder={messages.auth.ownerPlaceholder}
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              error={errors.ownerName?.message}
+              autoCapitalize="words"
+              autoComplete="name"
+              maxLength={80}
+              returnKeyType="next"
+              submitBehavior="submit"
+              onSubmitEditing={() => emailRef.current?.focus()}
+            />
+          )}
+        />
+      </Section>
+
+      <Section title={messages.auth.sectionAccess}>
+        <Controller
+          control={control}
+          name="email"
+          render={({ field }) => (
+            <TextField
+              ref={emailRef}
+              label={messages.auth.email}
+              placeholder={messages.auth.emailPlaceholder}
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              error={errors.email?.message}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              returnKeyType="next"
+              submitBehavior="submit"
+              onSubmitEditing={() => passwordRef.current?.focus()}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="password"
+          render={({ field }) => (
+            <TextField
+              ref={passwordRef}
+              label={messages.auth.password}
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              error={errors.password?.message}
+              hint={messages.auth.passwordHint}
+              secureToggle
+              autoCapitalize="none"
+              autoComplete="new-password"
+              textContentType="newPassword"
+              // Último campo: cierra el teclado para dejar a la vista la política de datos.
+              returnKeyType="done"
+              submitBehavior="blurAndSubmit"
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="dataPolicyAccepted"
+          render={({ field }) => (
+            <View style={styles.policy}>
+              <Pressable
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: field.value }}
+                accessibilityLabel={messages.auth.policyAccept + messages.auth.policyLink}
+                onPress={() => field.onChange(!field.value)}
+                style={styles.policyRow}
+              >
+                <View style={[styles.checkbox, field.value && styles.checkboxChecked]}>
+                  {field.value ? <Icon name="check" size={18} color={theme.colors.onInk} strokeWidth={3} /> : null}
+                </View>
+                <AppText variant="body" style={styles.policyText}>
+                  {messages.auth.policyAccept + messages.auth.policyLink}
+                </AppText>
+              </Pressable>
+              <Pressable accessibilityRole="link" onPress={() => setPolicyOpen(true)} style={styles.policyLink}>
+                <AppText variant="bodyStrong" style={styles.underline}>
+                  {messages.auth.policyRead}
+                </AppText>
+              </Pressable>
+              {errors.dataPolicyAccepted ? (
+                <AppText variant="caption" tone="danger">
+                  {errors.dataPolicyAccepted.message}
+                </AppText>
+              ) : null}
+            </View>
+          )}
+        />
+      </Section>
 
       <BottomSheet visible={policyOpen} onClose={() => setPolicyOpen(false)}>
         <AppText variant="heading">{messages.auth.policyTitle}</AppText>
@@ -176,7 +183,22 @@ export default function RegisterScreen() {
   );
 }
 
+// Bloque del formulario con un subtítulo pequeño; los campos van más juntos
+// dentro del bloque y los bloques más separados entre sí.
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <View style={styles.section}>
+      <AppText variant="bodyStrong" tone="secondary" accessibilityRole="header" style={styles.sectionTitle}>
+        {title}
+      </AppText>
+      {children}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  section: { gap: theme.spacing.md, marginTop: theme.spacing.sm },
+  sectionTitle: { textTransform: 'uppercase', letterSpacing: 1 },
   policy: { gap: theme.spacing.sm },
   policyRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, minHeight: 48 },
   checkbox: {
