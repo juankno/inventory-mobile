@@ -41,6 +41,10 @@ const config: ExpoConfig = {
   ],
   extra: {
     apiUrl: process.env.EXPO_PUBLIC_API_URL,
+    // Proyecto de EAS Build. Con app.config.ts EAS no puede escribirlo solo.
+    eas: {
+      projectId: 'be063f47-cffc-4949-8037-575c1a66f481',
+    },
   },
 };
 

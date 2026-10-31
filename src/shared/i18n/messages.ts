@@ -37,6 +37,11 @@ export const messages = {
   auth: {
     headlineStrong: 'Tu inventario,',
     headlineSoft: 'en orden.',
+    loginSubtitle: 'Ingresa para seguir llevando tu tienda.',
+    registerTitle: 'Crea tu cuenta',
+    registerSubtitle: 'Te toma menos de un minuto.',
+    sectionBusiness: 'Tu negocio',
+    sectionAccess: 'Tu acceso',
     tabLogin: 'Ingresar',
     tabRegister: 'Crear cuenta',
     email: 'Correo electrónico',

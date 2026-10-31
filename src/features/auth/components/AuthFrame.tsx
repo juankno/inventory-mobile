@@ -12,6 +12,9 @@ import { theme } from '@/shared/ui/theme';
 
 type Props = {
   tab: 'login' | 'register';
+  // Título propio de cada pantalla, en dos tonos, y una línea que la explica.
+  headline: { strong: string; soft?: string };
+  subtitle: string;
   children: ReactNode;
   footer: ReactNode;
   // Mientras se envía el formulario no se puede cambiar de pestaña.
@@ -19,8 +22,9 @@ type Props = {
 };
 
 // Encabezado de marca y pestañas Ingresar / Crear cuenta (diseño "Inicio de sesión y registro").
+// La marca (logo y nombre) va en una fila; debajo, cada pantalla pone su título.
 // Cada pestaña es su propia ruta; al cambiar se reemplaza la pantalla.
-export function AuthFrame({ tab, children, footer, busy = false }: Props) {
+export function AuthFrame({ tab, headline, subtitle, children, footer, busy = false }: Props) {
   // Login y registro son la primera pantalla sin sesión: atrás saldría de la app.
   useConfirmExit();
   return (
@@ -28,7 +32,12 @@ export function AuthFrame({ tab, children, footer, busy = false }: Props) {
       header={
         <View style={styles.header}>
           <View style={styles.logoRow}>
-            <AppLogo size={56} />
+            <View style={styles.brand}>
+              <AppLogo size={44} />
+              <AppText variant="heading" style={styles.brandName}>
+                {messages.app.name}
+              </AppText>
+            </View>
             {isMockApi ? (
               <View accessibilityLabel={messages.auth.demoLabel} style={styles.demo}>
                 <AppText variant="caption" tone="inverse" style={styles.demoText}>
@@ -37,10 +46,12 @@ export function AuthFrame({ tab, children, footer, busy = false }: Props) {
               </View>
             ) : null}
           </View>
-          <Headline strong={messages.auth.headlineStrong} soft={messages.auth.headlineSoft} />
-          <AppText variant="bodyStrong" tone="secondary" style={styles.brand}>
-            {messages.app.name.toUpperCase()}
-          </AppText>
+          <View style={styles.titles}>
+            <Headline strong={headline.strong} soft={headline.soft} />
+            <AppText variant="lead" tone="secondary">
+              {subtitle}
+            </AppText>
+          </View>
         </View>
       }
       footer={footer}
@@ -92,7 +103,9 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xs,
   },
   demoText: { fontFamily: theme.fonts.extrabold, letterSpacing: 1.5 },
-  brand: { letterSpacing: 1 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
+  brandName: { fontFamily: theme.fonts.extrabold },
+  titles: { gap: theme.spacing.sm },
   tabs: {
     flexDirection: 'row',
     backgroundColor: theme.colors.field,
