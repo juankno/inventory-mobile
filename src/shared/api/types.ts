@@ -34,9 +34,16 @@ export type Movement = {
   type: MovementType;
   reason: OutboundReason | null;
   quantity: number;
+  // Existencia antes y después del movimiento: cada fila del historial muestra
+  // su diferencia sin depender de las demás páginas.
+  previousStock: number;
   resultingStock: number;
   createdAt: string;
 };
+
+// Una página del historial (GET /products/:id/movements?limit&cursor).
+// nextCursor es null cuando ya no hay movimientos más antiguos.
+export type Page<T> = { items: T[]; nextCursor: string | null };
 
 export type ProductDto = Omit<Product, 'salePrice' | 'stock' | 'minStock'> & {
   salePrice: Decimal | null;
@@ -44,8 +51,9 @@ export type ProductDto = Omit<Product, 'salePrice' | 'stock' | 'minStock'> & {
   minStock: Decimal | null;
 };
 
-export type MovementDto = Omit<Movement, 'quantity' | 'resultingStock'> & {
+export type MovementDto = Omit<Movement, 'quantity' | 'previousStock' | 'resultingStock'> & {
   quantity: Decimal;
+  previousStock: Decimal;
   resultingStock: Decimal;
 };
 
@@ -62,5 +70,10 @@ export function toProduct(dto: ProductDto): Product {
 }
 
 export function toMovement(dto: MovementDto): Movement {
-  return { ...dto, quantity: toNumber(dto.quantity), resultingStock: toNumber(dto.resultingStock) };
+  return {
+    ...dto,
+    quantity: toNumber(dto.quantity),
+    previousStock: toNumber(dto.previousStock),
+    resultingStock: toNumber(dto.resultingStock),
+  };
 }

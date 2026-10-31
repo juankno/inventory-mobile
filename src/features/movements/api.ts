@@ -1,5 +1,12 @@
 import { apiRequest } from '@/shared/api/apiClient';
-import { toMovement, type MovementDto, type MovementType, type OutboundReason } from '@/shared/api/types';
+import {
+  toMovement,
+  type Movement,
+  type MovementDto,
+  type MovementType,
+  type OutboundReason,
+  type Page,
+} from '@/shared/api/types';
 
 // Llamadas a la API de la funcionalidad movements (RF-11 a RF-13, RF-15).
 export type CreateMovementInput = {
@@ -14,9 +21,17 @@ export type CreateMovementInput = {
   idempotencyKey: string;
 };
 
-// Historial del producto, del más reciente al más antiguo.
-export const listMovements = async (productId: string) =>
-  (await apiRequest<MovementDto[]>('GET', `/products/${productId}/movements`)).map(toMovement);
+// Historial del producto por páginas, del más reciente al más antiguo (RF-15).
+// cursor es el nextCursor de la página anterior; sin él se pide la primera.
+export async function listMovements(
+  productId: string,
+  { limit, cursor }: { limit: number; cursor?: string | null },
+): Promise<Page<Movement>> {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (cursor) params.set('cursor', cursor);
+  const page = await apiRequest<Page<MovementDto>>('GET', `/products/${productId}/movements?${params}`);
+  return { items: page.items.map(toMovement), nextCursor: page.nextCursor };
+}
 
 export const createMovement = async (input: CreateMovementInput) =>
   toMovement(await apiRequest<MovementDto>('POST', '/movements', input));

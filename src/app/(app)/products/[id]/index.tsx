@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { MovementHistory } from '@/features/movements/components/MovementHistory';
-import { useMovements } from '@/features/movements/hooks/useMovements';
+import { useRecentMovements } from '@/features/movements/hooks/useMovements';
 import { useDeleteProduct, useProduct } from '@/features/products/hooks/useProducts';
 import { errorMessage } from '@/shared/api/errors';
 import type { MovementType } from '@/shared/api/types';
@@ -26,7 +26,7 @@ const t = messages.product;
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const product = useProduct(id);
-  const movements = useMovements(id);
+  const movements = useRecentMovements(id);
   const deleteMutation = useDeleteProduct(id);
   const showToast = useToast();
   // Una sola hoja inferior que muestra las opciones o la confirmación de eliminar.
@@ -121,9 +121,21 @@ export default function ProductDetailScreen() {
       </AppText>
       {movements.error ? <Banner message={errorMessage(movements.error, messages.errors.loadFailed)} /> : null}
       {movements.data ? (
-        <MovementHistory movements={movements.data} unit={item.unit} />
+        <MovementHistory
+          movements={movements.data.items}
+          unit={item.unit}
+          complete={movements.data.nextCursor === null}
+        />
       ) : movements.isPending ? (
         <ActivityIndicator color={theme.colors.ink} />
+      ) : null}
+      {/* El detalle solo muestra los últimos; el historial completo carga por páginas. */}
+      {movements.data?.nextCursor ? (
+        <Button
+          label={t.historyAll}
+          variant="secondary"
+          onPress={() => router.push({ pathname: '/products/[id]/history', params: { id } })}
+        />
       ) : null}
 
       <BottomSheet visible={sheet !== null} onClose={closeSheet}>

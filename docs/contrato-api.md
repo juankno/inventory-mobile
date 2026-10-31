@@ -47,7 +47,7 @@ Detalles de `DELETE /products/:id` (RF-08):
 
 | Método y ruta | Cuerpo | Respuesta |
 | --- | --- | --- |
-| `GET /products/:id/movements` | | `Movement[]`, del más reciente al más antiguo |
+| `GET /products/:id/movements?limit=20&cursor=…` | | `{ items: Movement[], nextCursor }`, del más reciente al más antiguo |
 | `POST /movements` | `{ productId, type, reason, quantity, idempotencyKey }` | `Movement` |
 | `GET /inventory/alerts` | | `Product[]` con `stock <= minStock` |
 
@@ -58,4 +58,14 @@ Reglas de `POST /movements`:
 - **`idempotencyKey`:** es un UUID que se repite en los reintentos. Si ya existe, el backend devuelve el movimiento que ya está registrado.
 - **Existencias insuficientes:** si una salida deja la existencia en negativo, el backend responde `409` con `code: "INSUFFICIENT_STOCK"`.
 
-`Movement` tiene estos campos: `{ id, productId, type, reason, quantity, resultingStock, createdAt }`.
+`Movement` tiene estos campos: `{ id, productId, type, reason, quantity, previousStock, resultingStock, createdAt }`.
+
+- **`previousStock`:** existencia antes del movimiento. El backend la conoce al registrarlo, dentro de la misma transacción. Con ella cada fila del historial calcula su diferencia sin depender de las demás páginas, incluso en los ajustes. Hoy el esquema de Prisma no la guarda: hay que agregar la columna `previous_stock`.
+
+Paginación de `GET /products/:id/movements` (RF-15):
+
+- **`limit`:** de 1 a 100. Si no llega, 20. El detalle del producto pide 5 y el historial completo pide 20 por página.
+- **`cursor`:** el `nextCursor` de la página anterior. Sin él se entrega la primera página.
+- **`nextCursor`:** `null` cuando ya no hay movimientos más antiguos. La app usa el `id` del último movimiento de la página, pero lo trata como un texto opaco.
+- **Orden estable:** `createdAt` descendente y luego `id`, para que dos movimientos del mismo instante no se repitan ni se salten entre páginas. El índice `@@index([productId, createdAt(sort: Desc)])` ya sirve para esta consulta.
+- Un cursor que no existe responde `400` con `code: "INVALID_CURSOR"`.

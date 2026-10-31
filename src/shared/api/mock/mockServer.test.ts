@@ -1,5 +1,5 @@
 import { ApiError } from '@/shared/api/errors';
-import type { AuthResponse, Movement, Product } from '@/shared/api/types';
+import type { AuthResponse, Movement, Page, Product } from '@/shared/api/types';
 import { mockRequest } from './mockServer';
 
 const findByName = async (name: string) =>
@@ -86,10 +86,45 @@ describe('API de demostración', () => {
     await expect(mockRequest('GET', `/products/lookup?code=${pan.code}`)).rejects.toMatchObject({
       code: 'PRODUCT_NOT_FOUND',
     });
-    expect(await mockRequest<Movement[]>('GET', `/products/${pan.id}/movements`)).toHaveLength(1);
+    const history = await mockRequest<Page<Movement>>('GET', `/products/${pan.id}/movements`);
+    expect(history.items).toHaveLength(1);
   });
 
   it('responde PRODUCT_NOT_FOUND con un código desconocido', async () => {
     await expect(mockRequest('GET', '/products/lookup?code=7702354948016')).rejects.toBeInstanceOf(ApiError);
+  });
+
+  it('entrega el historial por páginas, del más reciente al más antiguo', async () => {
+    const gaseosa = await findByName('Gaseosa 400 ml');
+    const path = `/products/${gaseosa.id}/movements`;
+    const first = await mockRequest<Page<Movement>>('GET', `${path}?limit=20`);
+    expect(first.items).toHaveLength(20);
+    expect(first.nextCursor).toBe(first.items[19].id);
+
+    const all = [...first.items];
+    let cursor = first.nextCursor;
+    while (cursor) {
+      const page = await mockRequest<Page<Movement>>('GET', `${path}?limit=20&cursor=${cursor}`);
+      all.push(...page.items);
+      cursor = page.nextCursor;
+    }
+    expect(new Set(all.map((movement) => movement.id)).size).toBe(all.length);
+    expect(all[0].resultingStock).toBe(gaseosa.stock);
+    // Cada movimiento parte de la existencia que dejó el anterior.
+    for (let i = 0; i < all.length - 1; i++) expect(all[i].previousStock).toBe(all[i + 1].resultingStock);
+    expect(all[all.length - 1].previousStock).toBe(0);
+  });
+
+  it('guarda la existencia previa de cada movimiento', async () => {
+    const leche = await findByName('Leche 1 litro');
+    const movement = await mockRequest<Movement>('POST', '/movements', {
+      productId: leche.id,
+      type: 'ADJUSTMENT',
+      reason: null,
+      quantity: 7,
+      idempotencyKey: 'ajuste-leche',
+    });
+    expect(movement.previousStock).toBe(leche.stock);
+    expect(movement.resultingStock).toBe(7);
   });
 });
