@@ -10,12 +10,22 @@ Estos son los endpoints que consume la app móvil, todos bajo `/api/v1`. Se defi
 
 | Método y ruta | Cuerpo | Respuesta |
 | --- | --- | --- |
-| `POST /auth/register` | `{ businessName, ownerName, email, password, dataPolicyAccepted: true }` | `AuthResponse` |
+| `POST /auth/register` | `{ businessName, ownerName, email, password, passwordConfirmation, acceptDataPolicy: true }` | `201` + `AuthResponse` |
 | `POST /auth/login` | `{ email, password }` | `AuthResponse` |
 | `POST /auth/password-reset/request` | `{ email }` | `204` aunque el correo no exista |
-| `POST /auth/password-reset/confirm` | `{ email, code, newPassword }` (`code`: 6 dígitos) | `204` |
+| `POST /auth/password-reset/confirm` | `{ email, code, newPassword }` (`code`: 6 dígitos) | `204`, o `400` con `code: "INVALID_RESET_CODE"` |
 
 `AuthResponse` tiene esta forma: `{ token, user: { ownerName, email }, business: { name } }`.
+
+El backend ya implementa estas rutas y las documenta en `inventory-backend/api/openapi.yaml`. Detalles:
+
+- **Cuerpos estrictos:** un campo de más o de menos responde `400 VALIDATION_ERROR`.
+- **Registro:** si el correo ya existe, responde `409 EMAIL_ALREADY_REGISTERED`.
+- **Inicio de sesión:** si el correo no existe o la contraseña no coincide, responde `401 INVALID_CREDENTIALS`.
+- **Restablecer contraseña (RF-04):**
+  - el código vence en 15 minutos y sirve una sola vez;
+  - después de 5 intentos con un código equivocado deja de servir;
+  - si el correo no se pudo enviar, responde `500 EMAIL_NOT_SENT`.
 
 ## Productos
 

@@ -15,13 +15,19 @@ export const loginSchema = z.object({
 });
 export type LoginForm = z.infer<typeof loginSchema>;
 
-export const registerSchema = z.object({
-  businessName: personName,
-  ownerName: personName,
-  email,
-  password: newPassword,
-  dataPolicyAccepted: z.boolean().refine((value) => value, { error: v.policy }),
-});
+export const registerSchema = z
+  .object({
+    businessName: personName,
+    ownerName: personName,
+    email,
+    password: newPassword,
+    passwordConfirmation: z.string(),
+    dataPolicyAccepted: z.boolean().refine((value) => value, { error: v.policy }),
+  })
+  .refine((form) => form.password === form.passwordConfirmation, {
+    error: v.passwordMismatch,
+    path: ['passwordConfirmation'],
+  });
 export type RegisterForm = z.input<typeof registerSchema>;
 
 export const requestResetSchema = z.object({ email });

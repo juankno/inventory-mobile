@@ -129,6 +129,10 @@ function handle(method: Method, path: string, body: Body): unknown {
     return authResponse(account?.ownerName ?? DEMO_OWNER, email, account?.businessName ?? DEMO_BUSINESS);
   }
   if (route === 'POST /auth/register') {
+    // Igual que el backend: la confirmación debe coincidir y la política, aceptada.
+    if (body.password !== body.passwordConfirmation || body.acceptDataPolicy !== true) {
+      throw new ApiError(400, 'VALIDATION_ERROR', 'Los datos enviados no son válidos.');
+    }
     const email = String(body.email).toLowerCase();
     const account = { ownerName: String(body.ownerName), businessName: String(body.businessName) };
     accounts.set(email, account);

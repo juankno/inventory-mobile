@@ -21,7 +21,8 @@ describe('API de demostración', () => {
       ownerName: 'Lucía Gómez',
       email: 'juanes0202@correo.com',
       password: '12345678',
-      dataPolicyAccepted: true,
+      passwordConfirmation: '12345678',
+      acceptDataPolicy: true,
     });
     const response = await mockRequest<AuthResponse>('POST', '/auth/login', {
       email: 'Juanes0202@correo.com',

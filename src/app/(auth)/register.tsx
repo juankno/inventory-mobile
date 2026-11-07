@@ -23,14 +23,22 @@ export default function RegisterScreen() {
   const ownerRef = useRef<TextInputInstance>(null);
   const emailRef = useRef<TextInputInstance>(null);
   const passwordRef = useRef<TextInputInstance>(null);
+  const confirmationRef = useRef<TextInputInstance>(null);
   const { control, handleSubmit, formState } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { businessName: '', ownerName: '', email: '', password: '', dataPolicyAccepted: false },
+    defaultValues: {
+      businessName: '',
+      ownerName: '',
+      email: '',
+      password: '',
+      passwordConfirmation: '',
+      dataPolicyAccepted: false,
+    },
   });
 
   const busy = registerMutation.isPending;
-  const onSubmit = handleSubmit((form) => {
-    if (!busy) registerMutation.mutate({ ...form, dataPolicyAccepted: true });
+  const onSubmit = handleSubmit(({ dataPolicyAccepted: _accepted, ...form }) => {
+    if (!busy) registerMutation.mutate({ ...form, acceptDataPolicy: true });
   });
   const error = registerMutation.error;
   const { errors } = formState;
@@ -128,6 +136,27 @@ export default function RegisterScreen() {
               onBlur={field.onBlur}
               error={errors.password?.message}
               hint={messages.auth.passwordHint}
+              secureToggle
+              autoCapitalize="none"
+              autoComplete="new-password"
+              textContentType="newPassword"
+              returnKeyType="next"
+              submitBehavior="submit"
+              onSubmitEditing={() => confirmationRef.current?.focus()}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="passwordConfirmation"
+          render={({ field }) => (
+            <TextField
+              ref={confirmationRef}
+              label={messages.auth.passwordConfirmation}
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              error={errors.passwordConfirmation?.message}
               secureToggle
               autoCapitalize="none"
               autoComplete="new-password"
