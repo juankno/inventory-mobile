@@ -4,12 +4,14 @@ import type { AuthResponse } from '@/shared/api/types';
 // Llamadas a la API de la funcionalidad auth (RF-01, RF-02, RF-04).
 export type LoginInput = { email: string; password: string };
 
+// Cuerpo de POST /auth/register tal como lo valida el backend (api/openapi.yaml).
 export type RegisterInput = {
   businessName: string;
   ownerName: string;
   email: string;
   password: string;
-  dataPolicyAccepted: true;
+  passwordConfirmation: string;
+  acceptDataPolicy: true;
 };
 
 export type ConfirmResetInput = { email: string; code: string; newPassword: string };

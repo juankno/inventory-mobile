@@ -48,6 +48,7 @@ export const messages = {
     emailPlaceholder: 'nombre@correo.com',
     password: 'Contraseña',
     passwordHint: 'Mínimo 8 caracteres.',
+    passwordConfirmation: 'Repite la contraseña',
     businessName: 'Nombre del negocio',
     businessPlaceholder: 'Ej.: Tienda La Esquina',
     ownerName: 'Tu nombre',

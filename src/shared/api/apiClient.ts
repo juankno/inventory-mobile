@@ -10,6 +10,20 @@ const baseUrl = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:3000/api/v1'
 // API simulada en memoria. Se desactiva con EXPO_PUBLIC_USE_MOCK_API=false.
 export const isMockApi = process.env.EXPO_PUBLIC_USE_MOCK_API !== 'false';
 
+// Rutas que ya responde el backend aunque el modo demostración siga activo,
+// separadas por comas (por ejemplo "/auth/login,/auth/register"). Así la app
+// pasa al backend real a medida que se despliegan los endpoints.
+const realRoutes = (process.env.EXPO_PUBLIC_REAL_API_ROUTES ?? '')
+  .split(',')
+  .map((route: string) => route.trim())
+  .filter(Boolean);
+
+// "/products" abarca "/products/123" y "/products?x", pero no "/productsX".
+export function isRealRoute(path: string, routes: string[] = realRoutes): boolean {
+  const pathname = path.split('?')[0];
+  return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+}
+
 let getToken: () => string | null = () => null;
 let onUnauthorized: () => void = () => {};
 
@@ -24,7 +38,7 @@ export function configureApiClient(options: {
 type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
 export async function apiRequest<T>(method: Method, path: string, body?: unknown): Promise<T> {
-  if (isMockApi) return mockRequest<T>(method, path, body);
+  if (isMockApi && !isRealRoute(path)) return mockRequest<T>(method, path, body);
 
   const headers: Record<string, string> = { Accept: 'application/json' };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
