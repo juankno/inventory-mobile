@@ -5,7 +5,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useCodeResolver, type ScanPurpose } from '@/features/scanner/hooks/useCodeResolver';
+import { useRestoreProduct } from '@/features/products/hooks/useProducts';
+import { openScannedProduct, useCodeResolver, type ScanPurpose } from '@/features/scanner/hooks/useCodeResolver';
 import {
   classifyManualEntry,
   classifyScan,
@@ -13,7 +14,9 @@ import {
   type ScannedCode,
 } from '@/features/scanner/schemas';
 import { errorMessage } from '@/shared/api/errors';
+import type { DeletedProduct } from '@/shared/api/types';
 import { hapticSuccess, hapticWarning } from '@/shared/device/haptics';
+import { formatQuantity } from '@/shared/format/units';
 import { messages } from '@/shared/i18n/messages';
 import { AppText, Headline } from '@/shared/ui/AppText';
 import { BottomSheet } from '@/shared/ui/BottomSheet';
@@ -24,12 +27,13 @@ import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { TextField } from '@/shared/ui/TextField';
 import { theme } from '@/shared/ui/theme';
+import { useToast } from '@/shared/ui/Toast';
 import { useScreenSize } from '@/shared/ui/useScreenSize';
 
 const t = messages.scanner;
 const NO_READ_TIMEOUT_MS = 10_000;
 
-type Panel = 'idle' | 'searching' | 'noRead' | 'foreign' | 'error';
+type Panel = 'idle' | 'searching' | 'noRead' | 'foreign' | 'deleted' | 'error';
 
 const close = () => router.back();
 const searchByName = () => router.dismissTo({ pathname: '/', params: { focusSearch: '1' } });
@@ -80,6 +84,10 @@ function CameraScanner() {
   const [manualCode, setManualCode] = useState('');
   const [manualError, setManualError] = useState<string>();
   const [errorText, setErrorText] = useState('');
+  const [deleted, setDeleted] = useState<DeletedProduct | null>(null);
+  const [restoring, setRestoring] = useState(false);
+  const restoreProduct = useRestoreProduct();
+  const showToast = useToast();
   const busy = useRef(false);
 
   const scanning = panel === 'idle' && !manualOpen;
@@ -97,8 +105,12 @@ function CameraScanner() {
       setPanel('searching');
       resolver.mutate(scanned, {
         onSuccess: (outcome) => {
-          if (outcome !== 'navigated') {
-            hapticWarning();
+          if (outcome.kind === 'navigated') return;
+          hapticWarning();
+          if (outcome.kind === 'deleted') {
+            setDeleted(outcome.product);
+            setPanel('deleted');
+          } else {
             setPanel('foreign');
           }
         },
@@ -129,6 +141,21 @@ function CameraScanner() {
 
   const keepTrying = () => setPanel('idle');
 
+  const restoreDeleted = () => {
+    if (!deleted) return;
+    setRestoring(true);
+    restoreProduct(deleted.id)
+      .then((product) => {
+        showToast({ message: messages.toast.productRestored });
+        openScannedProduct(product, purpose);
+      })
+      .catch((error) => {
+        setErrorText(errorMessage(error, messages.errors.unexpected));
+        setPanel('error');
+      })
+      .finally(() => setRestoring(false));
+  };
+
   const submitManual = () => {
     const scanned = classifyManualEntry(manualCode);
     if (scanned.kind === 'invalid') {
@@ -149,7 +176,7 @@ function CameraScanner() {
         <AppText variant="title" tone="inverse" style={styles.title}>
           {purpose === 'lookup' ? t.lookupTitle : t.title}
         </AppText>
-        {panel === 'foreign' ? (
+        {panel === 'foreign' || panel === 'deleted' ? (
           <View style={styles.slot} />
         ) : (
           <IconButton
@@ -176,7 +203,7 @@ function CameraScanner() {
             barcodeScannerSettings={{ barcodeTypes: [...scannerBarcodeTypes] }}
             onBarcodeScanned={scanning ? onScanned : undefined}
           />
-          {panel === 'foreign' ? <View style={styles.paused} /> : null}
+          {panel === 'foreign' || panel === 'deleted' ? <View style={styles.paused} /> : null}
           {panel === 'idle' ? <View style={styles.scanLine} /> : null}
           <Corners dimmed={panel !== 'idle'} />
         </View>
@@ -236,6 +263,17 @@ function CameraScanner() {
               </AppText>
               <Button label={t.scanAnother} onPress={keepTrying} style={styles.firstAction} />
               <Button label={t.searchByName} variant="secondary" onPress={searchByName} />
+            </>
+          ) : null}
+
+          {panel === 'deleted' && deleted ? (
+            <>
+              <AppText variant="heading">{t.deletedTitle(deleted.name)}</AppText>
+              <AppText variant="lead" tone="secondary">
+                {t.deletedBody(formatQuantity(deleted.stock, deleted.unit))}
+              </AppText>
+              <Button label={t.restore} loading={restoring} onPress={restoreDeleted} style={styles.firstAction} />
+              <Button label={t.scanAnother} variant="secondary" disabled={restoring} onPress={keepTrying} />
             </>
           ) : null}
 

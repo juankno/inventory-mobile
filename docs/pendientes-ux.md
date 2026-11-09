@@ -19,6 +19,11 @@ Mejoras que salieron de revisar la app pensando en un tendero que la usa en el m
 - **Precio con separadores:** se ve "12.500" mientras se escribe.
 - **Historial paginado:** el detalle del producto muestra los últimos 5 movimientos y el botón "Ver todo el historial". Esa pantalla carga 20 movimientos más cada vez que se llega al final.
 
+- **Eliminar es reversible:** nada se borra de forma permanente. Hay tres formas de recuperar un producto:
+  - "Deshacer" en el aviso al eliminarlo;
+  - la pantalla "Productos eliminados" del menú ☰;
+  - escanear su código, que ofrece restaurarlo.
+
 ## Pendientes
 
 ### 1. Funcionar sin conexión (alto impacto, esfuerzo alto)
@@ -49,7 +54,15 @@ Por ahora no se recomiendan:
 - **Tablets:** limitar el ancho del contenido (por ejemplo, 600 dp centrados). Hoy campos y botones se estiran a todo el ancho; es de baja prioridad porque la app está pensada para celular.
 - **Deshacer con un endpoint propio:** hoy "Deshacer" registra un ajuste. Si el ERS pide que el historial no muestre la corrección, el backend necesitaría anular movimientos.
 
-### 4. Listas que crecen con el uso (revisado)
+### 4. Limpieza definitiva de lo eliminado (más adelante)
+
+Hoy ningún proceso borra datos. Más adelante, un cron puede borrar en segundo plano los productos eliminados hace más de cierto tiempo, usando `deleted_at`. Falta decidir:
+
+- **Tiempo de retención:** cuánto se conserva un producto eliminado.
+- **Movimientos:** `movements` referencia a `products`, así que hay que borrarlos con el producto o conservarlos anonimizados para los reportes.
+- **Aviso en la app:** "Productos eliminados" tendría que decir cuánto tiempo queda para restaurar.
+
+### 5. Listas que crecen con el uso (revisado)
 
 Se revisaron las listas que dependen de cuántos datos tenga el negocio:
 

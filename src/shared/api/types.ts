@@ -26,6 +26,9 @@ export type Product = {
   code: string;
 };
 
+// GET /products/deleted: se puede restaurar con su existencia e historial (RF-08).
+export type DeletedProduct = Product & { deletedAt: string };
+
 export type Movement = {
   id: string;
   type: MovementType;
@@ -50,6 +53,8 @@ export type ProductDto = Omit<Product, 'salePrice' | 'stock' | 'minStock'> & {
   minStock: Decimal | null;
 };
 
+export type DeletedProductDto = ProductDto & { deletedAt: string };
+
 export type MovementDto = Omit<Movement, 'quantity' | 'resultingStock'> & {
   quantity: Decimal;
   resultingStock: Decimal;
@@ -67,6 +72,10 @@ export function toProduct(dto: ProductDto): Product {
     stock: toNumber(dto.stock),
     minStock: toNullableNumber(dto.minStock),
   };
+}
+
+export function toDeletedProduct(dto: DeletedProductDto): DeletedProduct {
+  return { ...toProduct(dto), deletedAt: dto.deletedAt };
 }
 
 export function toMovement(dto: MovementDto): Movement {

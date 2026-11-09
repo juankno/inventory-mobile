@@ -23,8 +23,8 @@ type StoredMovement = Movement & { productId: string };
 
 const movements: StoredMovement[] = [];
 const idempotencyKeys = new Map<string, Movement>();
-// Productos eliminados (desactivados): no se borran para conservar su historial (RF-08).
-const inactive = new Set<string>();
+// Productos eliminados y su fecha: no se borran, para poder restaurarlos (RF-08).
+const inactive = new Map<string, string>();
 const activeProducts = () => [...products.values()].filter((product) => !inactive.has(product.id));
 
 let lastId = 0;
@@ -157,6 +157,21 @@ function handle(method: Method, path: string, body: Body): unknown {
     return product;
   }
 
+  if (route === 'GET /products/deleted') {
+    const code = query.get('code');
+    return [...inactive.entries()]
+      .map(([id, deletedAt]) => ({ ...products.get(id)!, deletedAt }))
+      .filter((product) => !code || product.code === code)
+      .sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
+  }
+
+  if ((match = pathname.match(/^\/products\/([^/]+)\/restore$/)) && method === 'POST') {
+    const product = products.get(match[1]);
+    if (!product) throw notFound();
+    inactive.delete(product.id);
+    return product;
+  }
+
   if (route === 'GET /products/low-stock') {
     return activeProducts()
       .filter((product) => product.stock === 0 || (product.minStock !== null && product.stock <= product.minStock))
@@ -169,7 +184,11 @@ function handle(method: Method, path: string, body: Body): unknown {
     const existing = [...products.values()].find((item) => item.code === code);
     if (existing) {
       throw inactive.has(existing.id)
-        ? new ApiError(409, 'CODE_OF_DELETED_PRODUCT', 'Este código es de un producto que eliminaste.')
+        ? new ApiError(
+            409,
+            'CODE_OF_DELETED_PRODUCT',
+            'Este código es de un producto que eliminaste. Puedes restaurarlo desde Productos eliminados.',
+          )
         : new ApiError(409, 'CODE_ALREADY_REGISTERED', 'Ya existe un producto con este código en tu negocio.');
     }
     const unit = body.unit as Unit;
@@ -231,7 +250,7 @@ function handle(method: Method, path: string, body: Body): unknown {
       return updated;
     }
     if (method === 'DELETE') {
-      inactive.add(product.id);
+      inactive.set(product.id, new Date().toISOString());
       return undefined;
     }
   }

@@ -6,7 +6,9 @@ import {
   createProduct,
   deleteProduct,
   getProduct,
+  listDeletedProducts,
   listProducts,
+  restoreProduct,
   updateProduct,
   type UpdateProductInput,
 } from '../api';
@@ -60,4 +62,23 @@ export function useDeleteProduct(id: string) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.alerts });
     },
   });
+}
+
+export function useDeletedProducts() {
+  return useQuery({ queryKey: queryKeys.deletedProducts, queryFn: listDeletedProducts });
+}
+
+// Usa el cliente de consultas directamente porque también se llama desde el aviso
+// "Deshacer", cuando la pantalla del producto ya se cerró.
+export function useRestoreProduct() {
+  const queryClient = useQueryClient();
+  return async (id: string) => {
+    const product = await restoreProduct(id);
+    queryClient.setQueryData(queryKeys.product(id), product);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.products }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.alerts }),
+    ]);
+    return product;
+  };
 }

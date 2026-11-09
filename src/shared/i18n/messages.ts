@@ -111,6 +111,7 @@ export const messages = {
     filterOut: 'Agotados',
     noFilterResults: { low: 'No hay productos por agotarse.', out: 'No hay productos agotados.' },
     menuAlerts: 'Productos por reponer',
+    menuDeleted: 'Productos eliminados',
     menuLogout: 'Cerrar sesión',
   },
   alerts: {
@@ -160,6 +161,10 @@ export const messages = {
     permissionStep3: ['Toca ', 'Cámara', ' y elige ', 'Permitir', '.'],
     openSettings: 'Abrir ajustes',
     allowCamera: 'Permitir la cámara',
+    deletedTitle: (name: string) => `${name} está eliminado`,
+    deletedBody: (quantity: string) =>
+      `Este código es de un producto que eliminaste. Si lo restauras, vuelve con ${quantity} y su historial.`,
+    restore: 'Restaurar producto',
     withoutCamera: 'Sin cámara puedes buscar productos, ver existencias y escribir los códigos a mano.',
   },
   product: {
@@ -186,8 +191,18 @@ export const messages = {
     delete: 'Eliminar producto',
     deleteTitle: (name: string) => `¿Eliminar ${name}?`,
     deleteBody:
-      'Ya no aparecerá en tu inventario ni en las alertas. Su historial de movimientos se conserva.',
+      'Ya no aparecerá en tu inventario ni en las alertas. Podrás restaurarlo desde "Productos eliminados", con sus existencias e historial.',
     deleteConfirm: 'Sí, eliminar',
+  },
+  deletedProducts: {
+    title: 'Productos eliminados',
+    intro: 'Al restaurarlos vuelven a tu inventario con sus existencias e historial.',
+    emptyTitle: 'No hay productos eliminados',
+    emptyBody: 'Lo que elimines aparecerá aquí, por si necesitas recuperarlo.',
+    deletedAt: (when: string) => `Eliminado: ${when}`,
+    stock: (quantity: string) => `Existencias: ${quantity}`,
+    restore: 'Restaurar',
+    restoreLabel: (name: string) => `Restaurar ${name}`,
   },
   productForm: {
     newTitle: 'Nuevo producto',
@@ -309,6 +324,8 @@ export const messages = {
     productCreated: 'Producto guardado',
     productUpdated: 'Cambios guardados',
     productDeleted: 'Producto eliminado',
+    productRestored: 'Producto restaurado',
+    restoreFailed: 'No pudimos restaurar el producto. Inténtalo desde "Productos eliminados".',
   },
   discard: {
     title: '¿Descartar los cambios?',

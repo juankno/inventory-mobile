@@ -353,6 +353,14 @@ export default function InventoryScreen() {
           }}
         />
         <SheetAction
+          icon="trash"
+          label={t.menuDeleted}
+          onPress={() => {
+            setMenuOpen(false);
+            router.push('/products/deleted');
+          }}
+        />
+        <SheetAction
           icon="logOut"
           label={t.menuLogout}
           destructive
