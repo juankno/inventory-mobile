@@ -192,6 +192,13 @@ export const messages = {
     deleteTitle: (name: string) => `¿Eliminar ${name}?`,
     deleteBody:
       'Ya no aparecerá en tu inventario ni en las alertas. Podrás restaurarlo desde "Productos eliminados", con sus existencias e historial.',
+    // Si todavía tiene existencias, se dicen antes de eliminar; la cantidad va resaltada.
+    deleteBodyWithStock: (quantity: string) =>
+      [
+        'Todavía tiene ',
+        quantity,
+        '. Al eliminarlo ya no contará en tu inventario. Si lo restauras desde "Productos eliminados", vuelve con sus existencias e historial.',
+      ] as const,
     deleteConfirm: 'Sí, eliminar',
   },
   deletedProducts: {

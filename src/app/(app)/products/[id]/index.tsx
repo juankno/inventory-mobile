@@ -55,6 +55,7 @@ export default function ProductDetailScreen() {
 
   const item = product.data;
   const status = stockStatus(item);
+  const stockWarning = t.deleteBodyWithStock(`${formatNumber(item.stock)} ${unitWord(item.stock, item.unit)}`);
   const registerMovement = (type: MovementType) =>
     router.push({ pathname: '/products/[id]/movement', params: { id, type } });
   const openFromMenu = (path: '/products/[id]/edit' | '/products/[id]/qr') => {
@@ -146,7 +147,17 @@ export default function ProductDetailScreen() {
           <>
             <AppText variant="heading">{t.deleteTitle(item.name)}</AppText>
             <AppText variant="lead" tone="secondary">
-              {t.deleteBody}
+              {item.stock > 0 ? (
+                <>
+                  {stockWarning[0]}
+                  <AppText variant="lead" style={styles.bold}>
+                    {stockWarning[1]}
+                  </AppText>
+                  {stockWarning[2]}
+                </>
+              ) : (
+                t.deleteBody
+              )}
             </AppText>
             {deleteMutation.error ? (
               <Banner message={errorMessage(deleteMutation.error, messages.errors.unexpected)} />
@@ -207,6 +218,7 @@ function Fact({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
+  bold: { fontFamily: theme.fonts.bold, color: theme.colors.text },
   flex: { flex: 1 },
   stockLabel: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, marginTop: theme.spacing.sm },
   stock: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', columnGap: theme.spacing.sm },
