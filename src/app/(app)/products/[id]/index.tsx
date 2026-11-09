@@ -6,6 +6,7 @@ import { MovementHistory } from '@/features/movements/components/MovementHistory
 import { useRecentMovements } from '@/features/movements/hooks/useMovements';
 import { useDeleteProduct, useProduct, useRestoreProduct } from '@/features/products/hooks/useProducts';
 import { errorMessage } from '@/shared/api/errors';
+import { visibleLoadError } from '@/shared/api/queryPolicy';
 import type { MovementType } from '@/shared/api/types';
 import { formatMoney } from '@/shared/format/dates';
 import { stockStatus, stockStatusLabel } from '@/shared/format/stock';
@@ -30,6 +31,7 @@ export default function ProductDetailScreen() {
   const deleteMutation = useDeleteProduct(id);
   const restoreProduct = useRestoreProduct();
   const showToast = useToast();
+  const movementsError = visibleLoadError(movements);
   // Una sola hoja inferior que muestra las opciones o la confirmación de eliminar.
   const [sheet, setSheet] = useState<'options' | 'confirmDelete' | null>(null);
   const closeSheet = () => {
@@ -120,7 +122,7 @@ export default function ProductDetailScreen() {
       <AppText variant="heading" accessibilityRole="header">
         {t.history}
       </AppText>
-      {movements.error ? <Banner message={errorMessage(movements.error, messages.errors.loadFailed)} /> : null}
+      {movementsError ? <Banner message={errorMessage(movementsError, messages.errors.loadFailed)} /> : null}
       {movements.data ? (
         <MovementHistory
           movements={movements.data.items}

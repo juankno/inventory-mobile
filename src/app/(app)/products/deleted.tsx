@@ -4,6 +4,7 @@ import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-nativ
 
 import { useDeletedProducts, useRestoreProduct } from '@/features/products/hooks/useProducts';
 import { errorMessage } from '@/shared/api/errors';
+import { visibleLoadError } from '@/shared/api/queryPolicy';
 import { formatRelativeDateTime } from '@/shared/format/dates';
 import { formatQuantity } from '@/shared/format/units';
 import { messages } from '@/shared/i18n/messages';
@@ -24,6 +25,7 @@ export default function DeletedProductsScreen() {
   const restoreProduct = useRestoreProduct();
   const showToast = useToast();
   const { narrow } = useScreenSize();
+  const loadError = visibleLoadError(deleted);
   const [restoringId, setRestoringId] = useState<string | null>(null);
 
   const restore = (id: string) => {
@@ -52,7 +54,7 @@ export default function DeletedProductsScreen() {
       }
     >
       {deleted.isPending ? <ActivityIndicator color={theme.colors.ink} /> : null}
-      {deleted.error ? <Banner message={errorMessage(deleted.error, messages.errors.loadFailed)} /> : null}
+      {loadError ? <Banner message={errorMessage(loadError, messages.errors.loadFailed)} /> : null}
 
       {deleted.data?.length === 0 ? (
         <View style={styles.empty}>
