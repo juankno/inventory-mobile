@@ -49,9 +49,8 @@ export default function NewProductScreen() {
       {
         name: form.name.trim(),
         unit: form.unit,
-        codeType: hasBarcode ? 'GTIN' : 'INTERNAL',
         code: hasBarcode ? code : undefined,
-        initialStock: parseQuantity(form.stock) ?? 0,
+        stock: parseQuantity(form.stock) ?? 0,
         minStock: parseOptionalQuantity(form.minStock),
         salePrice: parsePrice(form.salePrice),
       },

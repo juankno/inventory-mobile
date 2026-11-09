@@ -11,11 +11,13 @@ type Props = {
   icon?: IconName;
   disabled?: boolean;
   loading?: boolean;
+  // Para el lector de pantalla, si la etiqueta visible no basta ("Restaurar" qué).
+  accessibilityLabel?: string;
   style?: StyleProp<ViewStyle>;
 };
 
 // Botón tipo píldora: negro (principal), gris claro (secundario) o rojo (eliminar).
-export function Button({ label, onPress, variant = 'primary', icon, disabled, loading, style }: Props) {
+export function Button({ label, onPress, variant = 'primary', icon, disabled, loading, accessibilityLabel, style }: Props) {
   const isPrimary = variant === 'primary';
   const inactive = disabled || loading;
   const foreground = variant === 'secondary' ? theme.colors.ink : theme.colors.onInk;
@@ -23,6 +25,7 @@ export function Button({ label, onPress, variant = 'primary', icon, disabled, lo
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled: !!inactive, busy: !!loading }}
       onPress={onPress}
       disabled={inactive}

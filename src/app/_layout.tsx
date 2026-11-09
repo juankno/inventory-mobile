@@ -6,18 +6,24 @@ import {
   Manrope_800ExtraBold,
   useFonts,
 } from '@expo-google-fonts/manrope';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useIsRestoring } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 
 import { OnboardingProvider, useOnboarding } from '@/features/onboarding/OnboardingProvider';
+import { createQueryClient, persistOptions } from '@/shared/api/queryClient';
+import { watchAppFocus } from '@/shared/device/appFocus';
+import { watchConnection } from '@/shared/device/network';
 import { SessionProvider, useSession } from '@/shared/session/SessionProvider';
 import { theme } from '@/shared/ui/theme';
 import { ToastProvider } from '@/shared/ui/Toast';
 
 void SplashScreen.preventAutoHideAsync();
+watchConnection();
+watchAppFocus();
 
 // Proveedores y protección de rutas (M-02): el grupo (app) solo está
 // disponible con sesión iniciada; el grupo (auth), solo sin sesión. La
@@ -25,6 +31,8 @@ void SplashScreen.preventAutoHideAsync();
 function RootNavigator() {
   const { session, isLoading } = useSession();
   const onboarding = useOnboarding();
+  // La pantalla de carga sigue hasta tener lo guardado, para abrir con datos y no con un indicador.
+  const isRestoring = useIsRestoring();
   const [fontsLoaded, fontError] = useFonts({
     Manrope_400Regular,
     Manrope_500Medium,
@@ -32,7 +40,7 @@ function RootNavigator() {
     Manrope_700Bold,
     Manrope_800ExtraBold,
   });
-  const ready = !isLoading && !onboarding.isLoading && (fontsLoaded || !!fontError);
+  const ready = !isLoading && !isRestoring && !onboarding.isLoading && (fontsLoaded || !!fontError);
 
   useEffect(() => {
     if (ready) void SplashScreen.hideAsync();
@@ -67,11 +75,9 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
-  const [queryClient] = useState(
-    () => new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000 } } }),
-  );
+  const [queryClient] = useState(createQueryClient);
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
       <SessionProvider>
         <OnboardingProvider>
           <ToastProvider>
@@ -79,6 +85,6 @@ export default function RootLayout() {
           </ToastProvider>
         </OnboardingProvider>
       </SessionProvider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }

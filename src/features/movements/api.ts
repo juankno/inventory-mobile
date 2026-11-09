@@ -1,8 +1,10 @@
 import { apiRequest } from '@/shared/api/apiClient';
 import {
   toMovement,
+  toMovementResult,
   type Movement,
   type MovementDto,
+  type MovementResultDto,
   type MovementType,
   type OutboundReason,
   type Page,
@@ -33,5 +35,8 @@ export async function listMovements(
   return { items: page.items.map(toMovement), nextCursor: page.nextCursor };
 }
 
-export const createMovement = async (input: CreateMovementInput) =>
-  toMovement(await apiRequest<MovementDto>('POST', '/movements', input));
+// El backend solo acepta reason en las salidas: sin motivo, el campo no se envía.
+export const createMovement = async ({ reason, ...input }: CreateMovementInput) =>
+  toMovementResult(
+    await apiRequest<MovementResultDto>('POST', '/movements', reason ? { ...input, reason } : input),
+  );

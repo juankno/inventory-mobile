@@ -1,14 +1,13 @@
 import { apiRequest } from '@/shared/api/apiClient';
-import { toProduct, type CodeType, type ProductDto, type Unit } from '@/shared/api/types';
+import { toDeletedProduct, toProduct, type DeletedProductDto, type ProductDto, type Unit } from '@/shared/api/types';
 
 // Llamadas a la API de la funcionalidad products (RF-05 a RF-08).
 export type CreateProductInput = {
   name: string;
   unit: Unit;
-  codeType: CodeType;
-  // Solo para GTIN; el identificador interno (INV-…) lo genera el backend (B-05).
+  // Solo para GTIN; sin código, el backend genera el identificador interno INV-… (B-05).
   code?: string;
-  initialStock: number;
+  stock: number;
   minStock: number | null;
   salePrice: number | null;
 };
@@ -25,11 +24,25 @@ export const listProducts = async () => (await apiRequest<ProductDto[]>('GET', '
 
 export const getProduct = async (id: string) => toProduct(await apiRequest<ProductDto>('GET', `/products/${id}`));
 
-export const createProduct = async (input: CreateProductInput) =>
-  toProduct(await apiRequest<ProductDto>('POST', '/products', input));
+// Al crear, el backend no acepta null: lo que no se definió no se envía.
+export const createProduct = async ({ minStock, salePrice, ...input }: CreateProductInput) =>
+  toProduct(
+    await apiRequest<ProductDto>('POST', '/products', {
+      ...input,
+      ...(minStock !== null && { minStock }),
+      ...(salePrice !== null && { salePrice }),
+    }),
+  );
 
 export const updateProduct = async (id: string, input: UpdateProductInput) =>
   toProduct(await apiRequest<ProductDto>('PATCH', `/products/${id}`, input));
 
-// Desactiva el producto: sale de la lista y de las alertas, pero conserva su historial (RF-08).
+// Eliminar es reversible: el producto sale de la lista y de las alertas, pero conserva
+// su existencia y su historial, y se puede restaurar (RF-08).
 export const deleteProduct = (id: string) => apiRequest<void>('DELETE', `/products/${id}`);
+
+export const restoreProduct = async (id: string) =>
+  toProduct(await apiRequest<ProductDto>('POST', `/products/${id}/restore`));
+
+export const listDeletedProducts = async () =>
+  (await apiRequest<DeletedProductDto[]>('GET', '/products/deleted')).map(toDeletedProduct);

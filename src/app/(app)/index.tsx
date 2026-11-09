@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAlerts } from '@/features/inventory/hooks/useAlerts';
 import { useProducts } from '@/features/products/hooks/useProducts';
 import { errorMessage } from '@/shared/api/errors';
+import { visibleLoadError } from '@/shared/api/queryPolicy';
 import type { Product } from '@/shared/api/types';
 import { useConfirmExit } from '@/shared/device/useConfirmExit';
 import { greeting } from '@/shared/format/dates';
@@ -124,6 +125,7 @@ export default function InventoryScreen() {
   }, [products.data, query, ascending, statusFilter]);
 
   const toRestock = alerts.data?.total ?? 0;
+  const loadError = visibleLoadError(products);
   const firstName = session?.ownerName.split(' ')[0] ?? '';
 
   const refresh = () => {
@@ -208,7 +210,7 @@ export default function InventoryScreen() {
         </Pressable>
       </View>
 
-      {products.error ? <Banner message={errorMessage(products.error, messages.errors.loadFailed)} /> : null}
+      {loadError ? <Banner message={errorMessage(loadError, messages.errors.loadFailed)} /> : null}
     </View>
   );
 
@@ -350,6 +352,14 @@ export default function InventoryScreen() {
           onPress={() => {
             setMenuOpen(false);
             router.push('/alerts');
+          }}
+        />
+        <SheetAction
+          icon="trash"
+          label={t.menuDeleted}
+          onPress={() => {
+            setMenuOpen(false);
+            router.push('/products/deleted');
           }}
         />
         <SheetAction

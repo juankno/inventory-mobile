@@ -4,11 +4,11 @@ import { mockRequest } from './mock/mockServer';
 
 // Cliente HTTP único sobre fetch (M-04): agrega la URL base y el token,
 // y convierte las respuestas de error en ApiError.
-const baseUrl = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:3000/api/v1';
+const baseUrl = process.env.EXPO_PUBLIC_API_URL ?? 'https://surtido-api.vercel.app/api/v1';
 
-// Modo demostración: mientras no haya backend, las peticiones las responde una
-// API simulada en memoria. Se desactiva con EXPO_PUBLIC_USE_MOCK_API=false.
-export const isMockApi = process.env.EXPO_PUBLIC_USE_MOCK_API !== 'false';
+// Modo demostración: con EXPO_PUBLIC_USE_MOCK_API=true, las peticiones las responde
+// una API simulada en memoria, para usar la app sin conexión ni cuenta.
+export const isMockApi = process.env.EXPO_PUBLIC_USE_MOCK_API === 'true';
 
 let getToken: () => string | null = () => null;
 let onUnauthorized: () => void = () => {};
