@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { configureApiClient } from '@/shared/api/apiClient';
+import { queryPersister } from '@/shared/api/queryClient';
 import { clearSession, loadSession, saveSession, type StoredSession } from './tokenStorage';
 
 type SessionContextValue = {
@@ -28,9 +29,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    await clearSession();
     tokenRef.current = null;
     queryClient.clear();
+    // Lo guardado se borra antes que la sesión: si la app se cierra a mitad de camino,
+    // la siguiente cuenta no puede encontrar datos de esta.
+    await Promise.resolve(queryPersister.removeClient()).catch(() => {});
+    await clearSession();
     setSession(null);
   }, [queryClient]);
 

@@ -327,6 +327,10 @@ export const messages = {
     productRestored: 'Producto restaurado',
     restoreFailed: 'No pudimos restaurar el producto. Inténtalo desde "Productos eliminados".',
   },
+  offline: {
+    noData: 'Sin conexión',
+    withData: (ago: string) => `Sin conexión · datos de ${ago}`,
+  },
   discard: {
     title: '¿Descartar los cambios?',
     body: 'Lo que escribiste en este formulario se perderá.',

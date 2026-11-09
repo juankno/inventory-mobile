@@ -3,6 +3,7 @@ import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-nativ
 
 import { useAlerts } from '@/features/inventory/hooks/useAlerts';
 import { errorMessage } from '@/shared/api/errors';
+import { visibleLoadError } from '@/shared/api/queryPolicy';
 import type { Product } from '@/shared/api/types';
 import { formatNumber, formatQuantity } from '@/shared/format/units';
 import { messages } from '@/shared/i18n/messages';
@@ -24,6 +25,7 @@ const amount = (value: number, product: Product) =>
 export default function AlertsScreen() {
   const alerts = useAlerts();
   const total = alerts.data?.total ?? 0;
+  const loadError = visibleLoadError(alerts);
 
   return (
     <PageLayout
@@ -49,7 +51,7 @@ export default function AlertsScreen() {
       }
     >
       {alerts.isPending ? <ActivityIndicator color={theme.colors.ink} /> : null}
-      {alerts.error ? <Banner message={errorMessage(alerts.error, messages.errors.loadFailed)} /> : null}
+      {loadError ? <Banner message={errorMessage(loadError, messages.errors.loadFailed)} /> : null}
 
       {alerts.data && total === 0 ? (
         <View style={styles.group}>
