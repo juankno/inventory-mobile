@@ -2,7 +2,6 @@
 export const messages = {
   app: {
     name: 'Surtido',
-    tagline: 'Tu negocio siempre surtido.',
   },
   common: {
     save: 'Guardar',
@@ -18,9 +17,7 @@ export const messages = {
   errors: {
     network: 'No hay conexión a internet. Revisa tu conexión e inténtalo de nuevo. Lo que escribiste se conserva.',
     unexpected: 'Ocurrió un error inesperado. Intenta de nuevo.',
-    sessionExpired: 'Tu sesión venció. Inicia sesión de nuevo.',
     loadFailed: 'No pudimos cargar la información.',
-    notFound: 'No encontramos este producto. Puede que lo hayan eliminado.',
   },
   validation: {
     email: 'Escribe un correo válido, por ejemplo nombre@correo.com.',
@@ -236,7 +233,6 @@ export const messages = {
     stockLocked: (quantity: string) =>
       [`Las existencias (`, quantity, `) no se editan aquí. Para cambiarlas registra una entrada, una salida o un ajuste por conteo, así queda en el historial.`] as const,
     registerMovement: 'Registrar un movimiento',
-    duplicateCode: 'Ya tienes un producto con este código.',
   },
   movement: {
     title: 'Nuevo movimiento',

@@ -5,7 +5,7 @@ import type { Unit } from '@/shared/api/types';
 import { toApiDate, type ReportPeriod } from './periods';
 
 // Llamadas a la API de la funcionalidad reports.
-export type PeriodSales = { total: number; sales: number };
+type PeriodSales = { total: number; sales: number };
 
 export type SalesSummary = {
   today: PeriodSales;

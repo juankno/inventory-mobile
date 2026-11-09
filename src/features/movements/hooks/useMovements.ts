@@ -5,7 +5,7 @@ import { queryKeys } from '@/shared/api/queryKeys';
 import { createMovement, listMovements } from '../api';
 
 // Movimientos que se ven en el detalle del producto; el resto, en "Ver todo el historial".
-export const RECENT_MOVEMENTS = 5;
+const RECENT_MOVEMENTS = 5;
 const HISTORY_PAGE_SIZE = 20;
 
 export function useRecentMovements(productId: string) {
