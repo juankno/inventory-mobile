@@ -1,12 +1,14 @@
 import { router } from 'expo-router';
-import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, Share, StyleSheet, View } from 'react-native';
 
 import { useAlerts } from '@/features/inventory/hooks/useAlerts';
+import { buildShoppingList } from '@/features/inventory/shoppingList';
 import { errorMessage } from '@/shared/api/errors';
 import { visibleLoadError } from '@/shared/api/queryPolicy';
 import type { Product } from '@/shared/api/types';
 import { formatNumber, formatQuantity } from '@/shared/format/units';
 import { messages } from '@/shared/i18n/messages';
+import { useSession } from '@/shared/session/SessionProvider';
 import { AppText } from '@/shared/ui/AppText';
 import { Button } from '@/shared/ui/Button';
 import { Banner } from '@/shared/ui/Feedback';
@@ -26,6 +28,20 @@ export default function AlertsScreen() {
   const alerts = useAlerts();
   const total = alerts.data?.total ?? 0;
   const loadError = visibleLoadError(alerts);
+  const { session } = useSession();
+
+  // Funciona sin conexión: usa las alertas guardadas en el celular.
+  const shareList = () => {
+    if (!alerts.data) return;
+    void Share.share({
+      message: buildShoppingList({
+        businessName: session?.businessName,
+        outOfStock: alerts.data.outOfStock,
+        lowStock: alerts.data.lowStock,
+        date: new Date(),
+      }),
+    });
+  };
 
   return (
     <PageLayout
@@ -46,6 +62,7 @@ export default function AlertsScreen() {
           </>
         ) : null
       }
+      footer={total > 0 ? <Button label={t.shareList} icon="share" onPress={shareList} /> : undefined}
       refreshControl={
         <RefreshControl refreshing={alerts.isRefetching} onRefresh={() => void alerts.refetch()} tintColor={theme.colors.ink} />
       }

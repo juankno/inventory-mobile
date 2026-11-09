@@ -21,6 +21,8 @@ Mejoras que salieron de revisar la app pensando en un tendero que la usa en el m
 
 - **Ver el inventario sin conexión:** lo último cargado se guarda en el celular hasta por 7 días y se borra al cerrar sesión. La app abre con esos datos y los actualiza en segundo plano. Sin señal, una franja superior dice "Sin conexión · datos de hace 2 h". El historial completo no se guarda.
 - **Datos frescos al volver a la app:** al regresar a primer plano, se repiten las consultas visibles con más de 30 segundos. Por ahora no se usan sockets: cada negocio tiene un solo usuario y Vercel no mantiene conexiones WebSocket abiertas. Vale la pena revisarlo si un negocio llega a tener varios empleados.
+- **Lista de compras:** desde Alertas se comparte por WhatsApp u otra app lo que hay que surtir. Funciona sin conexión.
+- **Reportes:** el menú ☰ tiene el resumen de ventas de hoy y de la semana, lo más vendido, y los reportes en Excel de inventario, ventas y movimientos. No incluyen ganancias, porque la app no guarda el costo de compra.
 - **Venta continua al reabrir la app:** el último tipo y motivo de movimiento se conservan.
 - **Eliminar es reversible:** nada se borra de forma permanente. Hay tres formas de recuperar un producto:
   - "Deshacer" en el aviso al eliminarlo;

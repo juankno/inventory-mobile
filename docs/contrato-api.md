@@ -6,6 +6,20 @@ Estos son los endpoints que consume la app móvil, todos bajo `/api/v1`, en `htt
 - **Errores:** llegan como `{ "code": "…", "message": "…" }`. La app muestra `message` tal cual, así que debe venir en español.
 - **Números:** las cantidades y los precios pueden llegar como número o como texto (`Decimal` de Prisma).
 
+## Reportes
+
+| Método y ruta | Respuesta |
+| --- | --- |
+| `GET /reports/summary` | `{ today, week, topProducts, salesWithoutPrice }`, en hora de Colombia; la semana empieza el lunes |
+| `GET /reports/inventory` | Archivo de Excel |
+| `GET /reports/movements?from=AAAA-MM-DD&to=AAAA-MM-DD` | Archivo de Excel |
+| `GET /reports/sales?from=AAAA-MM-DD&to=AAAA-MM-DD` | Archivo de Excel |
+
+- **Período:** `from` y `to` están incluidos y no pueden abarcar más de 366 días. Si hay demasiadas filas, responde `400 REPORT_TOO_LARGE`.
+- **Precio:** cada salida guarda el precio que tenía el producto. Las anteriores a este cambio no lo tienen: no suman al total y se cuentan como `salesWithoutPrice`.
+- **Deshacer:** `POST /movements` acepta `revertsMovementId` en los ajustes, y la venta revertida deja de contar.
+- **Modo demostración:** tiene el resumen, pero no genera archivos de Excel.
+
 ## Autenticación
 
 | Método y ruta | Cuerpo | Respuesta |
