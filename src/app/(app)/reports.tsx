@@ -1,14 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useState } from 'react';
 import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-native';
 
-import { downloadReport, getSalesSummary, type ReportKind } from '@/features/reports/api';
+import { downloadReport, type ReportKind } from '@/features/reports/api';
+import { useSalesSummary } from '@/features/reports/hooks/useSalesSummary';
 import { parseCustomPeriod, presetPeriod, type PeriodPreset } from '@/features/reports/periods';
 import { isMockApi } from '@/shared/api/apiClient';
 import { errorMessage } from '@/shared/api/errors';
-import { queryKeys } from '@/shared/api/queryKeys';
 import { visibleLoadError } from '@/shared/api/queryPolicy';
 import { formatMoney } from '@/shared/format/dates';
 import { formatQuantity } from '@/shared/format/units';
@@ -36,7 +35,7 @@ const periodOptions: readonly { value: PeriodPreset; label: string }[] = [
 
 // Resumen de ventas y reportes en Excel para compartir.
 export default function ReportsScreen() {
-  const summary = useQuery({ queryKey: queryKeys.salesSummary, queryFn: getSalesSummary });
+  const summary = useSalesSummary();
   const summaryError = visibleLoadError(summary);
   const [preset, setPreset] = useState<PeriodPreset>('month');
   const [customFrom, setCustomFrom] = useState('');

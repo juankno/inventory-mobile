@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ActivityIndicator, RefreshControl, Share, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, Share, StyleSheet, View } from 'react-native';
 
 import { useAlerts } from '@/features/inventory/hooks/useAlerts';
 import { buildShoppingList } from '@/features/inventory/shoppingList';
@@ -103,17 +103,16 @@ function AlertGroup({ title, tone, products }: { title: string; tone: 'danger' |
           key={product.id}
           style={[styles.card, narrow && styles.cardStacked, isDanger ? styles.cardDanger : styles.cardWarning]}
         >
-          <View style={styles.cardText}>
-            <AppText
-              variant="title"
-              onPress={() => router.push({ pathname: '/products/[id]', params: { id: product.id } })}
-            >
-              {product.name}
-            </AppText>
+          <Pressable
+            accessibilityRole="link"
+            onPress={() => router.push({ pathname: '/products/[id]', params: { id: product.id } })}
+            style={styles.cardText}
+          >
+            <AppText variant="title">{product.name}</AppText>
             <AppText variant="body" tone={isDanger ? 'danger' : 'secondary'}>
               {t.remaining(amount(product.stock, product), amount(product.minStock ?? 0, product))}
             </AppText>
-          </View>
+          </Pressable>
           <Button
             label={t.restock}
             variant={isDanger ? 'primary' : 'secondary'}
@@ -146,6 +145,6 @@ const styles = StyleSheet.create({
   cardStacked: { flexDirection: 'column', alignItems: 'stretch', padding: theme.spacing.lg },
   cardDanger: { backgroundColor: theme.colors.dangerBg },
   cardWarning: { borderWidth: 1, borderColor: theme.colors.border },
-  cardText: { flexGrow: 1, flexShrink: 1 },
+  cardText: { flexGrow: 1, flexShrink: 1, minHeight: theme.minTouchSize, justifyContent: 'center' },
   cardButton: { minHeight: 48, paddingHorizontal: theme.spacing.lg },
 });
