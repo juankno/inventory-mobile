@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 
 import { OnboardingProvider, useOnboarding } from '@/features/onboarding/OnboardingProvider';
 import { createQueryClient, persistOptions } from '@/shared/api/queryClient';
+import { watchAppFocus } from '@/shared/device/appFocus';
 import { watchConnection } from '@/shared/device/network';
 import { SessionProvider, useSession } from '@/shared/session/SessionProvider';
 import { theme } from '@/shared/ui/theme';
@@ -22,6 +23,7 @@ import { ToastProvider } from '@/shared/ui/Toast';
 
 void SplashScreen.preventAutoHideAsync();
 watchConnection();
+watchAppFocus();
 
 // Proveedores y protección de rutas (M-02): el grupo (app) solo está
 // disponible con sesión iniciada; el grupo (auth), solo sin sesión. La

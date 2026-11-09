@@ -20,6 +20,7 @@ Mejoras que salieron de revisar la app pensando en un tendero que la usa en el m
 - **Historial paginado:** el detalle del producto muestra los últimos 5 movimientos y el botón "Ver todo el historial". Esa pantalla carga 20 movimientos más cada vez que se llega al final.
 
 - **Ver el inventario sin conexión:** lo último cargado se guarda en el celular hasta por 7 días y se borra al cerrar sesión. La app abre con esos datos y los actualiza en segundo plano. Sin señal, una franja superior dice "Sin conexión · datos de hace 2 h". El historial completo no se guarda.
+- **Datos frescos al volver a la app:** al regresar a primer plano, se repiten las consultas visibles con más de 30 segundos. Por ahora no se usan sockets: cada negocio tiene un solo usuario y Vercel no mantiene conexiones WebSocket abiertas. Vale la pena revisarlo si un negocio llega a tener varios empleados.
 - **Venta continua al reabrir la app:** el último tipo y motivo de movimiento se conservan.
 - **Eliminar es reversible:** nada se borra de forma permanente. Hay tres formas de recuperar un producto:
   - "Deshacer" en el aviso al eliminarlo;
