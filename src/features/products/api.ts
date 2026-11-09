@@ -1,14 +1,13 @@
 import { apiRequest } from '@/shared/api/apiClient';
-import { toProduct, type CodeType, type ProductDto, type Unit } from '@/shared/api/types';
+import { toProduct, type ProductDto, type Unit } from '@/shared/api/types';
 
 // Llamadas a la API de la funcionalidad products (RF-05 a RF-08).
 export type CreateProductInput = {
   name: string;
   unit: Unit;
-  codeType: CodeType;
-  // Solo para GTIN; el identificador interno (INV-…) lo genera el backend (B-05).
+  // Solo para GTIN; sin código, el backend genera el identificador interno INV-… (B-05).
   code?: string;
-  initialStock: number;
+  stock: number;
   minStock: number | null;
   salePrice: number | null;
 };
@@ -25,8 +24,15 @@ export const listProducts = async () => (await apiRequest<ProductDto[]>('GET', '
 
 export const getProduct = async (id: string) => toProduct(await apiRequest<ProductDto>('GET', `/products/${id}`));
 
-export const createProduct = async (input: CreateProductInput) =>
-  toProduct(await apiRequest<ProductDto>('POST', '/products', input));
+// Al crear, el backend no acepta null: lo que no se definió no se envía.
+export const createProduct = async ({ minStock, salePrice, ...input }: CreateProductInput) =>
+  toProduct(
+    await apiRequest<ProductDto>('POST', '/products', {
+      ...input,
+      ...(minStock !== null && { minStock }),
+      ...(salePrice !== null && { salePrice }),
+    }),
+  );
 
 export const updateProduct = async (id: string, input: UpdateProductInput) =>
   toProduct(await apiRequest<ProductDto>('PATCH', `/products/${id}`, input));

@@ -24,22 +24,21 @@ export type Product = {
   minStock: number | null;
   codeType: CodeType;
   code: string;
-  createdAt: string;
-  updatedAt: string;
 };
 
 export type Movement = {
   id: string;
-  productId: string;
   type: MovementType;
   reason: OutboundReason | null;
+  // Entrada y salida: lo que suma o resta. Ajuste: la diferencia con signo frente
+  // a la existencia anterior.
   quantity: number;
-  // Existencia antes y después del movimiento: cada fila del historial muestra
-  // su diferencia sin depender de las demás páginas.
-  previousStock: number;
   resultingStock: number;
   createdAt: string;
 };
+
+// POST /movements. movement es null si un ajuste no cambió la existencia.
+export type MovementResult = { movement: Movement | null; stock: number };
 
 // Una página del historial (GET /products/:id/movements?limit&cursor).
 // nextCursor es null cuando ya no hay movimientos más antiguos.
@@ -51,11 +50,12 @@ export type ProductDto = Omit<Product, 'salePrice' | 'stock' | 'minStock'> & {
   minStock: Decimal | null;
 };
 
-export type MovementDto = Omit<Movement, 'quantity' | 'previousStock' | 'resultingStock'> & {
+export type MovementDto = Omit<Movement, 'quantity' | 'resultingStock'> & {
   quantity: Decimal;
-  previousStock: Decimal;
   resultingStock: Decimal;
 };
+
+export type MovementResultDto = { movement: MovementDto | null; stock: Decimal };
 
 const toNumber = (value: Decimal) => Number(value);
 const toNullableNumber = (value: Decimal | null) => (value === null ? null : Number(value));
@@ -70,10 +70,9 @@ export function toProduct(dto: ProductDto): Product {
 }
 
 export function toMovement(dto: MovementDto): Movement {
-  return {
-    ...dto,
-    quantity: toNumber(dto.quantity),
-    previousStock: toNumber(dto.previousStock),
-    resultingStock: toNumber(dto.resultingStock),
-  };
+  return { ...dto, quantity: toNumber(dto.quantity), resultingStock: toNumber(dto.resultingStock) };
+}
+
+export function toMovementResult(dto: MovementResultDto): MovementResult {
+  return { movement: dto.movement ? toMovement(dto.movement) : null, stock: toNumber(dto.stock) };
 }

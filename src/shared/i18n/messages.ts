@@ -27,6 +27,7 @@ export const messages = {
     passwordLength: 'La contraseña debe tener al menos 8 caracteres.',
     passwordMismatch: 'Las contraseñas no coinciden.',
     name: 'Escribe un nombre de máximo 80 caracteres.',
+    nameShort: 'Escribe un nombre de al menos 2 caracteres.',
     number: 'Escribe un número válido.',
     notNegative: 'No puede ser negativo.',
     wholeUnits: 'Los productos por unidad solo admiten números enteros.',

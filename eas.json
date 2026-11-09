@@ -12,8 +12,7 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://surtido-api.vercel.app/api/v1",
-        "EXPO_PUBLIC_USE_MOCK_API": "true",
-        "EXPO_PUBLIC_REAL_API_ROUTES": "/auth/login,/auth/register"
+        "EXPO_PUBLIC_USE_MOCK_API": "false"
       }
     },
     "preview": {
@@ -23,8 +22,7 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://surtido-api.vercel.app/api/v1",
-        "EXPO_PUBLIC_USE_MOCK_API": "true",
-        "EXPO_PUBLIC_REAL_API_ROUTES": "/auth/login,/auth/register"
+        "EXPO_PUBLIC_USE_MOCK_API": "false"
       }
     }
   }
