@@ -1,5 +1,6 @@
 import { ApiError } from '@/shared/api/errors';
 import type { AuthResponse, DeletedProduct, Movement, MovementResult, Page, Product } from '@/shared/api/types';
+import type { SalesSummary } from '@/features/reports/api';
 import { mockRequest } from './mockServer';
 
 const findByName = async (name: string) =>
@@ -107,6 +108,27 @@ describe('API de demostración', () => {
     expect(await mockRequest('GET', `/products/deleted?code=${huevos.code}`)).toEqual([]);
     const history = await mockRequest<Page<Movement>>('GET', `/products/${huevos.id}/movements`);
     expect(history.items).toHaveLength(1);
+  });
+
+  it('resume las ventas con su precio y sin contar las deshechas', async () => {
+    const aceite = await findByName('Aceite 1 litro');
+    const sale = { productId: aceite.id, type: 'OUTBOUND', reason: 'SALE', quantity: 1 };
+    await mockRequest('POST', '/movements', { ...sale, idempotencyKey: 'venta-1' });
+    const undone = await mockRequest<MovementResult>('POST', '/movements', { ...sale, idempotencyKey: 'venta-2' });
+    await mockRequest('POST', '/movements', {
+      productId: aceite.id,
+      type: 'ADJUSTMENT',
+      quantity: aceite.stock - 1,
+      idempotencyKey: 'deshacer-venta-2',
+      revertsMovementId: undone.movement?.id,
+    });
+
+    const summary = await mockRequest<SalesSummary>('GET', '/reports/summary');
+
+    expect(summary.topProducts.find((item) => item.name === 'Aceite 1 litro')).toMatchObject({
+      quantity: 1,
+      total: aceite.salePrice,
+    });
   });
 
   it('responde CODE_NOT_RECOGNIZED con un código desconocido', async () => {

@@ -111,6 +111,7 @@ export const messages = {
     filterOut: 'Agotados',
     noFilterResults: { low: 'No hay productos por agotarse.', out: 'No hay productos agotados.' },
     menuAlerts: 'Productos por reponer',
+    menuReports: 'Reportes',
     menuDeleted: 'Productos eliminados',
     menuLogout: 'Cerrar sesión',
   },
@@ -123,6 +124,7 @@ export const messages = {
     lowStock: 'Por agotarse',
     remaining: (quantity: string, minimum: string) => `Quedan ${quantity} · mínimo ${minimum}`,
     restock: 'Registrar entrada',
+    shareList: 'Compartir lista de compras',
     emptyTitle: 'Todo está surtido',
     emptyBody: 'Ningún producto está en su existencia mínima. Te avisaremos aquí cuando alguno lo esté.',
   },
@@ -192,6 +194,13 @@ export const messages = {
     deleteTitle: (name: string) => `¿Eliminar ${name}?`,
     deleteBody:
       'Ya no aparecerá en tu inventario ni en las alertas. Podrás restaurarlo desde "Productos eliminados", con sus existencias e historial.',
+    // Si todavía tiene existencias, se dicen antes de eliminar; la cantidad va resaltada.
+    deleteBodyWithStock: (quantity: string) =>
+      [
+        'Todavía tiene ',
+        quantity,
+        '. Al eliminarlo ya no contará en tu inventario. Si lo restauras desde "Productos eliminados", vuelve con sus existencias e historial.',
+      ] as const,
     deleteConfirm: 'Sí, eliminar',
   },
   deletedProducts: {
@@ -326,6 +335,51 @@ export const messages = {
     productDeleted: 'Producto eliminado',
     productRestored: 'Producto restaurado',
     restoreFailed: 'No pudimos restaurar el producto. Inténtalo desde "Productos eliminados".',
+  },
+  shoppingList: {
+    title: 'Lista de compras',
+    titleWithBusiness: (business: string) => `Lista de compras · ${business}`,
+    outOfStock: 'Agotados',
+    lowStock: 'Por agotarse',
+    remaining: (quantity: string) => `quedan ${quantity}`,
+    minimum: (quantity: string) => `mínimo ${quantity}`,
+  },
+  reports: {
+    title: 'Reportes',
+    salesTitle: 'Tus ventas',
+    today: 'Hoy',
+    thisWeek: 'Esta semana',
+    salesCount: (count: number) => (count === 1 ? '1 venta' : `${count} ventas`),
+    withoutPrice: (count: number) =>
+      count === 1
+        ? '1 venta de esta semana no suma porque el producto no tenía precio.'
+        : `${count} ventas de esta semana no suman porque el producto no tenía precio.`,
+    topTitle: 'Lo más vendido esta semana',
+    topEmpty: 'Todavía no hay ventas esta semana.',
+    excelTitle: 'Reportes en Excel',
+    demoUnavailable: 'Los reportes en Excel no están disponibles en el modo demostración.',
+    inventoryTitle: 'Inventario actual',
+    inventoryBody: 'Qué tienes hoy y cuánto vale a precio de venta.',
+    inventoryAction: 'Compartir inventario',
+    periodTitle: 'Ventas y movimientos',
+    periodToday: 'Hoy',
+    periodWeek: 'Semana',
+    periodMonth: 'Este mes',
+    periodLastMonth: 'Mes pasado',
+    periodCustom: 'Otro',
+    from: 'Desde',
+    to: 'Hasta',
+    datePlaceholder: 'DD/MM/AAAA',
+    periodErrors: {
+      invalidDate: 'Escribe las dos fechas como DD/MM/AAAA.',
+      reversed: 'La fecha "Desde" debe ser anterior a "Hasta".',
+      tooLong: 'Elige un período de máximo un año.',
+    },
+    salesBody: 'Cuánto vendiste y qué se vende más. No incluye ganancias, porque la app no guarda el costo de compra.',
+    salesAction: 'Compartir ventas',
+    movementsBody: 'Todas las entradas, salidas y ajustes del período.',
+    movementsAction: 'Compartir movimientos',
+    shareTitle: 'Compartir reporte',
   },
   offline: {
     noData: 'Sin conexión',

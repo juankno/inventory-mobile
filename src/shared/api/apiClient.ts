@@ -1,3 +1,5 @@
+import { fetch as expoFetch } from 'expo/fetch';
+
 import { messages } from '@/shared/i18n/messages';
 import { ApiError, type ApiErrorBody } from './errors';
 import { mockRequest } from './mock/mockServer';
@@ -23,17 +25,23 @@ export function configureApiClient(options: {
 
 type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
-export async function apiRequest<T>(method: Method, path: string, body?: unknown): Promise<T> {
-  if (isMockApi) return mockRequest<T>(method, path, body);
+type HttpResponse = { ok: boolean; status: number; json(): Promise<unknown> };
+type RequestInit = { method: Method; headers: Record<string, string>; body?: string };
 
+async function send<R extends HttpResponse>(
+  fetchFn: (url: string, init: RequestInit) => Promise<R>,
+  method: Method,
+  path: string,
+  body?: unknown,
+): Promise<R> {
   const headers: Record<string, string> = { Accept: 'application/json' };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  let response: Response;
+  let response: R;
   try {
-    response = await fetch(`${baseUrl}${path}`, {
+    response = await fetchFn(`${baseUrl}${path}`, {
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -53,6 +61,23 @@ export async function apiRequest<T>(method: Method, path: string, body?: unknown
     );
   }
 
+  return response;
+}
+
+export async function apiRequest<T>(method: Method, path: string, body?: unknown): Promise<T> {
+  if (isMockApi) return mockRequest<T>(method, path, body);
+
+  const response = await send(fetch, method, path, body);
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
+}
+
+// Descarga un archivo. Usa expo/fetch porque el fetch de React Native no entrega los bytes.
+export async function apiDownload(path: string): Promise<Uint8Array> {
+  const response = await send(expoFetch, 'GET', path);
+  try {
+    return new Uint8Array(await response.arrayBuffer());
+  } catch {
+    throw new ApiError(0, 'NETWORK_ERROR', messages.errors.network);
+  }
 }

@@ -125,7 +125,7 @@ export default function MovementScreen() {
               ? {
                   label: messages.toast.undo,
                   onPress: () =>
-                    undoMovement(item.id, previousStock)
+                    undoMovement(item.id, movement.id, previousStock)
                       .then(() => showToast({ message: messages.toast.undone }))
                       .catch(() => showToast({ message: messages.toast.undoFailed })),
                 }
