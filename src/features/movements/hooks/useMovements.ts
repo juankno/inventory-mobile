@@ -36,6 +36,7 @@ export function useCreateMovement() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.products });
       void queryClient.invalidateQueries({ queryKey: queryKeys.movements(productId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.alerts });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.salesSummary });
     },
   });
 }
@@ -45,18 +46,20 @@ export function useCreateMovement() {
 // consultas directamente porque la pantalla del movimiento ya se cerró.
 export function useUndoMovement() {
   const queryClient = useQueryClient();
-  return async (productId: string, previousStock: number) => {
+  return async (productId: string, movementId: string, previousStock: number) => {
     await createMovement({
       productId,
       type: 'ADJUSTMENT',
       reason: null,
       quantity: previousStock,
       idempotencyKey: Crypto.randomUUID(),
+      revertsMovementId: movementId,
     });
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: queryKeys.products }),
       queryClient.invalidateQueries({ queryKey: queryKeys.movements(productId) }),
       queryClient.invalidateQueries({ queryKey: queryKeys.alerts }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.salesSummary }),
     ]);
   };
 }

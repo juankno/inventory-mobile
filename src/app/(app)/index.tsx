@@ -355,6 +355,14 @@ export default function InventoryScreen() {
           }}
         />
         <SheetAction
+          icon="chart"
+          label={t.menuReports}
+          onPress={() => {
+            setMenuOpen(false);
+            router.push('/reports');
+          }}
+        />
+        <SheetAction
           icon="trash"
           label={t.menuDeleted}
           onPress={() => {

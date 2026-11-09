@@ -19,7 +19,11 @@ const CROCKFORD = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
 const products = new Map<string, Product>();
-type StoredMovement = Movement & { productId: string };
+type StoredMovement = Movement & {
+  productId: string;
+  unitPrice: number | null;
+  revertsMovementId: string | null;
+};
 
 const movements: StoredMovement[] = [];
 const idempotencyKeys = new Map<string, Movement>();
@@ -35,7 +39,7 @@ const BUSY_PRODUCT = 'Gaseosa 400 ml';
 
 // Una semana en la que cada mañana se surte lo que se vende en el día, así la
 // existencia termina en la del seed.
-function busyHistory(productId: string, finalStock: number, start: number): Omit<StoredMovement, 'id'>[] {
+function busyHistory(productId: string, finalStock: number, salePrice: number | null, start: number) {
   const history: Omit<StoredMovement, 'id'>[] = [];
   let stock = 0;
   const add = (type: 'INBOUND' | 'OUTBOUND', quantity: number, at: number) => {
@@ -46,6 +50,8 @@ function busyHistory(productId: string, finalStock: number, start: number): Omit
       reason: type === 'OUTBOUND' ? 'SALE' : null,
       quantity,
       resultingStock: stock,
+      unitPrice: type === 'OUTBOUND' ? salePrice : null,
+      revertsMovementId: null,
       createdAt: new Date(at).toISOString(),
     });
   };
@@ -66,7 +72,7 @@ function seed() {
     products.set(id, { id, ...item });
     const history =
       item.name === BUSY_PRODUCT
-        ? busyHistory(id, item.stock, start)
+        ? busyHistory(id, item.stock, item.salePrice, start)
         : item.stock > 0
           ? [
               {
@@ -75,6 +81,8 @@ function seed() {
                 reason: null,
                 quantity: item.stock,
                 resultingStock: item.stock,
+                unitPrice: null,
+                revertsMovementId: null,
                 createdAt: created,
               },
             ]
@@ -114,6 +122,37 @@ function checkWholeUnits(unit: Unit, value: number) {
   if (unit === 'UNIT' && !Number.isInteger(value)) {
     throw new ApiError(400, 'VALIDATION_ERROR', 'Los productos por unidad solo admiten números enteros.');
   }
+}
+
+// Mismo cálculo que el backend: solo ventas que no se deshicieron, con el precio guardado.
+function salesSummary() {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const weekStart = todayStart - ((now.getDay() + 6) % 7) * DAY_MS;
+  const reverted = new Set(movements.map((movement) => movement.revertsMovementId));
+  const sales = movements.filter(
+    (movement) =>
+      movement.reason === 'SALE' && !reverted.has(movement.id) && Date.parse(movement.createdAt) >= weekStart,
+  );
+  const value = (sale: StoredMovement) => sale.quantity * (sale.unitPrice ?? 0);
+  const period = (items: StoredMovement[]) => ({
+    sales: items.length,
+    total: items.reduce((sum, sale) => sum + value(sale), 0),
+  });
+  const top = new Map<string, { name: string; unit: Unit; quantity: number; total: number }>();
+  for (const sale of sales) {
+    const product = products.get(sale.productId)!;
+    const item = top.get(product.id) ?? { name: product.name, unit: product.unit, quantity: 0, total: 0 };
+    item.quantity += sale.quantity;
+    item.total += value(sale);
+    top.set(product.id, item);
+  }
+  return {
+    today: period(sales.filter((sale) => Date.parse(sale.createdAt) >= todayStart)),
+    week: period(sales),
+    topProducts: [...top.values()].sort((a, b) => b.total - a.total || b.quantity - a.quantity).slice(0, 5),
+    salesWithoutPrice: sales.filter((sale) => sale.unitPrice === null).length,
+  };
 }
 
 type Body = Record<string, unknown>;
@@ -156,6 +195,8 @@ function handle(method: Method, path: string, body: Body): unknown {
     }
     return product;
   }
+
+  if (route === 'GET /reports/summary') return salesSummary();
 
   if (route === 'GET /products/deleted') {
     const code = query.get('code');
@@ -213,6 +254,8 @@ function handle(method: Method, path: string, body: Body): unknown {
         reason: null,
         quantity: stock,
         resultingStock: stock,
+        unitPrice: null,
+        revertsMovementId: null,
         createdAt: new Date().toISOString(),
       });
     }
@@ -283,6 +326,8 @@ function handle(method: Method, path: string, body: Body): unknown {
       reason: type === 'OUTBOUND' ? (body.reason as OutboundReason) : null,
       quantity: change,
       resultingStock,
+      unitPrice: type === 'OUTBOUND' ? product.salePrice : null,
+      revertsMovementId: (body.revertsMovementId as string | undefined) ?? null,
       createdAt: new Date().toISOString(),
     };
     movements.push(movement);

@@ -21,6 +21,8 @@ export type CreateMovementInput = {
   quantity: number;
   // Evita registrar dos veces el mismo movimiento si se reintenta (RU-01).
   idempotencyKey: string;
+  // Con "Deshacer": el movimiento que este ajuste revierte, para que no cuente en los reportes.
+  revertsMovementId?: string;
 };
 
 // Historial del producto por páginas, del más reciente al más antiguo (RF-15).

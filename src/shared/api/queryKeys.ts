@@ -10,4 +10,5 @@ export const queryKeys = {
   recentMovements: (productId: string) => ['movements', productId, 'recent'] as const,
   movementHistory: (productId: string) => ['movements', productId, 'all'] as const,
   alerts: ['inventory', 'alerts'] as const,
+  salesSummary: ['reports', 'summary'] as const,
 };
