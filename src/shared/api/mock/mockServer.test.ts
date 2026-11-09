@@ -1,5 +1,5 @@
 import { ApiError } from '@/shared/api/errors';
-import type { AuthResponse, Movement, MovementResult, Page, Product } from '@/shared/api/types';
+import type { AuthResponse, DeletedProduct, Movement, MovementResult, Page, Product } from '@/shared/api/types';
 import { mockRequest } from './mockServer';
 
 const findByName = async (name: string) =>
@@ -91,6 +91,22 @@ describe('API de demostración', () => {
     await expect(
       mockRequest('POST', '/products', { name: 'Pan', unit: 'UNIT', stock: 1, code: pan.code }),
     ).rejects.toMatchObject({ code: 'CODE_OF_DELETED_PRODUCT' });
+  });
+
+  it('restaura un producto eliminado con su existencia y su historial', async () => {
+    const huevos = await findByName('Huevos');
+    await mockRequest('DELETE', `/products/${huevos.id}`);
+
+    const deleted = await mockRequest<DeletedProduct[]>('GET', `/products/deleted?code=${huevos.code}`);
+    expect(deleted).toHaveLength(1);
+    expect(deleted[0].deletedAt).toBeTruthy();
+
+    const restored = await mockRequest<Product>('POST', `/products/${huevos.id}/restore`);
+    expect(restored.stock).toBe(huevos.stock);
+    expect((await findByName('Huevos')).id).toBe(huevos.id);
+    expect(await mockRequest('GET', `/products/deleted?code=${huevos.code}`)).toEqual([]);
+    const history = await mockRequest<Page<Movement>>('GET', `/products/${huevos.id}/movements`);
+    expect(history.items).toHaveLength(1);
   });
 
   it('responde CODE_NOT_RECOGNIZED con un código desconocido', async () => {

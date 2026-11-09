@@ -3,6 +3,8 @@
 export const queryKeys = {
   products: ['products'] as const,
   product: (id: string) => ['products', id] as const,
+  // Va bajo 'products': al eliminar o restaurar se refresca junto con la lista.
+  deletedProducts: ['products', 'deleted'] as const,
   // Invalidar movements(id) refresca el resumen del detalle y el historial completo.
   movements: (productId: string) => ['movements', productId] as const,
   recentMovements: (productId: string) => ['movements', productId, 'recent'] as const,

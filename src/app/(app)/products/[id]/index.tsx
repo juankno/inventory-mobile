@@ -4,7 +4,7 @@ import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-nativ
 
 import { MovementHistory } from '@/features/movements/components/MovementHistory';
 import { useRecentMovements } from '@/features/movements/hooks/useMovements';
-import { useDeleteProduct, useProduct } from '@/features/products/hooks/useProducts';
+import { useDeleteProduct, useProduct, useRestoreProduct } from '@/features/products/hooks/useProducts';
 import { errorMessage } from '@/shared/api/errors';
 import type { MovementType } from '@/shared/api/types';
 import { formatMoney } from '@/shared/format/dates';
@@ -28,6 +28,7 @@ export default function ProductDetailScreen() {
   const product = useProduct(id);
   const movements = useRecentMovements(id);
   const deleteMutation = useDeleteProduct(id);
+  const restoreProduct = useRestoreProduct();
   const showToast = useToast();
   // Una sola hoja inferior que muestra las opciones o la confirmación de eliminar.
   const [sheet, setSheet] = useState<'options' | 'confirmDelete' | null>(null);
@@ -157,7 +158,16 @@ export default function ProductDetailScreen() {
                 deleteMutation.mutate(undefined, {
                   onSuccess: () => {
                     setSheet(null);
-                    showToast({ message: messages.toast.productDeleted });
+                    showToast({
+                      message: messages.toast.productDeleted,
+                      action: {
+                        label: messages.toast.undo,
+                        onPress: () =>
+                          restoreProduct(id)
+                            .then(() => showToast({ message: messages.toast.productRestored }))
+                            .catch(() => showToast({ message: messages.toast.restoreFailed })),
+                      },
+                    });
                     router.dismissTo('/');
                   },
                 })

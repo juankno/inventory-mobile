@@ -1,5 +1,5 @@
 import { apiRequest } from '@/shared/api/apiClient';
-import { toProduct, type ProductDto, type Unit } from '@/shared/api/types';
+import { toDeletedProduct, toProduct, type DeletedProductDto, type ProductDto, type Unit } from '@/shared/api/types';
 
 // Llamadas a la API de la funcionalidad products (RF-05 a RF-08).
 export type CreateProductInput = {
@@ -37,5 +37,12 @@ export const createProduct = async ({ minStock, salePrice, ...input }: CreatePro
 export const updateProduct = async (id: string, input: UpdateProductInput) =>
   toProduct(await apiRequest<ProductDto>('PATCH', `/products/${id}`, input));
 
-// Desactiva el producto: sale de la lista y de las alertas, pero conserva su historial (RF-08).
+// Eliminar es reversible: el producto sale de la lista y de las alertas, pero conserva
+// su existencia y su historial, y se puede restaurar (RF-08).
 export const deleteProduct = (id: string) => apiRequest<void>('DELETE', `/products/${id}`);
+
+export const restoreProduct = async (id: string) =>
+  toProduct(await apiRequest<ProductDto>('POST', `/products/${id}/restore`));
+
+export const listDeletedProducts = async () =>
+  (await apiRequest<DeletedProductDto[]>('GET', '/products/deleted')).map(toDeletedProduct);

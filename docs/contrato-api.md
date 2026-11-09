@@ -21,7 +21,7 @@ Detalles:
 
 - **Cuerpos estrictos:** un campo de más o de menos responde `400 VALIDATION_ERROR`.
 - **Registro:** si el correo ya existe, responde `409 EMAIL_ALREADY_REGISTERED`.
-- **Inicio de sesión:** si el correo no existe o la contraseña no coincide, responde `401 INVALID_CREDENTIALS`.
+- **Inicio de sesión:** si el correo no existe o la contraseña no coincide, responde `401 INVALID_CREDENTIALS`. Después de 5 intentos fallidos seguidos, el correo queda bloqueado 15 minutos y responde `429 TOO_MANY_LOGIN_ATTEMPTS`, aunque la contraseña sea correcta. Restablecer la contraseña quita el bloqueo.
 - **Restablecer contraseña (RF-04):**
   - el código vence en 15 minutos y sirve una sola vez;
   - después de 5 intentos con un código equivocado deja de servir;
@@ -36,20 +36,24 @@ Detalles:
 | `GET /products/code/:code` | | `Product`, o `404 CODE_NOT_RECOGNIZED` |
 | `POST /products` | `{ name, unit, stock, code?, minStock?, salePrice? }` | `201` + `Product` |
 | `PATCH /products/:id` | `{ name, unit, minStock, salePrice }` (`minStock` y `salePrice` admiten `null`) | `Product` |
-| `DELETE /products/:id` | | `204`. Desactiva el producto (`isActive = false`) |
+| `DELETE /products/:id` | | `204`. Desactiva el producto y guarda la fecha en `deletedAt` |
+| `GET /products/deleted?code=…` | | `DeletedProduct[]`, del eliminado más reciente al más antiguo. `code` es opcional |
+| `POST /products/:id/restore` | | `Product`, ya activo, o `404 PRODUCT_NOT_FOUND` |
 
 Detalles de `POST /products`:
 
 - **Código:** con `code` es un GTIN de 8 o 13 dígitos. Sin `code`, el backend genera un identificador interno (`INV-` y 10 caracteres).
 - **Campos opcionales:** `minStock` y `salePrice` no admiten `null`. Si no se definen, la app no los envía.
 - **Existencia inicial:** si `stock` es mayor que 0, el backend registra el primer movimiento `INBOUND`. El historial lo muestra como "Existencia inicial".
-- **Código repetido:** responde `409 CODE_ALREADY_REGISTERED`, o `409 CODE_OF_DELETED_PRODUCT` si el código es de un producto eliminado.
+- **Código repetido:** responde `409 CODE_ALREADY_REGISTERED`, o `409 CODE_OF_DELETED_PRODUCT` si el código es de un producto eliminado. Al escanear, la app ofrece restaurarlo antes de llegar a este punto.
 
 Detalles de `DELETE /products/:id` (RF-08):
 
-- El producto eliminado deja de salir en las consultas, incluidos su detalle y su historial, que responden `404`. Sus movimientos se conservan en la base de datos.
+- Eliminar no borra nada y es reversible: el producto conserva su existencia, sus movimientos y su código, y vuelve con `POST /products/:id/restore`.
+- Mientras está eliminado deja de salir en las consultas, incluidos su detalle y su historial, que responden `404`.
 - No se le pueden registrar movimientos: responde `404`.
 - Su código sigue ocupado por la restricción única.
+- `DeletedProduct` tiene los campos de `Product` y `deletedAt`.
 
 `Product` tiene estos campos: `{ id, name, unit, salePrice, stock, minStock, codeType, code }`. Las consultas agregan `status` (`OK`, `LOW_STOCK` u `OUT_OF_STOCK`); la app calcula el estado por su cuenta y lo ignora.
 
