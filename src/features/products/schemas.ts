@@ -10,7 +10,12 @@ const v = messages.validation;
 
 export const productFormSchema = z
   .object({
-    name: z.string().trim().min(1, { error: messages.common.required }).max(80, { error: v.name }),
+    name: z
+      .string()
+      .trim()
+      .min(1, { error: messages.common.required })
+      .min(2, { error: v.nameShort })
+      .max(80, { error: v.name }),
     unit: z.enum(['UNIT', 'KILOGRAM', 'GRAM', 'POUND', 'LITER']),
     // Vacío en la edición: las existencias solo cambian con movimientos.
     stock: z.string(),

@@ -114,19 +114,22 @@ export default function MovementScreen() {
     createMutation.mutate(
       { productId: item.id, type, reason: movementReason, quantity: value, idempotencyKey },
       {
-        onSuccess: (movement) => {
+        onSuccess: ({ movement, stock }) => {
           hapticSuccess();
           if (scanned) rememberChoice({ type, reason: movementReason });
-          const remaining = `${formatNumber(movement.resultingStock)} ${unitWord(movement.resultingStock, item.unit)}`;
+          const remaining = `${formatNumber(stock)} ${unitWord(stock, item.unit)}`;
           showToast({
             message: messages.toast.remaining(messages.toast.registered[type], remaining),
-            action: {
-              label: messages.toast.undo,
-              onPress: () =>
-                undoMovement(movement, previousStock)
-                  .then(() => showToast({ message: messages.toast.undone }))
-                  .catch(() => showToast({ message: messages.toast.undoFailed })),
-            },
+            // Sin movimiento (el ajuste coincidió con la existencia) no hay nada que deshacer.
+            action: movement
+              ? {
+                  label: messages.toast.undo,
+                  onPress: () =>
+                    undoMovement(item.id, previousStock)
+                      .then(() => showToast({ message: messages.toast.undone }))
+                      .catch(() => showToast({ message: messages.toast.undoFailed })),
+                }
+              : undefined,
           });
           if (scanned) router.replace('/scanner');
           else router.back();

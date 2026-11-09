@@ -24,10 +24,10 @@ type RowProps = {
   divider?: boolean;
 };
 
-// Una fila del historial (RF-15). La diferencia sale de la existencia antes y
-// después del movimiento, así también sirve para los ajustes.
+// Una fila del historial (RF-15). En un ajuste, quantity ya trae la diferencia con
+// signo; así cada fila se calcula sola, sin depender de las demás páginas.
 export const MovementRow = memo(function MovementRow({ movement, unit, isOldest, divider }: RowProps) {
-  const delta = movement.resultingStock - movement.previousStock;
+  const delta = movement.type === 'OUTBOUND' ? -movement.quantity : movement.quantity;
   const sign = delta > 0 ? '+' : delta < 0 ? '−' : '';
   return (
     <View style={[styles.row, divider && styles.divider]} accessible>

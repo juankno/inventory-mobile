@@ -4,25 +4,11 @@ import { mockRequest } from './mock/mockServer';
 
 // Cliente HTTP único sobre fetch (M-04): agrega la URL base y el token,
 // y convierte las respuestas de error en ApiError.
-const baseUrl = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:3000/api/v1';
+const baseUrl = process.env.EXPO_PUBLIC_API_URL ?? 'https://surtido-api.vercel.app/api/v1';
 
-// Modo demostración: mientras no haya backend, las peticiones las responde una
-// API simulada en memoria. Se desactiva con EXPO_PUBLIC_USE_MOCK_API=false.
-export const isMockApi = process.env.EXPO_PUBLIC_USE_MOCK_API !== 'false';
-
-// Rutas que ya responde el backend aunque el modo demostración siga activo,
-// separadas por comas (por ejemplo "/auth/login,/auth/register"). Así la app
-// pasa al backend real a medida que se despliegan los endpoints.
-const realRoutes = (process.env.EXPO_PUBLIC_REAL_API_ROUTES ?? '')
-  .split(',')
-  .map((route: string) => route.trim())
-  .filter(Boolean);
-
-// "/products" abarca "/products/123" y "/products?x", pero no "/productsX".
-export function isRealRoute(path: string, routes: string[] = realRoutes): boolean {
-  const pathname = path.split('?')[0];
-  return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
-}
+// Modo demostración: con EXPO_PUBLIC_USE_MOCK_API=true, las peticiones las responde
+// una API simulada en memoria, para usar la app sin conexión ni cuenta.
+export const isMockApi = process.env.EXPO_PUBLIC_USE_MOCK_API === 'true';
 
 let getToken: () => string | null = () => null;
 let onUnauthorized: () => void = () => {};
@@ -38,7 +24,7 @@ export function configureApiClient(options: {
 type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
 export async function apiRequest<T>(method: Method, path: string, body?: unknown): Promise<T> {
-  if (isMockApi && !isRealRoute(path)) return mockRequest<T>(method, path, body);
+  if (isMockApi) return mockRequest<T>(method, path, body);
 
   const headers: Record<string, string> = { Accept: 'application/json' };
   if (body !== undefined) headers['Content-Type'] = 'application/json';

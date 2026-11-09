@@ -2,7 +2,6 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import * as Crypto from 'expo-crypto';
 
 import { queryKeys } from '@/shared/api/queryKeys';
-import type { Movement } from '@/shared/api/types';
 import { createMovement, listMovements } from '../api';
 
 // Movimientos que se ven en el detalle del producto; el resto, en "Ver todo el historial".
@@ -33,9 +32,9 @@ export function useCreateMovement() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createMovement,
-    onSuccess: (movement) => {
+    onSuccess: (_result, { productId }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.products });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.movements(movement.productId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.movements(productId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.alerts });
     },
   });
@@ -46,9 +45,9 @@ export function useCreateMovement() {
 // consultas directamente porque la pantalla del movimiento ya se cerró.
 export function useUndoMovement() {
   const queryClient = useQueryClient();
-  return async (movement: Movement, previousStock: number) => {
+  return async (productId: string, previousStock: number) => {
     await createMovement({
-      productId: movement.productId,
+      productId,
       type: 'ADJUSTMENT',
       reason: null,
       quantity: previousStock,
@@ -56,7 +55,7 @@ export function useUndoMovement() {
     });
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: queryKeys.products }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.movements(movement.productId) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.movements(productId) }),
       queryClient.invalidateQueries({ queryKey: queryKeys.alerts }),
     ]);
   };

@@ -61,7 +61,7 @@ La interfaz sigue las imágenes de [docs/diseno](docs/diseno): fondo hueso, hoja
 
 ## Modo demostración
 
-Mientras el backend no tenga los endpoints, la app usa una API simulada en memoria (`src/shared/api/mock/`). Con ella se puede ingresar con cualquier correo y contraseña, y se usan los 20 productos del inventario de demostración. Los datos se reinician cada vez que se recarga la app. Para conectarla al backend real, pon `EXPO_PUBLIC_USE_MOCK_API=false` en `.env` y reinicia Expo.
+La app usa el backend real (`https://surtido-api.vercel.app/api/v1`). Para usarla sin cuenta ni conexión, pon `EXPO_PUBLIC_USE_MOCK_API=true` en `.env` y reinicia Expo: una API simulada en memoria (`src/shared/api/mock/`) responde con los mismos endpoints y errores, se ingresa con cualquier correo y contraseña, y se usan los 20 productos de demostración. Los datos se reinician cada vez que se recarga la app.
 
 ## Estado
 

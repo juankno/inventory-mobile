@@ -1,6 +1,6 @@
 # Contrato de la API que usa la app
 
-Estos son los endpoints que consume la app móvil, todos bajo `/api/v1`. Se definieron a partir del esquema de Prisma de `inventory-backend`, porque el backend todavía no tiene las rutas montadas. Si el DDS 8.1 dice otra cosa, manda el DDS: hay que ajustar los archivos `src/features/*/api.ts`.
+Estos son los endpoints que consume la app móvil, todos bajo `/api/v1`, en `https://surtido-api.vercel.app/api/v1`. La referencia completa del backend está en `inventory-backend/api/openapi.yaml` y en `/api/v1/docs`; si algo cambia allá, hay que ajustar los archivos `src/features/*/api.ts` y la API simulada de `src/shared/api/mock/`.
 
 - **Autenticación:** con sesión iniciada, la app envía `Authorization: Bearer <token>`.
 - **Errores:** llegan como `{ "code": "…", "message": "…" }`. La app muestra `message` tal cual, así que debe venir en español.
@@ -17,7 +17,7 @@ Estos son los endpoints que consume la app móvil, todos bajo `/api/v1`. Se defi
 
 `AuthResponse` tiene esta forma: `{ token, user: { ownerName, email }, business: { name } }`.
 
-El backend ya implementa estas rutas y las documenta en `inventory-backend/api/openapi.yaml`. Detalles:
+Detalles:
 
 - **Cuerpos estrictos:** un campo de más o de menos responde `400 VALIDATION_ERROR`.
 - **Registro:** si el correo ya existe, responde `409 EMAIL_ALREADY_REGISTERED`.
@@ -31,51 +31,51 @@ El backend ya implementa estas rutas y las documenta en `inventory-backend/api/o
 
 | Método y ruta | Cuerpo | Respuesta |
 | --- | --- | --- |
-| `GET /products` | | `Product[]` activos del negocio |
-| `GET /products/:id` | | `Product` |
-| `GET /products/lookup?code=…` | | `Product` o `404` con `code: "PRODUCT_NOT_FOUND"` |
-| `POST /products` | `{ name, unit, codeType, code?, initialStock, minStock, salePrice }` | `Product` |
-| `PATCH /products/:id` | `{ name, unit, minStock, salePrice }` | `Product` |
+| `GET /products` | | `Product[]` activos del negocio, ordenados por nombre |
+| `GET /products/:id` | | `Product`, o `404 PRODUCT_NOT_FOUND` si no existe o está eliminado |
+| `GET /products/code/:code` | | `Product`, o `404 CODE_NOT_RECOGNIZED` |
+| `POST /products` | `{ name, unit, stock, code?, minStock?, salePrice? }` | `201` + `Product` |
+| `PATCH /products/:id` | `{ name, unit, minStock, salePrice }` (`minStock` y `salePrice` admiten `null`) | `Product` |
 | `DELETE /products/:id` | | `204`. Desactiva el producto (`isActive = false`) |
 
 Detalles de `POST /products`:
 
-- Con `codeType: "INTERNAL"` la app no envía `code`. El backend lo genera con `Base32IdGenerator` (`INV-` y 10 caracteres).
-- El backend registra `initialStock` como el primer movimiento `INBOUND`. El historial lo muestra como "Existencia inicial".
-- Si el código ya existe en el negocio, debe responder `409` con un mensaje claro.
+- **Código:** con `code` es un GTIN de 8 o 13 dígitos. Sin `code`, el backend genera un identificador interno (`INV-` y 10 caracteres).
+- **Campos opcionales:** `minStock` y `salePrice` no admiten `null`. Si no se definen, la app no los envía.
+- **Existencia inicial:** si `stock` es mayor que 0, el backend registra el primer movimiento `INBOUND`. El historial lo muestra como "Existencia inicial".
+- **Código repetido:** responde `409 CODE_ALREADY_REGISTERED`, o `409 CODE_OF_DELETED_PRODUCT` si el código es de un producto eliminado.
 
 Detalles de `DELETE /products/:id` (RF-08):
 
-- El producto desactivado deja de salir en `GET /products`, en `GET /products/lookup` y en `GET /inventory/alerts`.
-- `GET /products/:id` y su historial siguen respondiendo, para conservar los movimientos.
+- El producto eliminado deja de salir en las consultas, incluidos su detalle y su historial, que responden `404`. Sus movimientos se conservan en la base de datos.
 - No se le pueden registrar movimientos: responde `404`.
-- Su código sigue ocupado por la restricción única. Si se intenta registrar de nuevo, el backend responde `409` y debe explicar que el código es de un producto eliminado.
+- Su código sigue ocupado por la restricción única.
 
-`Product` tiene estos campos: `{ id, name, unit, salePrice, stock, minStock, codeType, code, createdAt, updatedAt }`.
+`Product` tiene estos campos: `{ id, name, unit, salePrice, stock, minStock, codeType, code }`. Las consultas agregan `status` (`OK`, `LOW_STOCK` u `OUT_OF_STOCK`); la app calcula el estado por su cuenta y lo ignora.
 
 ## Movimientos e inventario
 
 | Método y ruta | Cuerpo | Respuesta |
 | --- | --- | --- |
 | `GET /products/:id/movements?limit=20&cursor=…` | | `{ items: Movement[], nextCursor }`, del más reciente al más antiguo |
-| `POST /movements` | `{ productId, type, reason, quantity, idempotencyKey }` | `Movement` |
-| `GET /inventory/alerts` | | `Product[]` con `stock <= minStock` |
+| `POST /movements` | `{ productId, type, reason?, quantity, idempotencyKey }` | `{ movement, stock }`: `201` si se registró, `200` si no |
+| `GET /products/low-stock` | | `Product[]` agotados o con `stock <= minStock`, los agotados primero |
 
 Reglas de `POST /movements`:
 
-- **`reason`:** solo va en las salidas (`SALE`, `CONSUMPTION` o `LOSS`). En entradas y ajustes llega `null`.
-- **`quantity`:** en una entrada o una salida es lo que suma o resta. En un ajuste es la **existencia contada**, que queda como la nueva existencia del producto.
-- **`idempotencyKey`:** es un UUID que se repite en los reintentos. Si ya existe, el backend devuelve el movimiento que ya está registrado.
+- **`reason`:** solo va en las salidas (`SALE`, `CONSUMPTION` o `LOSS`). En entradas y ajustes no se envía.
+- **`quantity` al enviar:** en una entrada o una salida es lo que suma o resta. En un ajuste es la **existencia contada**, que queda como la nueva existencia del producto.
+- **`idempotencyKey`:** es un UUID que se repite en los reintentos. Si ya existe, el backend responde `200` con el movimiento que ya está registrado.
+- **Ajuste sin cambios:** si la existencia contada es igual a la actual, responde `200` con `movement: null`.
 - **Existencias insuficientes:** si una salida deja la existencia en negativo, el backend responde `409` con `code: "INSUFFICIENT_STOCK"`.
 
-`Movement` tiene estos campos: `{ id, productId, type, reason, quantity, previousStock, resultingStock, createdAt }`.
+`Movement` tiene estos campos: `{ id, type, reason, quantity, resultingStock, createdAt }`.
 
-- **`previousStock`:** existencia antes del movimiento. El backend la conoce al registrarlo, dentro de la misma transacción. Con ella cada fila del historial calcula su diferencia sin depender de las demás páginas, incluso en los ajustes. Hoy el esquema de Prisma no la guarda: hay que agregar la columna `previous_stock`.
+- **`quantity` al leer:** en una entrada o una salida es positivo. En un ajuste es la **diferencia con signo** frente a la existencia anterior. Por eso cada fila del historial calcula su diferencia sin depender de las demás páginas.
 
 Paginación de `GET /products/:id/movements` (RF-15):
 
-- **`limit`:** de 1 a 100. Si no llega, 20. El detalle del producto pide 5 y el historial completo pide 20 por página.
+- **`limit`:** de 1 a 100. Si no llega, 50. El detalle del producto pide 5 y el historial completo pide 20 por página.
 - **`cursor`:** el `nextCursor` de la página anterior. Sin él se entrega la primera página.
-- **`nextCursor`:** `null` cuando ya no hay movimientos más antiguos. La app usa el `id` del último movimiento de la página, pero lo trata como un texto opaco.
-- **Orden estable:** `createdAt` descendente y luego `id`, para que dos movimientos del mismo instante no se repitan ni se salten entre páginas. El índice `@@index([productId, createdAt(sort: Desc)])` ya sirve para esta consulta.
-- Un cursor que no existe responde `400` con `code: "INVALID_CURSOR"`.
+- **`nextCursor`:** `null` cuando ya no hay movimientos más antiguos.
+- **Orden estable:** `createdAt` descendente y luego `id`, para que dos movimientos del mismo instante no se repitan ni se salten entre páginas.
