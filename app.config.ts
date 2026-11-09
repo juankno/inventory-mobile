@@ -5,12 +5,13 @@ const config: ExpoConfig = {
   name: 'Surtido',
   slug: 'inventory-mobile',
   scheme: 'inventory',
-  version: '0.1.0',
+  version: '0.2.0',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'light',
   android: {
     package: 'co.edu.poligran.inventory',
+    versionCode: 2,
     adaptiveIcon: {
       backgroundColor: '#1F1F1E',
       foregroundImage: './assets/android-icon-foreground.png',
@@ -20,6 +21,8 @@ const config: ExpoConfig = {
     predictiveBackGestureEnabled: false,
   },
   plugins: [
+    // Sin x86 ni x86_64, que solo sirven en emuladores: la APK pesa bastante menos.
+    ['expo-build-properties', { android: { buildArchs: ['arm64-v8a', 'armeabi-v7a'] } }],
     'expo-router',
     'expo-secure-store',
     'expo-font',
