@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
 
 import { queryKeys } from '@/shared/api/queryKeys';
 import type { Product } from '@/shared/api/types';
@@ -13,8 +13,9 @@ import {
   type UpdateProductInput,
 } from '../api';
 
-export function useProducts() {
-  return useQuery({ queryKey: queryKeys.products, queryFn: listProducts });
+// refetchInterval permite volver a intentar mientras la API no responde.
+export function useProducts(options: Pick<UseQueryOptions<Product[]>, 'refetchInterval'> = {}) {
+  return useQuery({ queryKey: queryKeys.products, queryFn: listProducts, ...options });
 }
 
 // Muestra de inmediato el producto que ya está en la lista y lo actualiza desde la API.

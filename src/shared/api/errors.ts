@@ -12,7 +12,10 @@ export class ApiError extends Error {
 
 export type ApiErrorBody = { code: string; message: string };
 
-export const isNetworkError = (error: unknown) => error instanceof ApiError && error.code === 'NETWORK_ERROR';
+// NETWORK_ERROR: la petición falló sin respuesta. TIMEOUT: se esperó el límite sin
+// respuesta. Para el usuario las dos son falta de conexión.
+export const isNetworkError = (error: unknown) =>
+  error instanceof ApiError && (error.code === 'NETWORK_ERROR' || error.code === 'TIMEOUT');
 
 export const hasErrorCode = (error: unknown, code: string) => error instanceof ApiError && error.code === code;
 

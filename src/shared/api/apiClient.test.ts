@@ -20,6 +20,16 @@ const hangingFetch = (_url: string, init: { signal: AbortSignal }) =>
   });
 
 describe('apiRequest', () => {
+  it('distingue una falla inmediata de la red', async () => {
+    jest.useRealTimers();
+    globalThis.fetch = (async () => {
+      throw new TypeError('Network request failed');
+    }) as unknown as typeof fetch;
+    const { apiRequest } = loadRealClient();
+
+    await expect(apiRequest('GET', '/products')).rejects.toMatchObject({ code: 'NETWORK_ERROR' });
+  });
+
   const realFetch = globalThis.fetch;
 
   beforeEach(() => jest.useFakeTimers());
@@ -41,7 +51,7 @@ describe('apiRequest', () => {
     expect(settled).not.toHaveBeenCalled();
 
     await jest.advanceTimersByTimeAsync(1_000);
-    await expect(request).rejects.toMatchObject({ code: 'NETWORK_ERROR' });
+    await expect(request).rejects.toMatchObject({ code: 'TIMEOUT' });
   });
 
   it('no cancela una respuesta que ya llegó', async () => {

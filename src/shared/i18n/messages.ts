@@ -16,6 +16,7 @@ export const messages = {
   },
   errors: {
     network: 'No hay conexión a internet. Revisa tu conexión e inténtalo de nuevo. Lo que escribiste se conserva.',
+    timeout: 'La conexión está muy lenta y no hubo respuesta. Inténtalo de nuevo. Lo que escribiste se conserva.',
     unexpected: 'Ocurrió un error inesperado. Intenta de nuevo.',
     loadFailed: 'No pudimos cargar la información.',
   },
@@ -378,8 +379,15 @@ export const messages = {
     shareTitle: 'Compartir reporte',
   },
   offline: {
-    noData: 'Sin conexión',
-    withData: (ago: string) => `Sin conexión · datos de ${ago}`,
+    offline: {
+      noData: 'Sin conexión',
+      withData: (ago: string) => `Sin conexión · datos de ${ago}`,
+    },
+    // Hay red, pero la API no responde: no se dice "sin conexión" porque el celular sí la tiene.
+    unreachable: {
+      noData: 'No pudimos conectar con el servidor',
+      withData: (ago: string) => `No pudimos actualizar · datos de ${ago}`,
+    },
   },
   discard: {
     title: '¿Descartar los cambios?',

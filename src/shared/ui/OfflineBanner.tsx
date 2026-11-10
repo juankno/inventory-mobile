@@ -8,8 +8,17 @@ import { theme } from './theme';
 
 const ONE_MINUTE_MS = 60_000;
 
-// Franja superior sin conexión. updatedAt es cuándo se cargaron los datos que se ven; 0 si no hay.
-export function OfflineBanner({ updatedAt, paddingTop }: { updatedAt: number; paddingTop: number }) {
+type Props = {
+  // offline: el celular no tiene red. unreachable: tiene red, pero la API no responde.
+  reason: 'offline' | 'unreachable';
+  // Cuándo se cargaron los datos que se ven; 0 si no hay.
+  updatedAt: number;
+  paddingTop: number;
+};
+
+// Franja superior cuando no se pueden actualizar los datos.
+export function OfflineBanner({ reason, updatedAt, paddingTop }: Props) {
+  const t = messages.offline[reason];
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -20,7 +29,7 @@ export function OfflineBanner({ updatedAt, paddingTop }: { updatedAt: number; pa
   return (
     <View accessibilityRole="alert" accessibilityLiveRegion="polite" style={[styles.banner, { paddingTop }]}>
       <AppText variant="caption" style={styles.text}>
-        {updatedAt > 0 ? messages.offline.withData(formatTimeAgo(updatedAt, now)) : messages.offline.noData}
+        {updatedAt > 0 ? t.withData(formatTimeAgo(updatedAt, now)) : t.noData}
       </AppText>
     </View>
   );
