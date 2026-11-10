@@ -1,8 +1,8 @@
-import type { Query } from '@tanstack/react-query';
+import { onlineManager, type Query } from '@tanstack/react-query';
 
 import { ApiError } from './errors';
 import { queryKeys } from './queryKeys';
-import { shouldPersistQuery, shouldRetryQuery, visibleLoadError } from './queryPolicy';
+import { connectionNotice, shouldPersistQuery, shouldRetryQuery, visibleLoadError } from './queryPolicy';
 
 const network = new ApiError(0, 'NETWORK_ERROR', 'Sin conexión');
 const server = new ApiError(500, 'INTERNAL_ERROR', 'Error');
@@ -11,8 +11,18 @@ const query = (queryKey: readonly unknown[], status = 'success') =>
   ({ queryKey, state: { status } }) as unknown as Pick<Query, 'queryKey' | 'state'>;
 
 describe('shouldRetryQuery', () => {
-  it('no reintenta sin conexión', () => {
+  afterEach(() => onlineManager.setOnline(true));
+
+  it('no reintenta si el celular no tiene red', () => {
+    onlineManager.setOnline(false);
     expect(shouldRetryQuery(0, network)).toBe(false);
+  });
+
+  it('con red, reintenta dos veces un fallo de red pasajero', () => {
+    onlineManager.setOnline(true);
+    expect(shouldRetryQuery(0, network)).toBe(true);
+    expect(shouldRetryQuery(1, network)).toBe(true);
+    expect(shouldRetryQuery(2, network)).toBe(false);
   });
 
   it('reintenta una vez los demás errores', () => {
@@ -36,6 +46,22 @@ describe('shouldPersistQuery', () => {
   it('no guarda consultas fallidas o sin terminar', () => {
     expect(shouldPersistQuery(query(queryKeys.products, 'error'))).toBe(false);
     expect(shouldPersistQuery(query(queryKeys.products, 'pending'))).toBe(false);
+  });
+});
+
+describe('connectionNotice', () => {
+  it('sin red, avisa que no hay conexión', () => {
+    expect(connectionNotice(false, null)).toBe('offline');
+    expect(connectionNotice(false, network)).toBe('offline');
+  });
+
+  it('con red pero sin respuesta de la API, no dice que no hay conexión', () => {
+    expect(connectionNotice(true, network)).toBe('unreachable');
+  });
+
+  it('no avisa nada si todo responde o el error es de otro tipo', () => {
+    expect(connectionNotice(true, null)).toBeNull();
+    expect(connectionNotice(true, server)).toBeNull();
   });
 });
 

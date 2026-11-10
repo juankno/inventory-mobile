@@ -378,8 +378,15 @@ export const messages = {
     shareTitle: 'Compartir reporte',
   },
   offline: {
-    noData: 'Sin conexión',
-    withData: (ago: string) => `Sin conexión · datos de ${ago}`,
+    offline: {
+      noData: 'Sin conexión',
+      withData: (ago: string) => `Sin conexión · datos de ${ago}`,
+    },
+    // Hay red, pero la API no responde: no se dice "sin conexión" porque el celular sí la tiene.
+    unreachable: {
+      noData: 'No pudimos conectar con el servidor',
+      withData: (ago: string) => `No pudimos actualizar · datos de ${ago}`,
+    },
   },
   discard: {
     title: '¿Descartar los cambios?',

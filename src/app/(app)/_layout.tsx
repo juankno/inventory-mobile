@@ -1,10 +1,11 @@
 import { Stack } from 'expo-router';
+import { onlineManager } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaInsetsContext, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useProducts } from '@/features/products/hooks/useProducts';
-import { isNetworkError } from '@/shared/api/errors';
+import { connectionNotice, RECHECK_CONNECTION_MS } from '@/shared/api/queryPolicy';
 import { useIsOnline } from '@/shared/device/network';
 import { OfflineBanner } from '@/shared/ui/OfflineBanner';
 import { theme } from '@/shared/ui/theme';
@@ -14,15 +15,19 @@ import { theme } from '@/shared/ui/theme';
 export default function AppLayout() {
   const insets = useSafeAreaInsets();
   const isOnline = useIsOnline();
-  const products = useProducts();
-  // También si el celular dice estar conectado, pero la API no responde.
-  const offline = !isOnline || isNetworkError(products.error);
+  // Mientras la API no responda teniendo red, se vuelve a intentar cada tanto.
+  const products = useProducts({
+    refetchInterval: (query) =>
+      connectionNotice(onlineManager.isOnline(), query.state.error) === 'unreachable' ? RECHECK_CONNECTION_MS : false,
+  });
+  const notice = connectionNotice(isOnline, products.error);
+  const offline = notice !== null;
   // Con la franja visible, ella ocupa la zona de la barra de estado y las pantallas ya no la reservan.
   const screenInsets = useMemo(() => (offline ? { ...insets, top: 0 } : insets), [offline, insets]);
 
   return (
     <View style={styles.root}>
-      {offline ? <OfflineBanner updatedAt={products.dataUpdatedAt} paddingTop={insets.top} /> : null}
+      {notice ? <OfflineBanner reason={notice} updatedAt={products.dataUpdatedAt} paddingTop={insets.top} /> : null}
       <SafeAreaInsetsContext.Provider value={screenInsets}>
         <AppStack />
       </SafeAreaInsetsContext.Provider>
