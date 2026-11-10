@@ -28,31 +28,46 @@ export function BottomSheet({ visible, onClose, children }: Props) {
   );
 }
 
-// Fila de acción de un menú dentro de la hoja.
+// Fila de acción de un menú dentro de la hoja. destructive la separa y la pinta de
+// rojo claro; navigates muestra una flecha porque abre otra pantalla.
 export function SheetAction({
   icon,
   label,
+  description,
   onPress,
   destructive,
+  navigates,
 }: {
   icon: IconName;
   label: string;
+  // Qué hace la opción, en una línea, para quien no la conoce.
+  description?: string;
   onPress: () => void;
   destructive?: boolean;
+  navigates?: boolean;
 }) {
   const color = destructive ? theme.colors.dangerText : theme.colors.ink;
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityHint={description}
       onPress={onPress}
-      style={({ pressed }) => [styles.action, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.action, destructive && styles.destructive, pressed && styles.pressed]}
     >
       <View style={styles.actionIcon}>
         <Icon name={icon} color={color} size={22} />
       </View>
-      <AppText variant="lead" tone={destructive ? 'danger' : 'default'} style={styles.actionLabel}>
-        {label}
-      </AppText>
+      <View style={styles.actionText}>
+        <AppText variant="lead" tone={destructive ? 'danger' : 'default'} style={styles.actionLabel}>
+          {label}
+        </AppText>
+        {description ? (
+          <AppText variant="body" tone={destructive ? 'danger' : 'secondary'}>
+            {description}
+          </AppText>
+        ) : null}
+      </View>
+      {navigates ? <Icon name="chevronRight" color={theme.colors.secondary} size={22} /> : null}
     </Pressable>
   );
 }
@@ -82,9 +97,12 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
     minHeight: 60,
     paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.pill,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.lg,
     backgroundColor: theme.colors.field,
   },
+  // Separada de las demás para no tocarla por error.
+  destructive: { backgroundColor: theme.colors.dangerBg, marginTop: theme.spacing.sm },
   pressed: { opacity: 0.85 },
   actionIcon: {
     width: 40,
@@ -94,5 +112,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  actionText: { flex: 1 },
   actionLabel: { fontFamily: theme.fonts.bold },
 });
