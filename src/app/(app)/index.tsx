@@ -218,10 +218,14 @@ export default function InventoryScreen() {
   const empty = products.isPending ? (
     <Skeleton variant="card" count={6} />
   ) : products.data && products.data.length === 0 ? (
-    // Primer uso: los dos caminos para empezar, en el mismo mensaje.
+    // Primer uso: el texto señala el botón de abajo en vez de repetirlo. El "+" no
+    // tiene texto, así que se explica aquí cómo agregar un producto sin código.
     <EmptyState icon="box" title={t.emptyTitle} body={t.emptyBody}>
-      <Button label={t.emptyScan} icon="scanBarcode" onPress={() => router.push('/scanner')} />
-      <Button label={t.emptyAdd} icon="plus" variant="secondary" onPress={() => router.push('/products/new')} />
+      <Pressable accessibilityRole="link" onPress={() => router.push('/products/new')} style={styles.emptyLink}>
+        <AppText variant="bodyStrong" style={styles.underline}>
+          {t.emptyAdd}
+        </AppText>
+      </Pressable>
     </EmptyState>
   ) : query ? (
     <EmptyState icon="search" title={t.noResults(query.trim())} />
@@ -460,6 +464,8 @@ const styles = StyleSheet.create({
   },
   clear: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', marginRight: -12 },
   touch: { minHeight: theme.minTouchSize, justifyContent: 'center' },
+  emptyLink: { alignSelf: 'center', minHeight: theme.minTouchSize, justifyContent: 'center' },
+  underline: { textDecorationLine: 'underline', textAlign: 'center' },
   listTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   separator: { height: theme.spacing.sm },
   row: {
