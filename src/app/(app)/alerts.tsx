@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ActivityIndicator, Pressable, RefreshControl, Share, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, Share, StyleSheet, View } from 'react-native';
 
 import { useAlerts } from '@/features/inventory/hooks/useAlerts';
 import { buildShoppingList } from '@/features/inventory/shoppingList';
@@ -11,9 +11,11 @@ import { messages } from '@/shared/i18n/messages';
 import { useSession } from '@/shared/session/SessionProvider';
 import { AppText } from '@/shared/ui/AppText';
 import { Button } from '@/shared/ui/Button';
+import { EmptyState } from '@/shared/ui/EmptyState';
 import { Banner } from '@/shared/ui/Feedback';
 import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
+import { Skeleton } from '@/shared/ui/Skeleton';
 import { theme } from '@/shared/ui/theme';
 import { useScreenSize } from '@/shared/ui/useScreenSize';
 
@@ -67,17 +69,10 @@ export default function AlertsScreen() {
         <RefreshControl refreshing={alerts.isRefetching} onRefresh={() => void alerts.refetch()} tintColor={theme.colors.ink} />
       }
     >
-      {alerts.isPending ? <ActivityIndicator color={theme.colors.ink} /> : null}
+      {alerts.isPending ? <Skeleton variant="card" count={3} /> : null}
       {loadError ? <Banner message={errorMessage(loadError, messages.errors.loadFailed)} /> : null}
 
-      {alerts.data && total === 0 ? (
-        <View style={styles.group}>
-          <AppText variant="title">{t.emptyTitle}</AppText>
-          <AppText variant="body" tone="secondary">
-            {t.emptyBody}
-          </AppText>
-        </View>
-      ) : null}
+      {alerts.data && total === 0 ? <EmptyState icon="check" title={t.emptyTitle} body={t.emptyBody} /> : null}
 
       {alerts.data?.outOfStock.length ? (
         <AlertGroup title={t.outOfStock} tone="danger" products={alerts.data.outOfStock} />

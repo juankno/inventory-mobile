@@ -2,10 +2,10 @@ import { onlineManager } from '@tanstack/react-query';
 import * as Network from 'expo-network';
 import { useSyncExternalStore } from 'react';
 
-// Conectado a un wifi sin internet también cuenta como sin conexión. Un valor
-// desconocido cuenta como conectado, para no bloquear por un dato que no llegó.
-const isOnline = ({ isConnected, isInternetReachable }: Network.NetworkState) =>
-  isConnected !== false && isInternetReachable !== false;
+// Solo cuenta si el celular dice que no tiene red. isInternetReachable no se usa:
+// en algunos Android marca "sin internet" aunque sí haya. Un wifi sin internet
+// se detecta igual, porque las peticiones fallan (connectionNotice).
+export const isOnline = ({ isConnected }: Network.NetworkState) => isConnected !== false;
 
 // Le dice a TanStack Query cuándo hay conexión: al volver, repite las consultas.
 export function watchConnection() {

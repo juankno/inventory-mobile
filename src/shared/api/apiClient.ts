@@ -58,6 +58,7 @@ async function send<R extends HttpResponse>(
       signal: controller.signal,
     });
   } catch {
+    if (controller.signal.aborted) throw new ApiError(0, 'TIMEOUT', messages.errors.timeout);
     throw new ApiError(0, 'NETWORK_ERROR', messages.errors.network);
   } finally {
     clearTimeout(timer);

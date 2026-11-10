@@ -85,6 +85,40 @@ describe('sin conexión', () => {
   });
 });
 
+describe('con red, después de un fallo pasajero', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  it('reintenta y se recupera sin quedar en error', async () => {
+    const client = newClient();
+    const queryFn = jest
+      .fn<Promise<typeof products>, []>()
+      .mockRejectedValueOnce(networkError)
+      .mockResolvedValueOnce(products);
+
+    const result = client.fetchQuery({ queryKey: queryKeys.products, queryFn });
+    await jest.advanceTimersByTimeAsync(1_000);
+
+    await expect(result).resolves.toEqual(products);
+    expect(queryFn).toHaveBeenCalledTimes(2);
+    expect(client.getQueryState(queryKeys.products)?.error).toBeNull();
+  });
+
+  it('se rinde después de dos reintentos si la API sigue sin responder', async () => {
+    const client = newClient();
+    const queryFn = jest.fn(async () => {
+      throw networkError;
+    });
+
+    const result = client.fetchQuery({ queryKey: queryKeys.products, queryFn });
+    result.catch(() => {});
+    await jest.advanceTimersByTimeAsync(10_000);
+
+    await expect(result).rejects.toBe(networkError);
+    expect(queryFn).toHaveBeenCalledTimes(3);
+  });
+});
+
 describe('lo guardado en el celular', () => {
   afterEach(() => queryPersister.removeClient());
 

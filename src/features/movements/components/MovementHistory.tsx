@@ -6,9 +6,18 @@ import { formatRelativeDateTime } from '@/shared/format/dates';
 import { formatNumber, formatQuantity } from '@/shared/format/units';
 import { messages } from '@/shared/i18n/messages';
 import { AppText } from '@/shared/ui/AppText';
+import { EmptyState } from '@/shared/ui/EmptyState';
+import { Icon, type IconName } from '@/shared/ui/Icon';
 import { theme } from '@/shared/ui/theme';
 
 const labels = messages.movement.labels;
+
+// Un ícono por tipo: el ajuste se distingue de una entrada o una salida aunque cambie la existencia.
+const MOVEMENT_ICONS: Record<Movement['type'], IconName> = {
+  INBOUND: 'plus',
+  OUTBOUND: 'minus',
+  ADJUSTMENT: 'pencil',
+};
 
 function movementTitle(movement: Movement, isOldest: boolean): string {
   if (isOldest && movement.type === 'INBOUND') return messages.movement.initialStock;
@@ -32,7 +41,7 @@ export const MovementRow = memo(function MovementRow({ movement, unit, isOldest,
   return (
     <View style={[styles.row, divider && styles.divider]} accessible>
       <View style={styles.icon}>
-        <AppText variant="title">{delta >= 0 ? '+' : '–'}</AppText>
+        <Icon name={MOVEMENT_ICONS[movement.type]} size={22} />
       </View>
       <View style={styles.main}>
         <AppText variant="title" numberOfLines={1}>
@@ -56,11 +65,7 @@ export const MovementRow = memo(function MovementRow({ movement, unit, isOldest,
 // no hay movimientos más antiguos, así el último es la existencia inicial.
 export function MovementHistory({ movements, unit, complete }: { movements: Movement[]; unit: Unit; complete: boolean }) {
   if (movements.length === 0) {
-    return (
-      <AppText variant="body" tone="secondary">
-        {messages.product.historyEmpty}
-      </AppText>
-    );
+    return <EmptyState icon="history" title={messages.product.historyEmpty} />;
   }
 
   return (
