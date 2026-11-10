@@ -9,8 +9,10 @@ import { errorMessage } from '@/shared/api/errors';
 import { messages } from '@/shared/i18n/messages';
 import { AppText } from '@/shared/ui/AppText';
 import { Button } from '@/shared/ui/Button';
+import { EmptyState } from '@/shared/ui/EmptyState';
 import { Banner } from '@/shared/ui/Feedback';
 import { IconButton } from '@/shared/ui/IconButton';
+import { Skeleton } from '@/shared/ui/Skeleton';
 import { theme } from '@/shared/ui/theme';
 
 const t = messages.product;
@@ -45,13 +47,11 @@ export default function MovementHistoryScreen() {
   ) : undefined;
 
   const empty = history.isPending ? (
-    <ActivityIndicator color={theme.colors.ink} />
+    <Skeleton variant="row" count={8} />
   ) : history.error ? (
     <Banner message={errorMessage(history.error, messages.errors.loadFailed)} />
   ) : (
-    <AppText variant="body" tone="secondary">
-      {t.historyEmpty}
-    </AppText>
+    <EmptyState icon="history" title={t.historyEmpty} />
   );
 
   return (

@@ -18,6 +18,7 @@ import { Button } from '@/shared/ui/Button';
 import { Banner, StatusBadge } from '@/shared/ui/Feedback';
 import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
+import { Skeleton } from '@/shared/ui/Skeleton';
 import { theme } from '@/shared/ui/theme';
 import { useToast } from '@/shared/ui/Toast';
 
@@ -131,7 +132,7 @@ export default function ProductDetailScreen() {
           complete={movements.data.nextCursor === null}
         />
       ) : movements.isPending ? (
-        <ActivityIndicator color={theme.colors.ink} />
+        <Skeleton variant="row" count={3} />
       ) : null}
       {/* El detalle solo muestra los últimos; el historial completo carga por páginas. */}
       {movements.data?.nextCursor ? (
@@ -191,11 +192,29 @@ export default function ProductDetailScreen() {
         ) : (
           <>
             <AppText variant="heading">{item.name}</AppText>
-            <SheetAction icon="pencil" label={t.edit} onPress={() => openFromMenu('/products/[id]/edit')} />
+            <SheetAction
+              icon="pencil"
+              label={t.edit}
+              description={t.editHint}
+              navigates
+              onPress={() => openFromMenu('/products/[id]/edit')}
+            />
             {item.codeType === 'INTERNAL' ? (
-              <SheetAction icon="qrCode" label={t.viewQr} onPress={() => openFromMenu('/products/[id]/qr')} />
+              <SheetAction
+                icon="qrCode"
+                label={t.viewQr}
+                description={t.viewQrHint}
+                navigates
+                onPress={() => openFromMenu('/products/[id]/qr')}
+              />
             ) : null}
-            <SheetAction icon="trash" label={t.delete} destructive onPress={() => setSheet('confirmDelete')} />
+            <SheetAction
+              icon="trash"
+              label={t.delete}
+              description={t.deleteHint}
+              destructive
+              onPress={() => setSheet('confirmDelete')}
+            />
             <Button label={messages.common.close} variant="secondary" onPress={closeSheet} />
           </>
         )}

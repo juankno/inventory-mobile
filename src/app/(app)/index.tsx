@@ -1,7 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Animated,
   FlatList,
   Platform,
@@ -31,10 +30,12 @@ import { useSession } from '@/shared/session/SessionProvider';
 import { AppText } from '@/shared/ui/AppText';
 import { BottomSheet, SheetAction } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
+import { EmptyState } from '@/shared/ui/EmptyState';
 import { Banner, StatusBadge } from '@/shared/ui/Feedback';
 import { FilterChips } from '@/shared/ui/FilterChips';
 import { Icon } from '@/shared/ui/Icon';
 import { IconButton } from '@/shared/ui/IconButton';
+import { Skeleton } from '@/shared/ui/Skeleton';
 import { theme } from '@/shared/ui/theme';
 
 const t = messages.inventory;
@@ -215,32 +216,21 @@ export default function InventoryScreen() {
   );
 
   const empty = products.isPending ? (
-    <ActivityIndicator color={theme.colors.ink} style={styles.loading} />
+    <Skeleton variant="card" count={6} />
   ) : products.data && products.data.length === 0 ? (
-    <View style={styles.empty}>
-      <AppText variant="title">{t.emptyTitle}</AppText>
-      <AppText variant="body" tone="secondary">
-        {t.emptyBody}
-      </AppText>
-      {/* Primer uso: los dos caminos para empezar, en el mismo mensaje. */}
-      <View style={styles.emptyActions}>
-        <Button label={t.emptyScan} icon="scanBarcode" onPress={() => router.push('/scanner')} />
-        <Button
-          label={t.emptyAdd}
-          icon="plus"
-          variant="secondary"
-          onPress={() => router.push('/products/new')}
-        />
-      </View>
-    </View>
+    // Primer uso: el texto señala el botón de abajo en vez de repetirlo. El "+" no
+    // tiene texto, así que se explica aquí cómo agregar un producto sin código.
+    <EmptyState icon="box" title={t.emptyTitle} body={t.emptyBody}>
+      <Pressable accessibilityRole="link" onPress={() => router.push('/products/new')} style={styles.emptyLink}>
+        <AppText variant="bodyStrong" style={styles.underline}>
+          {t.emptyAdd}
+        </AppText>
+      </Pressable>
+    </EmptyState>
   ) : query ? (
-    <AppText variant="body" tone="secondary" style={styles.empty}>
-      {t.noResults(query.trim())}
-    </AppText>
+    <EmptyState icon="search" title={t.noResults(query.trim())} />
   ) : statusFilter !== 'all' ? (
-    <AppText variant="body" tone="secondary" style={styles.empty}>
-      {t.noFilterResults[statusFilter]}
-    </AppText>
+    <EmptyState icon="check" title={t.noFilterResults[statusFilter]} />
   ) : null;
 
   return (
@@ -349,6 +339,8 @@ export default function InventoryScreen() {
         <SheetAction
           icon="bell"
           label={t.menuAlerts}
+          description={t.menuAlertsHint}
+          navigates
           onPress={() => {
             setMenuOpen(false);
             router.push('/alerts');
@@ -357,6 +349,8 @@ export default function InventoryScreen() {
         <SheetAction
           icon="chart"
           label={t.menuReports}
+          description={t.menuReportsHint}
+          navigates
           onPress={() => {
             setMenuOpen(false);
             router.push('/reports');
@@ -365,6 +359,8 @@ export default function InventoryScreen() {
         <SheetAction
           icon="trash"
           label={t.menuDeleted}
+          description={t.menuDeletedHint}
+          navigates
           onPress={() => {
             setMenuOpen(false);
             router.push('/products/deleted');
@@ -373,6 +369,7 @@ export default function InventoryScreen() {
         <SheetAction
           icon="logOut"
           label={t.menuLogout}
+          description={t.menuLogoutHint}
           destructive
           onPress={() => {
             setMenuOpen(false);
@@ -467,6 +464,8 @@ const styles = StyleSheet.create({
   },
   clear: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', marginRight: -12 },
   touch: { minHeight: theme.minTouchSize, justifyContent: 'center' },
+  emptyLink: { alignSelf: 'center', minHeight: theme.minTouchSize, justifyContent: 'center' },
+  underline: { textDecorationLine: 'underline', textAlign: 'center' },
   listTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   separator: { height: theme.spacing.sm },
   row: {
@@ -487,9 +486,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  loading: { marginTop: theme.spacing.xxl },
-  empty: { gap: theme.spacing.sm, paddingVertical: theme.spacing.lg },
-  emptyActions: { gap: theme.spacing.sm, marginTop: theme.spacing.md },
   backToTop: { position: 'absolute', right: theme.spacing.lg },
   backToTopButton: {
     width: 52,

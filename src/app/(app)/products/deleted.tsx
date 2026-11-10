@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 
 import { useDeletedProducts, useRestoreProduct } from '@/features/products/hooks/useProducts';
 import { errorMessage } from '@/shared/api/errors';
@@ -10,9 +10,11 @@ import { formatQuantity } from '@/shared/format/units';
 import { messages } from '@/shared/i18n/messages';
 import { AppText } from '@/shared/ui/AppText';
 import { Button } from '@/shared/ui/Button';
+import { EmptyState } from '@/shared/ui/EmptyState';
 import { Banner } from '@/shared/ui/Feedback';
 import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
+import { Skeleton } from '@/shared/ui/Skeleton';
 import { theme } from '@/shared/ui/theme';
 import { useToast } from '@/shared/ui/Toast';
 import { useScreenSize } from '@/shared/ui/useScreenSize';
@@ -53,17 +55,10 @@ export default function DeletedProductsScreen() {
         />
       }
     >
-      {deleted.isPending ? <ActivityIndicator color={theme.colors.ink} /> : null}
+      {deleted.isPending ? <Skeleton variant="card" count={3} /> : null}
       {loadError ? <Banner message={errorMessage(loadError, messages.errors.loadFailed)} /> : null}
 
-      {deleted.data?.length === 0 ? (
-        <View style={styles.empty}>
-          <AppText variant="title">{t.emptyTitle}</AppText>
-          <AppText variant="body" tone="secondary">
-            {t.emptyBody}
-          </AppText>
-        </View>
-      ) : null}
+      {deleted.data?.length === 0 ? <EmptyState icon="trash" title={t.emptyTitle} body={t.emptyBody} /> : null}
 
       {deleted.data?.map((product) => (
         <View key={product.id} style={[styles.card, narrow && styles.cardStacked]}>
@@ -92,7 +87,6 @@ export default function DeletedProductsScreen() {
 }
 
 const styles = StyleSheet.create({
-  empty: { gap: theme.spacing.sm },
   card: {
     flexDirection: 'row',
     alignItems: 'center',

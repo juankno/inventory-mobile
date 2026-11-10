@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import { useState } from 'react';
-import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 
 import { downloadReport, type ReportKind } from '@/features/reports/api';
 import { useSalesSummary } from '@/features/reports/hooks/useSalesSummary';
@@ -15,9 +15,12 @@ import { messages } from '@/shared/i18n/messages';
 import { AppText } from '@/shared/ui/AppText';
 import { Button } from '@/shared/ui/Button';
 import { ChipGroup } from '@/shared/ui/ChipGroup';
+import { EmptyState } from '@/shared/ui/EmptyState';
 import { Banner } from '@/shared/ui/Feedback';
+import { Icon, type IconName } from '@/shared/ui/Icon';
 import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
+import { Skeleton } from '@/shared/ui/Skeleton';
 import { TextField } from '@/shared/ui/TextField';
 import { theme } from '@/shared/ui/theme';
 
@@ -33,7 +36,8 @@ const periodOptions: readonly { value: PeriodPreset; label: string }[] = [
   { value: 'custom', label: t.periodCustom },
 ];
 
-// Resumen de ventas y reportes en Excel para compartir.
+// Resumen de ventas y reportes en Excel para compartir. Sigue el estilo del inicio:
+// cifras grandes en tarjetas, filas con borde y una tarjeta por reporte.
 export default function ReportsScreen() {
   const summary = useSalesSummary();
   const summaryError = visibleLoadError(summary);
@@ -72,15 +76,17 @@ export default function ReportsScreen() {
     }
   };
 
-  const downloadButton = (kind: ReportKind, label: string) => (
-    <Button
-      label={label}
-      icon="share"
-      variant="secondary"
-      loading={busy === kind}
-      disabled={isMockApi || (busy !== null && busy !== kind)}
-      onPress={() => void share(kind)}
-    />
+  const reportCard = (kind: ReportKind, icon: IconName, title: string, body: string, action: string) => (
+    <ReportCard icon={icon} title={title} body={body}>
+      <Button
+        label={action}
+        icon="share"
+        variant="secondary"
+        loading={busy === kind}
+        disabled={isMockApi || (busy !== null && busy !== kind)}
+        onPress={() => void share(kind)}
+      />
+    </ReportCard>
   );
 
   const data = summary.data;
@@ -96,7 +102,7 @@ export default function ReportsScreen() {
       <AppText variant="heading" accessibilityRole="header">
         {t.salesTitle}
       </AppText>
-      {summary.isPending ? <ActivityIndicator color={theme.colors.ink} /> : null}
+      {summary.isPending ? <Skeleton variant="stats" /> : null}
       {summaryError ? <Banner message={errorMessage(summaryError, messages.errors.loadFailed)} /> : null}
 
       {data ? (
@@ -116,21 +122,22 @@ export default function ReportsScreen() {
               {t.topTitle}
             </AppText>
             {data.topProducts.length === 0 ? (
-              <AppText variant="body" tone="secondary">
-                {t.topEmpty}
-              </AppText>
+              <EmptyState icon="chart" title={t.topEmpty} />
             ) : (
               data.topProducts.map((product, index) => (
-                <View key={`${product.name}-${index}`} style={styles.topRow} accessible>
+                <View key={`${product.name}-${index}`} style={styles.row} accessible>
+                  <View style={styles.rank}>
+                    <AppText variant="bodyStrong">{index + 1}</AppText>
+                  </View>
                   <View style={styles.flex}>
-                    <AppText variant="bodyStrong" numberOfLines={1}>
-                      {`${index + 1}. ${product.name}`}
+                    <AppText variant="title" numberOfLines={1}>
+                      {product.name}
                     </AppText>
                     <AppText variant="body" tone="secondary">
                       {formatQuantity(product.quantity, product.unit)}
                     </AppText>
                   </View>
-                  <AppText variant="bodyStrong">{formatMoney(product.total)}</AppText>
+                  <AppText variant="title">{formatMoney(product.total)}</AppText>
                 </View>
               ))
             )}
@@ -138,19 +145,13 @@ export default function ReportsScreen() {
         </>
       ) : null}
 
-      <AppText variant="heading" accessibilityRole="header" style={styles.excelTitle}>
+      <AppText variant="heading" accessibilityRole="header" style={styles.section}>
         {t.excelTitle}
       </AppText>
       {isMockApi ? <Banner tone="info" message={t.demoUnavailable} /> : null}
       {error ? <Banner message={error} /> : null}
 
-      <View style={styles.group}>
-        <AppText variant="title">{t.inventoryTitle}</AppText>
-        <AppText variant="body" tone="secondary">
-          {t.inventoryBody}
-        </AppText>
-        {downloadButton('inventory', t.inventoryAction)}
-      </View>
+      {reportCard('inventory', 'box', t.inventoryTitle, t.inventoryBody, t.inventoryAction)}
 
       <View style={styles.group}>
         <AppText variant="title">{t.periodTitle}</AppText>
@@ -192,26 +193,20 @@ export default function ReportsScreen() {
             </View>
           </View>
         ) : null}
-        <AppText variant="body" tone="secondary">
-          {t.salesBody}
-        </AppText>
-        {downloadButton('sales', t.salesAction)}
-        <AppText variant="body" tone="secondary">
-          {t.movementsBody}
-        </AppText>
-        {downloadButton('movements', t.movementsAction)}
       </View>
+
+      {reportCard('sales', 'chart', t.salesReportTitle, t.salesBody, t.salesAction)}
+      {reportCard('movements', 'history', t.movementsReportTitle, t.movementsBody, t.movementsAction)}
     </PageLayout>
   );
 }
 
+// Como las tarjetas "Productos registrados" y "Por reponer" del inicio.
 function Stat({ label, amount, sales }: { label: string; amount: number; sales: number }) {
   return (
     <View style={styles.stat} accessible>
-      <AppText variant="body" tone="secondary">
-        {label}
-      </AppText>
-      <AppText variant="title" numberOfLines={1} adjustsFontSizeToFit>
+      <AppText variant="lead">{label}</AppText>
+      <AppText maxFontSizeMultiplier={theme.maxFontScale.number} numberOfLines={1} adjustsFontSizeToFit style={styles.statNumber}>
         {formatMoney(amount)}
       </AppText>
       <AppText variant="body" tone="secondary">
@@ -221,18 +216,71 @@ function Stat({ label, amount, sales }: { label: string; amount: number; sales: 
   );
 }
 
+function ReportCard({ icon, title, body, children }: { icon: IconName; title: string; body: string; children: ReactNode }) {
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <View style={styles.cardIcon}>
+          <Icon name={icon} />
+        </View>
+        <View style={styles.flex}>
+          <AppText variant="title">{title}</AppText>
+          <AppText variant="body" tone="secondary">
+            {body}
+          </AppText>
+        </View>
+      </View>
+      {children}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   stats: { flexDirection: 'row', gap: theme.spacing.md },
   stat: {
     flex: 1,
-    gap: 2,
+    gap: theme.spacing.sm,
+    minHeight: 130,
     backgroundColor: theme.colors.field,
     borderRadius: theme.radius.lg,
     padding: theme.spacing.lg,
   },
+  statNumber: { fontFamily: theme.fonts.medium, fontSize: 32, lineHeight: 40, color: theme.colors.text },
   group: { gap: theme.spacing.md },
-  topRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
-  excelTitle: { marginTop: theme.spacing.md },
+  section: { marginTop: theme.spacing.md },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  rank: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.colors.field,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  card: {
+    gap: theme.spacing.md,
+    padding: theme.spacing.lg,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.md },
+  cardIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.colors.field,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   dates: { flexDirection: 'row', gap: theme.spacing.md, alignItems: 'flex-start' },
 });
