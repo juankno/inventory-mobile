@@ -16,6 +16,7 @@ export const messages = {
   },
   errors: {
     network: 'No hay conexión a internet. Revisa tu conexión e inténtalo de nuevo. Lo que escribiste se conserva.',
+    timeout: 'La conexión está muy lenta y no hubo respuesta. Inténtalo de nuevo. Lo que escribiste se conserva.',
     unexpected: 'Ocurrió un error inesperado. Intenta de nuevo.',
     loadFailed: 'No pudimos cargar la información.',
   },

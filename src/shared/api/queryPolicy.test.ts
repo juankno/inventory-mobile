@@ -5,6 +5,7 @@ import { queryKeys } from './queryKeys';
 import { connectionNotice, shouldPersistQuery, shouldRetryQuery, visibleLoadError } from './queryPolicy';
 
 const network = new ApiError(0, 'NETWORK_ERROR', 'Sin conexión');
+const timeout = new ApiError(0, 'TIMEOUT', 'Sin respuesta');
 const server = new ApiError(500, 'INTERNAL_ERROR', 'Error');
 
 const query = (queryKey: readonly unknown[], status = 'success') =>
@@ -16,6 +17,11 @@ describe('shouldRetryQuery', () => {
   it('no reintenta si el celular no tiene red', () => {
     onlineManager.setOnline(false);
     expect(shouldRetryQuery(0, network)).toBe(false);
+  });
+
+  it('no reintenta cuando ya se esperó el límite sin respuesta', () => {
+    onlineManager.setOnline(true);
+    expect(shouldRetryQuery(0, timeout)).toBe(false);
   });
 
   it('con red, reintenta dos veces un fallo de red pasajero', () => {
@@ -57,6 +63,7 @@ describe('connectionNotice', () => {
 
   it('con red pero sin respuesta de la API, no dice que no hay conexión', () => {
     expect(connectionNotice(true, network)).toBe('unreachable');
+    expect(connectionNotice(true, timeout)).toBe('unreachable');
   });
 
   it('no avisa nada si todo responde o el error es de otro tipo', () => {
@@ -68,6 +75,7 @@ describe('connectionNotice', () => {
 describe('visibleLoadError', () => {
   it('oculta la falta de conexión si hay datos guardados', () => {
     expect(visibleLoadError({ data: [], error: network })).toBeNull();
+    expect(visibleLoadError({ data: [], error: timeout })).toBeNull();
   });
 
   it('muestra la falta de conexión si no hay nada que mostrar', () => {

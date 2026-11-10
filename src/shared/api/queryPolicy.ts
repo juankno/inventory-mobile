@@ -1,14 +1,18 @@
 import { onlineManager, type Query } from '@tanstack/react-query';
 
-import { isNetworkError } from './errors';
+import { hasErrorCode, isNetworkError } from './errors';
 import { queryKeys } from './queryKeys';
 
 // Sin conexión no se reintenta: la pantalla muestra lo guardado o el error de
 // inmediato, y la consulta se repite sola al volver la conexión. Con conexión, un
-// fallo de red suele ser pasajero (la red despertando al volver a la app), así que
-// se reintenta dos veces antes de avisar.
-export const shouldRetryQuery = (failureCount: number, error: unknown) =>
-  isNetworkError(error) ? onlineManager.isOnline() && failureCount < 2 : failureCount < 1;
+// fallo inmediato suele ser pasajero (la red despertando al volver a la app), así
+// que se reintenta dos veces, al segundo y a los 3 s. Un TIMEOUT no se reintenta:
+// ya se esperaron 20 s, y repetirlo dejaría la pantalla cargando un minuto.
+export function shouldRetryQuery(failureCount: number, error: unknown) {
+  if (hasErrorCode(error, 'TIMEOUT')) return false;
+  if (isNetworkError(error)) return onlineManager.isOnline() && failureCount < 2;
+  return failureCount < 1;
+}
 
 // Mientras la API no responda, se vuelve a intentar cada 30 s: si no, el aviso
 // quedaría fijo hasta que el usuario recargue, aunque la conexión ya esté bien.
