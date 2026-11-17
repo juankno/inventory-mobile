@@ -1,0 +1,21 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'co.edu.poligran.inventory'
+version = '1.0.0'
+
+android {
+  namespace "expo.modules.quickbubble"
+  defaultConfig {
+    versionCode 1
+    versionName '1.0.0'
+  }
+}
+
+dependencies {
+  // Para saber cuándo la app entera pasa a segundo plano, no solo una pantalla.
+  implementation 'androidx.lifecycle:lifecycle-process:2.8.7'
+  implementation 'androidx.core:core-ktx:1.13.1'
+}
