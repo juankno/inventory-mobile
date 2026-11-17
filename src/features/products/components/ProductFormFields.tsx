@@ -1,13 +1,14 @@
 import { Controller, useWatch, type Control, type FieldErrors } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 
+import { formatMoney } from '@/shared/format/dates';
 import { allowsDecimals, formatNumber, parseQuantity, unitOptions, unitWord } from '@/shared/format/units';
 import { messages } from '@/shared/i18n/messages';
 import { AppText } from '@/shared/ui/AppText';
 import { ChipGroup } from '@/shared/ui/ChipGroup';
 import { TextField } from '@/shared/ui/TextField';
 import { theme } from '@/shared/ui/theme';
-import { formatPriceInput, type ProductForm } from '../schemas';
+import { formatPriceInput, parsePrice, type ProductForm } from '../schemas';
 
 type Props = {
   control: Control<ProductForm>;
@@ -23,6 +24,8 @@ const t = messages.productForm;
 export function ProductFormFields({ control, errors, mode, namePlaceholder }: Props) {
   const unit = useWatch({ control, name: 'unit' });
   const minStock = useWatch({ control, name: 'minStock' });
+  const salePrice = parsePrice(useWatch({ control, name: 'salePrice' }));
+  const costPrice = parsePrice(useWatch({ control, name: 'costPrice' }));
   const decimals = allowsDecimals(unit);
   const minValue = parseQuantity(minStock);
 
@@ -43,30 +46,51 @@ export function ProductFormFields({ control, errors, mode, namePlaceholder }: Pr
     />
   );
 
-  const priceField = (
+  // Costo y precio en pesos, con puntos de miles mientras se escribe.
+  const moneyField = (name: 'salePrice' | 'costPrice', label: string) => (
     <Controller
       control={control}
-      name="salePrice"
+      name={name}
       render={({ field }) => (
         <TextField
-          label={
-            <AppText variant="label">
-              {t.price}
-              {mode === 'create' ? (
-                <AppText variant="body" tone="secondary">{` ${messages.common.optional}`}</AppText>
-              ) : null}
-            </AppText>
-          }
+          label={label}
           prefix="$"
           placeholder="0"
           value={field.value}
           onChangeText={(text) => field.onChange(formatPriceInput(text))}
           onBlur={field.onBlur}
-          error={errors.salePrice?.message}
+          error={errors[name]?.message}
           keyboardType="number-pad"
         />
       )}
     />
+  );
+
+  // Con costo y precio se muestra cuánto se gana por unidad; si no, que son opcionales.
+  const margin = salePrice !== null && costPrice !== null ? salePrice - costPrice : null;
+  const unitName = unitWord(1, unit);
+  const pricesHint =
+    margin === null || errors.salePrice || errors.costPrice
+      ? t.pricesHint
+      : margin >= 0
+        ? t.margin(formatMoney(margin), unitName)
+        : t.loss(formatMoney(-margin), unitName);
+
+  const pricesGroup = (
+    <View style={styles.group}>
+      <View style={styles.row}>
+        <View style={styles.cell}>{moneyField('costPrice', t.cost)}</View>
+        <View style={styles.cell}>{moneyField('salePrice', t.price)}</View>
+      </View>
+      <AppText
+        variant="caption"
+        tone={margin !== null && margin < 0 ? 'danger' : 'secondary'}
+        style={styles.hint}
+        accessibilityLiveRegion="polite"
+      >
+        {pricesHint}
+      </AppText>
+    </View>
   );
 
   const minStockHint =
@@ -139,16 +163,16 @@ export function ProductFormFields({ control, errors, mode, namePlaceholder }: Pr
             </View>
             {minStockHint}
           </View>
-          {priceField}
+          {pricesGroup}
         </>
       ) : (
-        <View style={styles.group}>
-          <View style={styles.row}>
-            <View style={styles.cell}>{minStockField}</View>
-            <View style={styles.cell}>{priceField}</View>
+        <>
+          <View style={styles.group}>
+            {minStockField}
+            {minStockHint}
           </View>
-          {minStockHint}
-        </View>
+          {pricesGroup}
+        </>
       )}
     </>
   );

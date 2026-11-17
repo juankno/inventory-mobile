@@ -7,9 +7,11 @@ import { useCreateMovement, useUndoMovement } from '@/features/movements/hooks/u
 import { getLastChoice, rememberChoice } from '@/features/movements/lastChoice';
 import { movementQuantitySchema, resultingStock } from '@/features/movements/schemas';
 import { useProduct } from '@/features/products/hooks/useProducts';
+import { formatPriceInput, parsePrice, priceToInput } from '@/features/products/schemas';
 import { errorMessage, hasErrorCode } from '@/shared/api/errors';
 import { hapticSuccess } from '@/shared/device/haptics';
 import type { MovementType, OutboundReason } from '@/shared/api/types';
+import { formatMoney } from '@/shared/format/dates';
 import { allowsDecimals, formatNumber, unitWord } from '@/shared/format/units';
 import { messages } from '@/shared/i18n/messages';
 import { AppText } from '@/shared/ui/AppText';
@@ -20,6 +22,7 @@ import { Banner, Tag } from '@/shared/ui/Feedback';
 import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { QuantityStepper } from '@/shared/ui/QuantityStepper';
+import { TextField } from '@/shared/ui/TextField';
 import { theme } from '@/shared/ui/theme';
 import { useToast } from '@/shared/ui/Toast';
 
@@ -61,6 +64,8 @@ export default function MovementScreen() {
   const [type, setType] = useState<MovementType | null>(initial.type);
   const [reason, setReason] = useState<OutboundReason | null>(initial.reason);
   const [quantity, setQuantity] = useState('1');
+  // Costo de esta venta. null: todavía no se editó y se muestra el del producto.
+  const [costText, setCostText] = useState<string | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   // La misma clave en cada reintento evita registrar dos veces el movimiento (RU-01).
   const [idempotencyKey] = useState(() => Crypto.randomUUID());
@@ -105,14 +110,48 @@ export default function MovementScreen() {
       : unchanged
         ? t.noChange
         : null;
-  const canSubmit = !disabledLabel && value !== null && !insufficient;
+  // En las ventas se puede cambiar el costo; uno distinto queda como el nuevo costo del producto.
+  const isSale = type === 'OUTBOUND' && reason === 'SALE';
+  const cost = costText ?? priceToInput(item.costPrice);
+  const unitCost = parsePrice(cost);
+  // Vacío, el backend usaría el costo guardado: si el producto ya tiene uno, se pide escribirlo.
+  const costError =
+    cost.trim() === ''
+      ? item.costPrice !== null
+        ? messages.common.required
+        : undefined
+      : unitCost === null
+        ? messages.validation.number
+        : undefined;
+  const costChanged = unitCost !== null && unitCost !== item.costPrice;
+  const saleProfit =
+    item.salePrice !== null && unitCost !== null && value !== null ? value * (item.salePrice - unitCost) : null;
+  const costHint =
+    item.salePrice === null
+      ? t.noPrice
+      : unitCost === null
+        ? t.noCost
+        : saleProfit === null
+          ? null
+          : saleProfit >= 0
+            ? t.saleProfit(formatMoney(saleProfit))
+            : t.saleLoss(formatMoney(-saleProfit));
+
+  const canSubmit = !disabledLabel && value !== null && !insufficient && !(isSale && costError);
 
   const submit = () => {
     if (!type || value === null || !canSubmit) return;
     const previousStock = item.stock;
     const movementReason = type === 'OUTBOUND' ? reason : null;
     createMutation.mutate(
-      { productId: item.id, type, reason: movementReason, quantity: value, idempotencyKey },
+      {
+        productId: item.id,
+        type,
+        reason: movementReason,
+        quantity: value,
+        idempotencyKey,
+        ...(isSale && unitCost !== null && { unitCost }),
+      },
       {
         onSuccess: ({ movement, stock }) => {
           hapticSuccess();
@@ -236,6 +275,30 @@ export default function MovementScreen() {
           <Button label={t.switchToAdjustment} variant="secondary" icon="pencil" onPress={switchToAdjustment} />
         ) : null}
       </View>
+
+      {isSale ? (
+        <View style={styles.group}>
+          <TextField
+            label={t.unitCost(unitWord(1, item.unit))}
+            prefix="$"
+            placeholder="0"
+            value={cost}
+            onChangeText={(text) => setCostText(formatPriceInput(text))}
+            error={costError}
+            keyboardType="number-pad"
+          />
+          {!costError && costHint ? (
+            <AppText
+              variant="body"
+              tone={saleProfit !== null && saleProfit < 0 ? 'danger' : 'secondary'}
+              accessibilityLiveRegion="polite"
+            >
+              {costHint}
+              {costChanged ? ` ${t.newCost}` : ''}
+            </AppText>
+          ) : null}
+        </View>
+      ) : null}
 
       <BottomSheet visible={helpOpen} onClose={() => setHelpOpen(false)}>
         <AppText variant="heading">{t.helpTitle}</AppText>

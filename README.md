@@ -14,7 +14,7 @@ npm install
 npm start                     # abre Expo; escanea el QR con Expo Go o presiona "a"
 ```
 
-Todos los módulos nativos que usa la app (cámara, SQLite, archivos, impresión, vibración) vienen en Expo Go, así que no hace falta un *development build* para desarrollar.
+Casi todos los módulos nativos que usa la app (cámara, SQLite, archivos, impresión, vibración) vienen en Expo Go, así que no hace falta un *development build* para desarrollar. La excepción es la burbuja de acceso rápido (`modules/quick-bubble`), un módulo propio de Android: en Expo Go la opción no aparece, y para probarla hay que instalar el APK o un *development build* (`npx expo run:android`).
 
 Para usar un backend local, cambia `EXPO_PUBLIC_API_URL` en `.env`: en el emulador es `http://10.0.2.2:3000/api/v1` y en un celular físico, la IP del computador en la red local. Después de cambiar `.env`, reinicia con `npx expo start -c`.
 
@@ -36,9 +36,10 @@ Para agregar bibliotecas usa `npx expo install <paquete>`, que elige versiones c
 
 - **Cuenta:** registro, inicio de sesión, restablecer la contraseña con un código por correo y presentación inicial.
 - **Inventario:** lista con búsqueda por nombre o código, filtros por estado y alertas de lo que hay que surtir, que se pueden compartir como lista de compras.
-- **Productos:** crear con código de barras o con un código QR propio para imprimir; editar; eliminar y restaurar.
-- **Movimientos:** entradas, salidas (venta, consumo o pérdida) y ajustes por conteo, con "Deshacer" y venta continua desde el escáner. El historial se carga por páginas.
-- **Reportes:** resumen de ventas de hoy y de la semana, y archivos de Excel de inventario, ventas y movimientos.
+- **Productos:** crear con código de barras o con un código QR propio para imprimir; editar; eliminar y restaurar. Cada producto tiene costo y precio de venta, y el formulario muestra cuánto se gana por unidad.
+- **Movimientos:** entradas, salidas (venta, consumo o pérdida) y ajustes por conteo, con "Deshacer" y venta continua desde el escáner. En cada venta se puede cambiar el costo, que queda como el nuevo costo del producto. El historial se carga por páginas.
+- **Reportes:** resumen de ventas y ganancia de hoy y de la semana, y archivos de Excel de inventario, ventas y movimientos.
+- **Acceso rápido (Android):** una burbuja flotante, como las de los chats, aparece al salir de la app y la abre con un toque. Se activa desde el menú y necesita el permiso "Mostrar sobre otras apps".
 - **Sin conexión:** lo último cargado se guarda en el celular hasta por 7 días y se borra al cerrar sesión. La app abre con esos datos y una franja avisa si no hay red o si el servidor no responde. Registrar movimientos sí requiere conexión.
 
 ## Estructura (DDS 5.2.3)
@@ -48,6 +49,8 @@ inventory-mobile/
 ├── app.config.ts              configuración de Expo, versión y arquitecturas del APK
 ├── eas.json                   perfiles de EAS y variables de cada uno
 ├── assets/
+├── modules/
+│   └── quick-bubble/          módulo nativo de Android para la burbuja de acceso rápido
 ├── docs/
 │   ├── diseno/                imágenes del diseño de la interfaz
 │   ├── contrato-api.md        endpoints que usa la app
@@ -62,7 +65,7 @@ inventory-mobile/
     │   └── <área>/            api.ts · hooks/ · components/ · schemas.ts
     └── shared/
         ├── api/               cliente HTTP, tipos del contrato, errores, caché y API simulada (M-04)
-        ├── device/            conexión, vuelta a la app, vibración y botón atrás
+        ├── device/            conexión, vuelta a la app, vibración, botón atrás y burbuja
         ├── session/           contexto de sesión y expo-secure-store (M-05)
         ├── ui/                componentes base y tema (M-12)
         ├── gs1/               dígito de control y normalización GTIN (M-09)

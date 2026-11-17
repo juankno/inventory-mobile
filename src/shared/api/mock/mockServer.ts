@@ -22,6 +22,7 @@ const products = new Map<string, Product>();
 type StoredMovement = Movement & {
   productId: string;
   unitPrice: number | null;
+  unitCost: number | null;
   revertsMovementId: string | null;
 };
 
@@ -39,7 +40,7 @@ const BUSY_PRODUCT = 'Gaseosa 400 ml';
 
 // Una semana en la que cada mañana se surte lo que se vende en el día, así la
 // existencia termina en la del seed.
-function busyHistory(productId: string, finalStock: number, salePrice: number | null, start: number) {
+function busyHistory(productId: string, finalStock: number, product: Pick<Product, 'salePrice' | 'costPrice'>, start: number) {
   const history: Omit<StoredMovement, 'id'>[] = [];
   let stock = 0;
   const add = (type: 'INBOUND' | 'OUTBOUND', quantity: number, at: number) => {
@@ -50,7 +51,8 @@ function busyHistory(productId: string, finalStock: number, salePrice: number | 
       reason: type === 'OUTBOUND' ? 'SALE' : null,
       quantity,
       resultingStock: stock,
-      unitPrice: type === 'OUTBOUND' ? salePrice : null,
+      unitPrice: type === 'OUTBOUND' ? product.salePrice : null,
+      unitCost: type === 'OUTBOUND' ? product.costPrice : null,
       revertsMovementId: null,
       createdAt: new Date(at).toISOString(),
     });
@@ -69,10 +71,13 @@ function seed() {
   const created = new Date(start).toISOString();
   for (const item of seedProducts) {
     const id = newId();
-    products.set(id, { id, ...item });
+    // Costo de demostración: un 70 % del precio de venta, redondeado a la centena.
+    const costPrice = item.salePrice === null ? null : Math.round((item.salePrice * 0.7) / 100) * 100;
+    const product: Product = { id, ...item, costPrice };
+    products.set(id, product);
     const history =
       item.name === BUSY_PRODUCT
-        ? busyHistory(id, item.stock, item.salePrice, start)
+        ? busyHistory(id, item.stock, product, start)
         : item.stock > 0
           ? [
               {
@@ -82,6 +87,7 @@ function seed() {
                 quantity: item.stock,
                 resultingStock: item.stock,
                 unitPrice: null,
+                unitCost: null,
                 revertsMovementId: null,
                 createdAt: created,
               },
@@ -135,9 +141,12 @@ function salesSummary() {
       movement.reason === 'SALE' && !reverted.has(movement.id) && Date.parse(movement.createdAt) >= weekStart,
   );
   const value = (sale: StoredMovement) => sale.quantity * (sale.unitPrice ?? 0);
+  const profit = (sale: StoredMovement) =>
+    sale.unitPrice === null || sale.unitCost === null ? 0 : sale.quantity * (sale.unitPrice - sale.unitCost);
   const period = (items: StoredMovement[]) => ({
     sales: items.length,
     total: items.reduce((sum, sale) => sum + value(sale), 0),
+    profit: items.reduce((sum, sale) => sum + profit(sale), 0),
   });
   const top = new Map<string, { name: string; unit: Unit; quantity: number; total: number }>();
   for (const sale of sales) {
@@ -152,6 +161,7 @@ function salesSummary() {
     week: period(sales),
     topProducts: [...top.values()].sort((a, b) => b.total - a.total || b.quantity - a.quantity).slice(0, 5),
     salesWithoutPrice: sales.filter((sale) => sale.unitPrice === null).length,
+    salesWithoutCost: sales.filter((sale) => sale.unitCost === null).length,
   };
 }
 
@@ -240,6 +250,7 @@ function handle(method: Method, path: string, body: Body): unknown {
       name: String(body.name),
       unit,
       salePrice: (body.salePrice as number | undefined) ?? null,
+      costPrice: (body.costPrice as number | undefined) ?? null,
       stock,
       minStock: (body.minStock as number | undefined) ?? null,
       codeType,
@@ -255,6 +266,7 @@ function handle(method: Method, path: string, body: Body): unknown {
         quantity: stock,
         resultingStock: stock,
         unitPrice: null,
+        unitCost: null,
         revertsMovementId: null,
         createdAt: new Date().toISOString(),
       });
@@ -288,6 +300,7 @@ function handle(method: Method, path: string, body: Body): unknown {
         unit,
         minStock: body.minStock as number | null,
         salePrice: body.salePrice as number | null,
+        costPrice: body.costPrice as number | null,
       };
       products.set(updated.id, updated);
       return updated;
@@ -319,6 +332,9 @@ function handle(method: Method, path: string, body: Body): unknown {
     // En un ajuste se guarda la diferencia con signo; si no hay diferencia, no se registra nada.
     const change = type === 'ADJUSTMENT' ? resultingStock - product.stock : quantity;
     if (change === 0) return { movement: null, stock: product.stock };
+    // Igual que el backend: sin unitCost se usa el costo del producto, y uno distinto queda como el nuevo.
+    const sentCost = body.unitCost as number | undefined;
+    const unitCost = type === 'OUTBOUND' ? (sentCost ?? product.costPrice) : null;
     const movement: StoredMovement = {
       id: newId(),
       productId: product.id,
@@ -327,12 +343,13 @@ function handle(method: Method, path: string, body: Body): unknown {
       quantity: change,
       resultingStock,
       unitPrice: type === 'OUTBOUND' ? product.salePrice : null,
+      unitCost,
       revertsMovementId: (body.revertsMovementId as string | undefined) ?? null,
       createdAt: new Date().toISOString(),
     };
     movements.push(movement);
     idempotencyKeys.set(key, movement);
-    products.set(product.id, { ...product, stock: resultingStock });
+    products.set(product.id, { ...product, stock: resultingStock, costPrice: sentCost ?? product.costPrice });
     return { movement, stock: resultingStock };
   }
 
