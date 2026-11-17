@@ -51,6 +51,10 @@ const normalize = (text: string) =>
 // Pantallas que hay que bajar para mostrar el botón "Volver arriba".
 const BACK_TO_TOP_SCREENS = 1.5;
 
+// Igual que los filtros: se ve de 40 dp y hitSlop completa los 48 dp de área táctil.
+const SORT_HEIGHT = 40;
+const SORT_SLOP = (theme.minTouchSize - SORT_HEIGHT) / 2;
+
 type StatusFilter = 'all' | Exclude<StockStatus, 'ok'>;
 
 // Coincide por nombre o por código (de barras o INV-), para encontrar un
@@ -205,8 +209,16 @@ export default function InventoryScreen() {
         <AppText variant="heading" accessibilityRole="header">
           {t.listTitle}
         </AppText>
-        <Pressable accessibilityRole="button" onPress={() => setAscending((value) => !value)} style={styles.touch}>
-          <AppText variant="lead" tone="secondary">
+        {/* Píldora como los filtros, con el ícono de ordenar, para que se vea tocable. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t.sortLabel(ascending)}
+          onPress={() => setAscending((value) => !value)}
+          hitSlop={SORT_SLOP}
+          style={({ pressed }) => [styles.sort, pressed && styles.sortPressed]}
+        >
+          <Icon name="arrowDownUp" size={18} color={theme.colors.ink} />
+          <AppText variant="body" style={styles.sortText}>
             {ascending ? t.sortAsc : t.sortDesc}
           </AppText>
         </Pressable>
@@ -476,10 +488,20 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   clear: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', marginRight: -12 },
-  touch: { minHeight: theme.minTouchSize, justifyContent: 'center' },
   emptyLink: { alignSelf: 'center', minHeight: theme.minTouchSize, justifyContent: 'center' },
   underline: { textDecorationLine: 'underline', textAlign: 'center' },
   listTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sort: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: SORT_HEIGHT,
+    paddingHorizontal: 14,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.field,
+  },
+  sortPressed: { opacity: 0.85 },
+  sortText: { fontFamily: theme.fonts.medium },
   separator: { height: theme.spacing.sm },
   row: {
     flexDirection: 'row',
