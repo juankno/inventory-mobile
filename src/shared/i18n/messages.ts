@@ -90,8 +90,11 @@ export const messages = {
     toRestock: 'Por\nreponer',
     search: 'Buscar por nombre o código',
     listTitle: 'Tus productos',
-    sortAsc: 'De la A a la Z',
-    sortDesc: 'De la Z a la A',
+    // Botón de orden: el texto corto se ve; el largo lo lee el lector de pantalla.
+    sortAsc: 'A → Z',
+    sortDesc: 'Z → A',
+    sortLabel: (ascending: boolean) =>
+      `Orden por nombre: ${ascending ? 'de la A a la Z' : 'de la Z a la A'}. Toca para invertirlo`,
     scan: 'Escanear código',
     add: 'Agregar producto sin código',
     backToTop: 'Volver arriba',
