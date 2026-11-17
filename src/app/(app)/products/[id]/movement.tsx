@@ -126,9 +126,13 @@ export default function MovementScreen() {
   const costChanged = unitCost !== null && unitCost !== item.costPrice;
   const saleProfit =
     item.salePrice !== null && unitCost !== null && value !== null ? value * (item.salePrice - unitCost) : null;
+  // Lo que hay que cobrar: la cantidad por el precio del producto (el precio no cambia en la venta).
+  const saleTotal = item.salePrice !== null && value !== null ? value * item.salePrice : null;
+  const saleQuantity = value !== null ? `${formatNumber(value)} ${unitWord(value, item.unit)}` : '';
+  // Sin precio, el aviso del resumen ya explica que no hay total ni ganancia.
   const costHint =
     item.salePrice === null
-      ? t.noPrice
+      ? null
       : unitCost === null
         ? t.noCost
         : saleProfit === null
@@ -276,6 +280,41 @@ export default function MovementScreen() {
         ) : null}
       </View>
 
+      {isSale && item.salePrice === null ? (
+        <View style={styles.group}>
+          <Banner tone="info" message={t.noPrice} />
+          <Button
+            label={t.addPrice}
+            variant="secondary"
+            icon="pencil"
+            onPress={() => router.push({ pathname: '/products/[id]/edit', params: { id: item.id } })}
+          />
+        </View>
+      ) : isSale && saleTotal !== null ? (
+        // Lo primero que necesita quien vende: cuánto cobrar. Se actualiza con la cantidad.
+        <View
+          style={styles.total}
+          accessible
+          accessibilityLabel={t.saleTotalLabel(formatMoney(saleTotal), saleQuantity, formatMoney(item.salePrice!), unitWord(1, item.unit))}
+          accessibilityLiveRegion="polite"
+        >
+          <View style={styles.totalRow}>
+            <AppText variant="title">{t.saleTotal}</AppText>
+            <AppText
+              maxFontSizeMultiplier={theme.maxFontScale.number}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              style={styles.totalAmount}
+            >
+              {formatMoney(saleTotal)}
+            </AppText>
+          </View>
+          <AppText variant="body" tone="secondary">
+            {t.saleBreakdown(saleQuantity, formatMoney(item.salePrice!))}
+          </AppText>
+        </View>
+      ) : null}
+
       {isSale ? (
         <View style={styles.group}>
           <TextField
@@ -318,6 +357,14 @@ export default function MovementScreen() {
 
 const styles = StyleSheet.create({
   group: { gap: theme.spacing.md },
+  total: {
+    gap: theme.spacing.xs,
+    padding: theme.spacing.lg,
+    borderRadius: theme.radius.lg,
+    backgroundColor: theme.colors.field,
+  },
+  totalRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: theme.spacing.md },
+  totalAmount: { flexShrink: 1, fontFamily: theme.fonts.medium, fontSize: 32, lineHeight: 40, color: theme.colors.text },
   scannedRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: theme.spacing.md },
   detailLink: { minHeight: theme.minTouchSize, justifyContent: 'center' },
   underline: { textDecorationLine: 'underline' },

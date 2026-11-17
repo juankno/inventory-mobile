@@ -279,7 +279,13 @@ export const messages = {
     saleLoss: (amount: string) => `Esta venta deja una pérdida de ${amount}.`,
     newCost: 'Este costo quedará guardado para las próximas ventas.',
     noCost: 'Sin costo no podremos calcular la ganancia de esta venta.',
-    noPrice: 'El producto no tiene precio de venta, así que no podemos calcular la ganancia.',
+    noPrice: 'Este producto no tiene precio de venta, así que no podemos calcular el total ni la ganancia.',
+    addPrice: 'Agregar precio',
+    saleTotal: 'Total a cobrar',
+    // "3 kilos × $2.500": de dónde sale el total.
+    saleBreakdown: (quantity: string, price: string) => `${quantity} × ${price}`,
+    saleTotalLabel: (total: string, quantity: string, price: string, unit: string) =>
+      `Total a cobrar: ${total}. ${quantity} a ${price} por ${unit}.`,
     help: 'Qué es cada movimiento',
     helpTitle: 'Qué es cada movimiento',
     helpInbound: ['Entrada', ': llegó mercancía (compra o reposición). Suma a las existencias.'],
