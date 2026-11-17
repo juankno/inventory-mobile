@@ -21,6 +21,7 @@ import { useProducts } from '@/features/products/hooks/useProducts';
 import { errorMessage } from '@/shared/api/errors';
 import { visibleLoadError } from '@/shared/api/queryPolicy';
 import type { Product } from '@/shared/api/types';
+import { quickBubbleAvailable } from '@/shared/device/quickBubble';
 import { useConfirmExit } from '@/shared/device/useConfirmExit';
 import { greeting } from '@/shared/format/dates';
 import { stockStatus, stockStatusLabel, type StockStatus } from '@/shared/format/stock';
@@ -366,6 +367,18 @@ export default function InventoryScreen() {
             router.push('/products/deleted');
           }}
         />
+        {quickBubbleAvailable ? (
+          <SheetAction
+            icon="arrowUpRight"
+            label={t.menuQuickAccess}
+            description={t.menuQuickAccessHint}
+            navigates
+            onPress={() => {
+              setMenuOpen(false);
+              router.push('/quick-access');
+            }}
+          />
+        ) : null}
         <SheetAction
           icon="logOut"
           label={t.menuLogout}

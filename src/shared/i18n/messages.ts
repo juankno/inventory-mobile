@@ -114,6 +114,8 @@ export const messages = {
     menuDeletedHint: 'Recupera lo que eliminaste',
     menuLogoutHint: 'Tus datos quedan guardados',
     menuDeleted: 'Productos eliminados',
+    menuQuickAccess: 'Burbuja de acceso rápido',
+    menuQuickAccessHint: 'Vuelve a la app con un toque',
     menuLogout: 'Cerrar sesión',
   },
   alerts: {
@@ -401,6 +403,23 @@ export const messages = {
     movementsReportTitle: 'Movimientos',
     movementsAction: 'Compartir movimientos',
     shareTitle: 'Compartir reporte',
+  },
+  quickAccess: {
+    title: 'Acceso rápido',
+    heading: 'Burbuja de acceso rápido',
+    intro: 'Cuando salgas de la app aparecerá una burbuja flotante, como las de los chats. Tócala desde cualquier pantalla para volver a registrar ventas.',
+    toggle: 'Mostrar la burbuja al salir de la app',
+    howTitle: 'Cómo funciona',
+    how: [
+      'Aparece cuando sales de la app y se quita al volver.',
+      'Arrástrala para moverla; se pega al borde más cercano.',
+      'Arrástrala a la X de abajo para ocultarla hasta la próxima vez.',
+      'Mientras está visible, Android muestra un aviso en las notificaciones.',
+    ],
+    permissionNeeded: 'Para mostrar la burbuja, Android pide el permiso "Mostrar sobre otras apps". Actívalo para Surtido y vuelve con el botón Atrás.',
+    permissionLost: 'La burbuja está activada, pero Android le quitó el permiso "Mostrar sobre otras apps". Vuelve a darlo para que aparezca.',
+    givePermission: 'Dar permiso',
+    enabled: 'Listo: la burbuja aparecerá cuando salgas de la app.',
   },
   offline: {
     offline: {
