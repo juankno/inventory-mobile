@@ -22,6 +22,7 @@ export const productFormSchema = z
     requireStock: z.boolean(),
     minStock: z.string(),
     salePrice: z.string(),
+    costPrice: z.string(),
   })
   .superRefine((form, ctx) => {
     const checkQuantity = (field: 'stock' | 'minStock', required: boolean) => {
@@ -39,10 +40,11 @@ export const productFormSchema = z
     checkQuantity('stock', form.requireStock);
     checkQuantity('minStock', false);
 
-    if (form.salePrice.trim() !== '') {
-      const price = parseQuantity(form.salePrice.replace(/\./g, ''));
-      if (price === null) ctx.addIssue({ code: 'custom', path: ['salePrice'], message: v.number });
-      else if (price < 0) ctx.addIssue({ code: 'custom', path: ['salePrice'], message: v.notNegative });
+    for (const field of ['salePrice', 'costPrice'] as const) {
+      if (form[field].trim() === '') continue;
+      const price = parsePrice(form[field]);
+      if (price === null) ctx.addIssue({ code: 'custom', path: [field], message: v.number });
+      else if (price < 0) ctx.addIssue({ code: 'custom', path: [field], message: v.notNegative });
     }
   });
 
@@ -55,7 +57,12 @@ export function formatPriceInput(text: string): string {
   return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
+// Precio o costo guardado → texto del campo: pesos sin decimales, con puntos de miles.
+export const priceToInput = (value: number | null) => (value === null ? '' : formatPriceInput(String(Math.round(value))));
+
 // El precio se escribe en pesos con puntos de miles ("12.500").
-export const parsePrice = (text: string) => (text.trim() === '' ? null : parseQuantity(text.replace(/\./g, '')));
+export function parsePrice(text: string): number | null {
+  return text.trim() === '' ? null : parseQuantity(text.replace(/\./g, ''));
+}
 
 export const parseOptionalQuantity = (text: string) => (text.trim() === '' ? null : parseQuantity(text));

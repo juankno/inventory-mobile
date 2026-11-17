@@ -39,6 +39,7 @@ export default function NewProductScreen() {
       requireStock: true,
       minStock: '',
       salePrice: '',
+      costPrice: '',
     },
   });
 
@@ -53,6 +54,7 @@ export default function NewProductScreen() {
         stock: parseQuantity(form.stock) ?? 0,
         minStock: parseOptionalQuantity(form.minStock),
         salePrice: parsePrice(form.salePrice),
+        costPrice: parsePrice(form.costPrice),
       },
       {
         onSuccess: (product) => {

@@ -20,6 +20,9 @@ export type Product = {
   name: string;
   unit: Unit;
   salePrice: number | null;
+  // Lo que le cuesta al negocio cada unidad. Una venta puede registrar otro costo,
+  // que queda como el nuevo costo del producto.
+  costPrice: number | null;
   stock: number;
   minStock: number | null;
   codeType: CodeType;
@@ -47,8 +50,9 @@ export type MovementResult = { movement: Movement | null; stock: number };
 // nextCursor es null cuando ya no hay movimientos más antiguos.
 export type Page<T> = { items: T[]; nextCursor: string | null };
 
-export type ProductDto = Omit<Product, 'salePrice' | 'stock' | 'minStock'> & {
+export type ProductDto = Omit<Product, 'salePrice' | 'costPrice' | 'stock' | 'minStock'> & {
   salePrice: Decimal | null;
+  costPrice: Decimal | null;
   stock: Decimal;
   minStock: Decimal | null;
 };
@@ -63,12 +67,18 @@ export type MovementDto = Omit<Movement, 'quantity' | 'resultingStock'> & {
 export type MovementResultDto = { movement: MovementDto | null; stock: Decimal };
 
 const toNumber = (value: Decimal) => Number(value);
-const toNullableNumber = (value: Decimal | null) => (value === null ? null : Number(value));
+// `undefined` cubre un backend que aún no envía el campo (p. ej. costPrice antes de desplegarlo).
+const toNullableNumber = (value: Decimal | null | undefined) => {
+  if (value === null || value === undefined) return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+};
 
 export function toProduct(dto: ProductDto): Product {
   return {
     ...dto,
     salePrice: toNullableNumber(dto.salePrice),
+    costPrice: toNullableNumber(dto.costPrice),
     stock: toNumber(dto.stock),
     minStock: toNullableNumber(dto.minStock),
   };

@@ -10,6 +10,7 @@ export type CreateProductInput = {
   stock: number;
   minStock: number | null;
   salePrice: number | null;
+  costPrice: number | null;
 };
 
 export type UpdateProductInput = {
@@ -17,6 +18,7 @@ export type UpdateProductInput = {
   unit: Unit;
   minStock: number | null;
   salePrice: number | null;
+  costPrice: number | null;
 };
 
 // Productos activos del negocio, ordenados por nombre.
@@ -25,12 +27,13 @@ export const listProducts = async () => (await apiRequest<ProductDto[]>('GET', '
 export const getProduct = async (id: string) => toProduct(await apiRequest<ProductDto>('GET', `/products/${id}`));
 
 // Al crear, el backend no acepta null: lo que no se definió no se envía.
-export const createProduct = async ({ minStock, salePrice, ...input }: CreateProductInput) =>
+export const createProduct = async ({ minStock, salePrice, costPrice, ...input }: CreateProductInput) =>
   toProduct(
     await apiRequest<ProductDto>('POST', '/products', {
       ...input,
       ...(minStock !== null && { minStock }),
       ...(salePrice !== null && { salePrice }),
+      ...(costPrice !== null && { costPrice }),
     }),
   );
 
