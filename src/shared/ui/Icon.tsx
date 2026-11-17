@@ -28,6 +28,8 @@ const icons = {
   minus: [{ d: 'M5 12h14' }],
   arrowUp: [{ d: 'm5 12 7-7 7 7' }, { d: 'M12 19V5' }],
   arrowUpRight: [{ d: 'M7 7h10v10' }, { d: 'M7 17 17 7' }],
+  // Flecha abajo y flecha arriba: el ícono habitual de "ordenar".
+  arrowDownUp: [{ d: 'm3 16 4 4 4-4' }, { d: 'M7 20V4' }, { d: 'm21 8-4-4-4 4' }, { d: 'M17 4v16' }],
   alert: [{ circle: [12, 12, 10] }, { d: 'M12 8v4' }, { d: 'M12 16h.01' }],
   eye: [
     { d: 'M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0' },
