@@ -92,6 +92,7 @@ Reglas de `POST /movements`:
 `Movement` tiene estos campos: `{ id, type, reason, quantity, resultingStock, createdAt }`.
 
 - **`quantity` al leer:** en una entrada o una salida es positivo. En un ajuste es la **diferencia con signo** frente a la existencia anterior. Por eso cada fila del historial calcula su diferencia sin depender de las demás páginas.
+- **`unitPrice` y `unitCost`:** el historial los trae en cada movimiento. Son el precio y el costo unitarios con que se registró la salida. Son `null` en entradas y ajustes, o si no había precio o costo, por ejemplo en ventas anteriores al costo del producto. La respuesta de `POST /movements` no los trae.
 
 Paginación de `GET /products/:id/movements` (RF-15):
 
