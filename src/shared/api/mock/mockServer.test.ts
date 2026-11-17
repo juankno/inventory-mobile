@@ -142,7 +142,7 @@ describe('API de demostración', () => {
     const summary = await mockRequest<SalesSummary>('GET', '/reports/summary');
     const updated = await findByName('Café molido 250 g');
     expect(updated.costPrice).toBe(8000);
-    expect(summary.today.profit - before.today.profit).toBe(
+    expect(summary.today.profit! - before.today.profit!).toBe(
       cafe.salePrice! - cafe.costPrice! + (cafe.salePrice! - 8000),
     );
   });

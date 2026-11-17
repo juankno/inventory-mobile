@@ -217,9 +217,11 @@ function Stat({ label, period }: { label: string; period: SalesSummary['today'] 
       <AppText variant="body" tone="secondary">
         {t.salesCount(period.sales)}
       </AppText>
-      <AppText variant="bodyStrong" tone={period.profit < 0 ? 'danger' : undefined}>
-        {t.profit(formatMoney(period.profit))}
-      </AppText>
+      {period.profit !== null ? (
+        <AppText variant="bodyStrong" tone={period.profit < 0 ? 'danger' : undefined}>
+          {t.profit(formatMoney(period.profit))}
+        </AppText>
+      ) : null}
     </View>
   );
 }
