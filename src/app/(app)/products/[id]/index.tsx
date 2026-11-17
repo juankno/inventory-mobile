@@ -107,6 +107,7 @@ export default function ProductDetailScreen() {
       <View style={styles.facts}>
         <Fact label={t.unit} value={unitLabel(item.unit)} />
         <Fact label={t.minimum} value={item.minStock === null ? t.noValue : formatQuantity(item.minStock, item.unit)} />
+        <Fact label={t.cost} value={item.costPrice === null ? t.noValue : formatMoney(item.costPrice)} />
         <Fact label={t.price} value={item.salePrice === null ? t.noValue : formatMoney(item.salePrice)} />
       </View>
 
@@ -243,9 +244,11 @@ const styles = StyleSheet.create({
   stock: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', columnGap: theme.spacing.sm },
   stockNumber: { fontFamily: theme.fonts.medium, fontSize: 72, lineHeight: 80, color: theme.colors.text },
   stockUnit: { marginBottom: theme.spacing.md, fontFamily: theme.fonts.medium },
-  facts: { flexDirection: 'row', gap: theme.spacing.sm },
+  facts: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },
   fact: {
-    flex: 1,
+    // Dos por fila.
+    flexGrow: 1,
+    flexBasis: '40%',
     backgroundColor: theme.colors.field,
     borderRadius: theme.radius.lg,
     paddingVertical: theme.spacing.md,

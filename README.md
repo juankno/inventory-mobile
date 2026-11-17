@@ -36,9 +36,9 @@ Para agregar bibliotecas usa `npx expo install <paquete>`, que elige versiones c
 
 - **Cuenta:** registro, inicio de sesión, restablecer la contraseña con un código por correo y presentación inicial.
 - **Inventario:** lista con búsqueda por nombre o código, filtros por estado y alertas de lo que hay que surtir, que se pueden compartir como lista de compras.
-- **Productos:** crear con código de barras o con un código QR propio para imprimir; editar; eliminar y restaurar.
-- **Movimientos:** entradas, salidas (venta, consumo o pérdida) y ajustes por conteo, con "Deshacer" y venta continua desde el escáner. El historial se carga por páginas.
-- **Reportes:** resumen de ventas de hoy y de la semana, y archivos de Excel de inventario, ventas y movimientos.
+- **Productos:** crear con código de barras o con un código QR propio para imprimir; editar; eliminar y restaurar. Cada producto tiene costo y precio de venta, y el formulario muestra cuánto se gana por unidad.
+- **Movimientos:** entradas, salidas (venta, consumo o pérdida) y ajustes por conteo, con "Deshacer" y venta continua desde el escáner. En cada venta se puede cambiar el costo, que queda como el nuevo costo del producto. El historial se carga por páginas.
+- **Reportes:** resumen de ventas y ganancia de hoy y de la semana, y archivos de Excel de inventario, ventas y movimientos.
 - **Sin conexión:** lo último cargado se guarda en el celular hasta por 7 días y se borra al cerrar sesión. La app abre con esos datos y una franja avisa si no hay red o si el servidor no responde. Registrar movimientos sí requiere conexión.
 
 ## Estructura (DDS 5.2.3)

@@ -23,6 +23,9 @@ export type CreateMovementInput = {
   idempotencyKey: string;
   // Con "Deshacer": el movimiento que este ajuste revierte, para que no cuente en los reportes.
   revertsMovementId?: string;
+  // Solo en las salidas: el costo unitario de esta venta. Sin él, el backend usa el costo
+  // del producto; si es distinto, queda como el nuevo costo del producto.
+  unitCost?: number;
 };
 
 // Historial del producto por páginas, del más reciente al más antiguo (RF-15).

@@ -131,6 +131,22 @@ describe('API de demostración', () => {
     });
   });
 
+  it('guarda el costo de cada venta y deja el último como costo del producto', async () => {
+    const cafe = await findByName('Café molido 250 g');
+    const sale = { productId: cafe.id, type: 'OUTBOUND', reason: 'SALE', quantity: 1 };
+    const before = await mockRequest<SalesSummary>('GET', '/reports/summary');
+
+    await mockRequest('POST', '/movements', { ...sale, idempotencyKey: 'costo-1' });
+    await mockRequest('POST', '/movements', { ...sale, idempotencyKey: 'costo-2', unitCost: 8000 });
+
+    const summary = await mockRequest<SalesSummary>('GET', '/reports/summary');
+    const updated = await findByName('Café molido 250 g');
+    expect(updated.costPrice).toBe(8000);
+    expect(summary.today.profit - before.today.profit).toBe(
+      cafe.salePrice! - cafe.costPrice! + (cafe.salePrice! - 8000),
+    );
+  });
+
   it('responde CODE_NOT_RECOGNIZED con un código desconocido', async () => {
     await expect(mockRequest('GET', '/products/code/7702354948016')).rejects.toBeInstanceOf(ApiError);
     await expect(mockRequest('GET', '/products/code/7702354948016')).rejects.toMatchObject({
