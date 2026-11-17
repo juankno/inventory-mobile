@@ -21,8 +21,6 @@ type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 const products = new Map<string, Product>();
 type StoredMovement = Movement & {
   productId: string;
-  unitPrice: number | null;
-  unitCost: number | null;
   revertsMovementId: string | null;
 };
 

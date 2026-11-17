@@ -40,6 +40,10 @@ export type Movement = {
   // a la existencia anterior.
   quantity: number;
   resultingStock: number;
+  // Solo en las salidas: el precio y el costo unitarios con que se registró. null en
+  // entradas y ajustes, o si no los había (ventas anteriores al costo del producto).
+  unitPrice: number | null;
+  unitCost: number | null;
   createdAt: string;
 };
 
@@ -59,9 +63,12 @@ export type ProductDto = Omit<Product, 'salePrice' | 'costPrice' | 'stock' | 'mi
 
 export type DeletedProductDto = ProductDto & { deletedAt: string };
 
-export type MovementDto = Omit<Movement, 'quantity' | 'resultingStock'> & {
+// POST /movements no trae unitPrice ni unitCost; el historial sí.
+export type MovementDto = Omit<Movement, 'quantity' | 'resultingStock' | 'unitPrice' | 'unitCost'> & {
   quantity: Decimal;
   resultingStock: Decimal;
+  unitPrice?: Decimal | null;
+  unitCost?: Decimal | null;
 };
 
 export type MovementResultDto = { movement: MovementDto | null; stock: Decimal };
@@ -89,7 +96,13 @@ export function toDeletedProduct(dto: DeletedProductDto): DeletedProduct {
 }
 
 export function toMovement(dto: MovementDto): Movement {
-  return { ...dto, quantity: toNumber(dto.quantity), resultingStock: toNumber(dto.resultingStock) };
+  return {
+    ...dto,
+    quantity: toNumber(dto.quantity),
+    resultingStock: toNumber(dto.resultingStock),
+    unitPrice: toNullableNumber(dto.unitPrice),
+    unitCost: toNullableNumber(dto.unitCost),
+  };
 }
 
 export function toMovementResult(dto: MovementResultDto): MovementResult {
