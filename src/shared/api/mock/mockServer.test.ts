@@ -145,6 +145,13 @@ describe('API de demostración', () => {
     expect(summary.today.profit! - before.today.profit!).toBe(
       cafe.salePrice! - cafe.costPrice! + (cafe.salePrice! - 8000),
     );
+
+    // El historial muestra el precio y el costo con que se registró cada venta.
+    const history = await mockRequest<Page<Movement>>('GET', `/products/${cafe.id}/movements?limit=2`);
+    expect(history.items.map(({ unitPrice, unitCost }) => ({ unitPrice, unitCost }))).toEqual([
+      { unitPrice: cafe.salePrice, unitCost: 8000 },
+      { unitPrice: cafe.salePrice, unitCost: cafe.costPrice },
+    ]);
   });
 
   it('responde CODE_NOT_RECOGNIZED con un código desconocido', async () => {
