@@ -10,13 +10,14 @@ Estos son los endpoints que consume la app móvil, todos bajo `/api/v1`, en `htt
 
 | Método y ruta | Respuesta |
 | --- | --- |
-| `GET /reports/summary` | `{ today, week, topProducts, salesWithoutPrice }`, en hora de Colombia; la semana empieza el lunes |
+| `GET /reports/summary` | `{ today, week, topProducts, salesWithoutPrice, salesWithoutCost }`, en hora de Colombia; la semana empieza el lunes. `today` y `week` traen `{ total, sales, profit }` |
 | `GET /reports/inventory` | Archivo de Excel |
 | `GET /reports/movements?from=AAAA-MM-DD&to=AAAA-MM-DD` | Archivo de Excel |
 | `GET /reports/sales?from=AAAA-MM-DD&to=AAAA-MM-DD` | Archivo de Excel |
 
 - **Período:** `from` y `to` están incluidos y no pueden abarcar más de 366 días. Si hay demasiadas filas, responde `400 REPORT_TOO_LARGE`.
 - **Precio:** cada salida guarda el precio que tenía el producto. Las anteriores a este cambio no lo tienen: no suman al total y se cuentan como `salesWithoutPrice`.
+- **Costo y ganancia:** cada salida guarda también su costo unitario. `profit` suma `cantidad × (precio − costo)` de las ventas que tienen los dos; las que no tienen costo se cuentan como `salesWithoutCost`.
 - **Deshacer:** `POST /movements` acepta `revertsMovementId` en los ajustes, y la venta revertida deja de contar.
 - **Modo demostración:** tiene el resumen, pero no genera archivos de Excel.
 
@@ -48,8 +49,8 @@ Detalles:
 | `GET /products` | | `Product[]` activos del negocio, ordenados por nombre |
 | `GET /products/:id` | | `Product`, o `404 PRODUCT_NOT_FOUND` si no existe o está eliminado |
 | `GET /products/code/:code` | | `Product`, o `404 CODE_NOT_RECOGNIZED` |
-| `POST /products` | `{ name, unit, stock, code?, minStock?, salePrice? }` | `201` + `Product` |
-| `PATCH /products/:id` | `{ name, unit, minStock, salePrice }` (`minStock` y `salePrice` admiten `null`) | `Product` |
+| `POST /products` | `{ name, unit, stock, code?, minStock?, salePrice?, costPrice? }` | `201` + `Product` |
+| `PATCH /products/:id` | `{ name, unit, minStock, salePrice, costPrice }` (`minStock`, `salePrice` y `costPrice` admiten `null`) | `Product` |
 | `DELETE /products/:id` | | `204`. Desactiva el producto y guarda la fecha en `deletedAt` |
 | `GET /products/deleted?code=…` | | `DeletedProduct[]`, del eliminado más reciente al más antiguo. `code` es opcional |
 | `POST /products/:id/restore` | | `Product`, ya activo, o `404 PRODUCT_NOT_FOUND` |
@@ -57,7 +58,7 @@ Detalles:
 Detalles de `POST /products`:
 
 - **Código:** con `code` es un GTIN de 8 o 13 dígitos. Sin `code`, el backend genera un identificador interno (`INV-` y 10 caracteres).
-- **Campos opcionales:** `minStock` y `salePrice` no admiten `null`. Si no se definen, la app no los envía.
+- **Campos opcionales:** `minStock`, `salePrice` y `costPrice` no admiten `null`. Si no se definen, la app no los envía.
 - **Existencia inicial:** si `stock` es mayor que 0, el backend registra el primer movimiento `INBOUND`. El historial lo muestra como "Existencia inicial".
 - **Código repetido:** responde `409 CODE_ALREADY_REGISTERED`, o `409 CODE_OF_DELETED_PRODUCT` si el código es de un producto eliminado. Al escanear, la app ofrece restaurarlo antes de llegar a este punto.
 
@@ -69,20 +70,21 @@ Detalles de `DELETE /products/:id` (RF-08):
 - Su código sigue ocupado por la restricción única.
 - `DeletedProduct` tiene los campos de `Product` y `deletedAt`.
 
-`Product` tiene estos campos: `{ id, name, unit, salePrice, stock, minStock, codeType, code }`. Las consultas agregan `status` (`OK`, `LOW_STOCK` u `OUT_OF_STOCK`); la app calcula el estado por su cuenta y lo ignora.
+`Product` tiene estos campos: `{ id, name, unit, salePrice, costPrice, stock, minStock, codeType, code }`. Las consultas agregan `status` (`OK`, `LOW_STOCK` u `OUT_OF_STOCK`); la app calcula el estado por su cuenta y lo ignora.
 
 ## Movimientos e inventario
 
 | Método y ruta | Cuerpo | Respuesta |
 | --- | --- | --- |
 | `GET /products/:id/movements?limit=20&cursor=…` | | `{ items: Movement[], nextCursor }`, del más reciente al más antiguo |
-| `POST /movements` | `{ productId, type, reason?, quantity, idempotencyKey }` | `{ movement, stock }`: `201` si se registró, `200` si no |
+| `POST /movements` | `{ productId, type, reason?, quantity, idempotencyKey, unitCost? }` | `{ movement, stock }`: `201` si se registró, `200` si no |
 | `GET /products/low-stock` | | `Product[]` agotados o con `stock <= minStock`, los agotados primero |
 
 Reglas de `POST /movements`:
 
 - **`reason`:** solo va en las salidas (`SALE`, `CONSUMPTION` o `LOSS`). En entradas y ajustes no se envía.
 - **`quantity` al enviar:** en una entrada o una salida es lo que suma o resta. En un ajuste es la **existencia contada**, que queda como la nueva existencia del producto.
+- **`unitCost`:** solo en las salidas. Es el costo unitario de esa venta; sin él, el backend usa el costo del producto. Si es distinto, queda como el nuevo costo del producto. La app lo envía en las ventas.
 - **`idempotencyKey`:** es un UUID que se repite en los reintentos. Si ya existe, el backend responde `200` con el movimiento que ya está registrado.
 - **Ajuste sin cambios:** si la existencia contada es igual a la actual, responde `200` con `movement: null`.
 - **Existencias insuficientes:** si una salida deja la existencia en negativo, el backend responde `409` con `code: "INSUFFICIENT_STOCK"`.
