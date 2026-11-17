@@ -1,4 +1,35 @@
-import { formatPriceInput, parsePrice } from './schemas';
+import { formatPriceInput, parsePrice, priceToInput, productFormSchema, type ProductForm } from './schemas';
+
+const form = (overrides: Partial<ProductForm>): ProductForm => ({
+  name: 'Arroz',
+  unit: 'UNIT',
+  stock: '1',
+  requireStock: true,
+  minStock: '',
+  salePrice: '',
+  costPrice: '',
+  ...overrides,
+});
+
+describe('productFormSchema', () => {
+  it('acepta el costo vacío o con puntos de miles', () => {
+    expect(productFormSchema.safeParse(form({})).success).toBe(true);
+    expect(productFormSchema.safeParse(form({ costPrice: '1.800', salePrice: '2.500' })).success).toBe(true);
+  });
+
+  it('rechaza un costo que no es un número', () => {
+    const result = productFormSchema.safeParse(form({ costPrice: 'abc' }));
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.path).toEqual(['costPrice']);
+  });
+});
+
+describe('priceToInput', () => {
+  it('muestra el valor guardado como se escribe en el campo', () => {
+    expect(priceToInput(12500)).toBe('12.500');
+    expect(priceToInput(null)).toBe('');
+  });
+});
 
 describe('formatPriceInput', () => {
   it('agrega los puntos de miles mientras se escribe', () => {

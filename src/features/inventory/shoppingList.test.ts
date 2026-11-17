@@ -6,6 +6,7 @@ const product = (overrides: Partial<Product>): Product => ({
   name: 'Arroz',
   unit: 'UNIT',
   salePrice: 2500,
+  costPrice: null,
   stock: 0,
   minStock: 4,
   codeType: 'INTERNAL',

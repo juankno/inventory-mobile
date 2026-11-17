@@ -3,7 +3,7 @@ import * as Sharing from 'expo-sharing';
 import { useState, type ReactNode } from 'react';
 import { RefreshControl, StyleSheet, View } from 'react-native';
 
-import { downloadReport, type ReportKind } from '@/features/reports/api';
+import { downloadReport, type ReportKind, type SalesSummary } from '@/features/reports/api';
 import { useSalesSummary } from '@/features/reports/hooks/useSalesSummary';
 import { parseCustomPeriod, presetPeriod, type PeriodPreset } from '@/features/reports/periods';
 import { isMockApi } from '@/shared/api/apiClient';
@@ -108,12 +108,17 @@ export default function ReportsScreen() {
       {data ? (
         <>
           <View style={styles.stats}>
-            <Stat label={t.today} amount={data.today.total} sales={data.today.sales} />
-            <Stat label={t.thisWeek} amount={data.week.total} sales={data.week.sales} />
+            <Stat label={t.today} period={data.today} />
+            <Stat label={t.thisWeek} period={data.week} />
           </View>
           {data.salesWithoutPrice > 0 ? (
             <AppText variant="body" tone="secondary">
               {t.withoutPrice(data.salesWithoutPrice)}
+            </AppText>
+          ) : null}
+          {data.salesWithoutCost > 0 ? (
+            <AppText variant="body" tone="secondary">
+              {t.withoutCost(data.salesWithoutCost)}
             </AppText>
           ) : null}
 
@@ -202,15 +207,18 @@ export default function ReportsScreen() {
 }
 
 // Como las tarjetas "Productos registrados" y "Por reponer" del inicio.
-function Stat({ label, amount, sales }: { label: string; amount: number; sales: number }) {
+function Stat({ label, period }: { label: string; period: SalesSummary['today'] }) {
   return (
     <View style={styles.stat} accessible>
       <AppText variant="lead">{label}</AppText>
       <AppText maxFontSizeMultiplier={theme.maxFontScale.number} numberOfLines={1} adjustsFontSizeToFit style={styles.statNumber}>
-        {formatMoney(amount)}
+        {formatMoney(period.total)}
       </AppText>
       <AppText variant="body" tone="secondary">
-        {t.salesCount(sales)}
+        {t.salesCount(period.sales)}
+      </AppText>
+      <AppText variant="bodyStrong" tone={period.profit < 0 ? 'danger' : undefined}>
+        {t.profit(formatMoney(period.profit))}
       </AppText>
     </View>
   );

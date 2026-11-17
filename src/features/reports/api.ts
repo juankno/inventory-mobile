@@ -5,7 +5,8 @@ import type { Unit } from '@/shared/api/types';
 import { toApiDate, type ReportPeriod } from './periods';
 
 // Llamadas a la API de la funcionalidad reports.
-type PeriodSales = { total: number; sales: number };
+// profit: ganancia de las ventas que tienen precio y costo.
+type PeriodSales = { total: number; sales: number; profit: number };
 
 export type SalesSummary = {
   today: PeriodSales;
@@ -13,6 +14,8 @@ export type SalesSummary = {
   topProducts: { name: string; unit: Unit; quantity: number; total: number }[];
   // Ventas de la semana que no suman: el producto no tenía precio al venderse.
   salesWithoutPrice: number;
+  // Ventas de la semana que no suman a la ganancia: no tenían costo.
+  salesWithoutCost: number;
 };
 
 export type ReportKind = 'inventory' | 'sales' | 'movements';
