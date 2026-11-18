@@ -1,4 +1,5 @@
 import { apiRequest } from '@/shared/api/apiClient';
+import { hasErrorCode } from '@/shared/api/errors';
 import { toDeletedProduct, toProduct, type DeletedProductDto, type ProductDto, type Unit } from '@/shared/api/types';
 
 // Llamadas a la API de la funcionalidad products (RF-05 a RF-08).
@@ -49,3 +50,22 @@ export const restoreProduct = async (id: string) =>
 
 export const listDeletedProducts = async () =>
   (await apiRequest<DeletedProductDto[]>('GET', '/products/deleted')).map(toDeletedProduct);
+
+// Nombre y unidad sugeridos para un código de barras nuevo: los que usan varias
+// tiendas o los de una base pública. Nunca trae precio, costo ni existencias de otro
+// negocio. Es solo una ayuda: el usuario decide si la usa.
+export type ProductSuggestion = {
+  name: string;
+  unit: Unit;
+  source: 'COMMUNITY' | 'OPEN_FOOD_FACTS';
+};
+
+// null si nadie conoce el código (404 SUGGESTION_NOT_FOUND).
+export async function getProductSuggestion(code: string): Promise<ProductSuggestion | null> {
+  try {
+    return await apiRequest<ProductSuggestion>('GET', `/catalog/${encodeURIComponent(code)}`);
+  } catch (error) {
+    if (hasErrorCode(error, 'SUGGESTION_NOT_FOUND')) return null;
+    throw error;
+  }
+}

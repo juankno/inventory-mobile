@@ -188,6 +188,15 @@ describe('API de demostración', () => {
     expect(today.series).toHaveLength(24);
   });
 
+  it('sugiere nombre y unidad de un código de barras conocido, sin precios ni existencias', async () => {
+    expect(await mockRequest('GET', '/catalog/7702004003508')).toEqual({
+      name: 'Arroz Diana 500 g',
+      unit: 'UNIT',
+      source: 'COMMUNITY',
+    });
+    await expect(mockRequest('GET', '/catalog/7702004003515')).rejects.toMatchObject({ code: 'SUGGESTION_NOT_FOUND' });
+  });
+
   it('responde CODE_NOT_RECOGNIZED con un código desconocido', async () => {
     await expect(mockRequest('GET', '/products/code/7702354948016')).rejects.toBeInstanceOf(ApiError);
     await expect(mockRequest('GET', '/products/code/7702354948016')).rejects.toMatchObject({

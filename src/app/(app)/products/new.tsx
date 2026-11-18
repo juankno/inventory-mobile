@@ -1,9 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { ProductFormFields } from '@/features/products/components/ProductFormFields';
-import { useCreateProduct } from '@/features/products/hooks/useProducts';
+import { ProductSuggestionCard } from '@/features/products/components/ProductSuggestionCard';
+import { useCreateProduct, useProductSuggestion } from '@/features/products/hooks/useProducts';
 import {
   parseOptionalQuantity,
   parsePrice,
@@ -30,7 +32,9 @@ export default function NewProductScreen() {
   const hasBarcode = !!code;
   const createMutation = useCreateProduct();
   const showToast = useToast();
-  const { control, handleSubmit, formState } = useForm<ProductForm>({
+  const suggestion = useProductSuggestion(hasBarcode ? code : undefined);
+  const [suggestionChoice, setSuggestionChoice] = useState<'accepted' | 'rejected' | null>(null);
+  const { control, handleSubmit, formState, setValue } = useForm<ProductForm>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
       name: '',
@@ -42,6 +46,14 @@ export default function NewProductScreen() {
       costPrice: '',
     },
   });
+
+  // Usar la sugerencia solo llena el nombre y la unidad; el resto lo escribe el usuario.
+  const acceptSuggestion = () => {
+    if (!suggestion.data) return;
+    setValue('name', suggestion.data.name, { shouldDirty: true, shouldValidate: true });
+    setValue('unit', suggestion.data.unit, { shouldDirty: true, shouldValidate: true });
+    setSuggestionChoice('accepted');
+  };
 
   const { allowLeave, discardSheet } = useDiscardGuard(formState.isDirty && !createMutation.isSuccess);
 
@@ -93,6 +105,14 @@ export default function NewProductScreen() {
       {createMutation.error ? (
         <Banner message={errorMessage(createMutation.error, messages.errors.unexpected)} />
       ) : null}
+      {suggestion.data && suggestionChoice === null ? (
+        <ProductSuggestionCard
+          suggestion={suggestion.data}
+          onAccept={acceptSuggestion}
+          onReject={() => setSuggestionChoice('rejected')}
+        />
+      ) : null}
+      {suggestionChoice === 'accepted' ? <Banner tone="info" message={t.suggestionUsed} /> : null}
       <ProductFormFields
         control={control}
         errors={formState.errors}

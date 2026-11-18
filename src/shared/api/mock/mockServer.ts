@@ -227,6 +227,13 @@ function salesOverview(query: URLSearchParams) {
   };
 }
 
+// Sugerencias de demostración para códigos de barras que no están en el inventario.
+// En el backend salen de lo que usan varias tiendas o de Open Food Facts.
+const demoSuggestions: Record<string, { name: string; unit: Unit; source: 'COMMUNITY' | 'OPEN_FOOD_FACTS' }> = {
+  '7702004003508': { name: 'Arroz Diana 500 g', unit: 'UNIT', source: 'COMMUNITY' },
+  '7707000000001': { name: 'Chocolatina 30 g', unit: 'UNIT', source: 'OPEN_FOOD_FACTS' },
+};
+
 type Body = Record<string, unknown>;
 
 function handle(method: Method, path: string, body: Body): unknown {
@@ -266,6 +273,14 @@ function handle(method: Method, path: string, body: Body): unknown {
       throw new ApiError(404, 'CODE_NOT_RECOGNIZED', 'Este código no corresponde a un producto de tu inventario.');
     }
     return product;
+  }
+
+  if ((match = pathname.match(/^\/catalog\/([^/]+)$/)) && method === 'GET') {
+    const suggestion = demoSuggestions[decodeURIComponent(match[1])];
+    if (!suggestion) {
+      throw new ApiError(404, 'SUGGESTION_NOT_FOUND', 'No tenemos datos de este código. Escribe el nombre del producto.');
+    }
+    return suggestion;
   }
 
   if (route === 'GET /reports/overview') return salesOverview(query);

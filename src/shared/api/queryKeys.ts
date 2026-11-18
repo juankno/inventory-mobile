@@ -14,4 +14,5 @@ export const queryKeys = {
   reports: ['reports'] as const,
   salesOverview: (from: string, to: string, compareFrom: string, compareTo: string) =>
     ['reports', 'overview', from, to, compareFrom, compareTo] as const,
+  productSuggestion: (code: string) => ['catalog', code] as const,
 };
