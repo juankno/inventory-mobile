@@ -40,5 +40,9 @@ yarn-error.*
 /ios
 /android
 
+# Gradle de los módulos nativos propios (se genera al compilar en local)
+modules/*/android/.gradle/
+modules/*/android/build/
+
 # variables de entorno
 .env

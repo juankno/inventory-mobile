@@ -52,7 +52,7 @@ export default function ReportsScreen() {
 
   // Un período a medio escribir no es un error hasta que estén las dos fechas.
   const custom = preset === 'custom' ? parseCustomPeriod(customFrom, customTo) : null;
-  const period = custom ? (custom.ok ? custom.period : null) : presetPeriod(preset as Exclude<PeriodPreset, 'custom'>);
+  const period = preset === 'custom' ? (custom?.ok ? custom.period : null) : presetPeriod(preset);
   const periodError =
     custom && !custom.ok && customFrom.trim() && customTo.trim() ? t.periodErrors[custom.error] : undefined;
   const comparison = period ? comparisonFor(preset, period) : null;
