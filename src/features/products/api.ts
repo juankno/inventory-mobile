@@ -66,9 +66,10 @@ export type ProductSuggestion = {
   imageLargeUrl?: string | null;
 };
 
-// Es opcional: si tarda más que esto, no aparece. Alcanza para el arranque en frío del
-// backend más la consulta a Open Food Facts.
-const SUGGESTION_TIMEOUT_MS = 5_000;
+// Es opcional: si tarda más que esto, no aparece. Debe ser mayor que la espera del
+// backend a Open Food Facts (4 s) más su arranque en frío. Esperar no detiene nada: el
+// formulario se usa mientras llega, y si ya se escribió un nombre no se muestra.
+const SUGGESTION_TIMEOUT_MS = 8_000;
 
 // null si nadie conoce el código (404 SUGGESTION_NOT_FOUND).
 export async function getProductSuggestion(code: string): Promise<ProductSuggestion | null> {
