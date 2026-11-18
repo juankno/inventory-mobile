@@ -96,11 +96,11 @@ Al registrar un código de barras nuevo, la app pregunta si se conoce. Si hay su
 
 - **Solo GTIN:** los QR internos `INV-` y otros contenidos responden `404` sin consultar nada.
 - **`source: COMMUNITY`:** el nombre y la unidad que usan al menos 3 negocios distintos para ese código, sin contar el propio ni los productos eliminados. Con menos coincidencias no se sugiere.
-- **`source: OPEN_FOOD_FACTS`:** si no hay coincidencias, se consulta la base pública Open Food Facts. Si tarda más de 2,5 s, no hay sugerencia.
+- **`source: OPEN_FOOD_FACTS` u `OPEN_BEAUTY_FACTS`:** si no hay coincidencias, se consultan a la vez Open Food Facts (alimentos) y Open Beauty Facts (cuidado personal y cosméticos), y se prefiere Open Food Facts. El backend espera hasta 4 s y la app hasta 8 s; si tarda más, no hay sugerencia. La tarjeta cita la base ("Se vende por unidad · Open Beauty Facts").
 - **`imageUrl`:** miniatura del frente del producto en `https://images.openfoodfacts.org`, solo en sugerencias de Open Food Facts que tengan foto; si no, `null`. La tarjeta la muestra para confirmar que el código es de ese producto, y si no carga deja el ícono. No se guarda en el inventario.
 - **Privacidad:** nunca trae precio, costo, existencias ni datos de otro negocio.
 - **Sin conexión o con error:** la tarjeta no aparece y el formulario funciona igual.
-- **Modo demostración:** conoce `7702004003508` (`COMMUNITY`) y `7707000000001` (`OPEN_FOOD_FACTS`).
+- **Modo demostración:** conoce `7702004003508` (`COMMUNITY`), `7707000000001` (`OPEN_FOOD_FACTS`) y `7707368810434` (`OPEN_BEAUTY_FACTS`).
 
 ## Movimientos e inventario
 

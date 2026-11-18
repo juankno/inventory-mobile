@@ -232,10 +232,17 @@ function salesOverview(query: URLSearchParams) {
 // La demostración no trae fotos: funciona sin internet.
 const demoSuggestions: Record<
   string,
-  { name: string; unit: Unit; source: 'COMMUNITY' | 'OPEN_FOOD_FACTS'; imageUrl: string | null; imageLargeUrl: string | null }
+  { name: string; unit: Unit; source: 'COMMUNITY' | 'OPEN_FOOD_FACTS' | 'OPEN_BEAUTY_FACTS'; imageUrl: string | null; imageLargeUrl: string | null }
 > = {
   '7702004003508': { name: 'Arroz Diana 500 g', unit: 'UNIT', source: 'COMMUNITY', imageUrl: null, imageLargeUrl: null },
   '7707000000001': { name: 'Chocolatina 30 g', unit: 'UNIT', source: 'OPEN_FOOD_FACTS', imageUrl: null, imageLargeUrl: null },
+  '7707368810434': {
+    name: 'Shampoo anticaspa Filoclen 250 ml',
+    unit: 'UNIT',
+    source: 'OPEN_BEAUTY_FACTS',
+    imageUrl: null,
+    imageLargeUrl: null,
+  },
 };
 
 type Body = Record<string, unknown>;
