@@ -30,30 +30,6 @@ export function presetPeriod(preset: Exclude<PeriodPreset, 'custom'>, now = new 
   }
 }
 
-// Convierte "9/11/2026" en "2026-11-09", o null si la fecha no existe.
-export function parseDayInput(text: string): string | null {
-  const match = text.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!match) return null;
-  const [day, month, year] = match.slice(1).map(Number);
-  const date = new Date(year, month - 1, day);
-  const exists = date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
-  return exists ? toApiDate(date) : null;
-}
-
-export type CustomPeriodResult =
-  | { ok: true; period: ReportPeriod }
-  | { ok: false; error: 'invalidDate' | 'reversed' | 'tooLong' };
-
-export function parseCustomPeriod(from: string, to: string): CustomPeriodResult {
-  const start = parseDayInput(from);
-  const end = parseDayInput(to);
-  if (!start || !end) return { ok: false, error: 'invalidDate' };
-  const days = (Date.parse(end) - Date.parse(start)) / DAY_MS;
-  if (days < 0) return { ok: false, error: 'reversed' };
-  if (days >= MAX_PERIOD_DAYS) return { ok: false, error: 'tooLong' };
-  return { ok: true, period: { from: start, to: end } };
-}
-
 // Convierte "2026-11-09" en la fecha local de ese día.
 export const fromApiDate = (day: string) => {
   const [year, month, date] = day.split('-').map(Number);
@@ -67,6 +43,27 @@ const shiftDays = (day: string, days: number) => {
 
 export const daysInPeriod = ({ from, to }: ReportPeriod) =>
   Math.round((fromApiDate(to).getTime() - fromApiDate(from).getTime()) / DAY_MS) + 1;
+
+// Al elegir "Otro" se arranca con los últimos 7 días, para que la pantalla muestre
+// datos de una vez en lugar de dos campos vacíos.
+export function defaultCustomPeriod(now = new Date()): ReportPeriod {
+  const today = toApiDate(now);
+  return { from: shiftDays(today, -6), to: today };
+}
+
+// Cambia una de las dos fechas y ajusta la otra si hace falta, para que el período
+// siempre sea válido: "Desde" no queda después de "Hasta" y no pasa de un año (el
+// límite del backend). Así no hay mensajes de error que mostrar.
+export function changeCustomPeriod(period: ReportPeriod, field: 'from' | 'to', day: string): ReportPeriod {
+  if (field === 'from') {
+    const to = day > period.to ? day : period.to;
+    const latest = shiftDays(day, MAX_PERIOD_DAYS - 1);
+    return { from: day, to: to > latest ? latest : to };
+  }
+  const from = day < period.from ? day : period.from;
+  const earliest = shiftDays(day, -(MAX_PERIOD_DAYS - 1));
+  return { from: from < earliest ? earliest : from, to: day };
+}
 
 // Con qué se compara cada período, como lo diría el tendero: hoy contra ayer, la
 // semana contra los mismos días de la semana pasada, el mes contra los mismos días

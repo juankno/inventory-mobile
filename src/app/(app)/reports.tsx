@@ -10,7 +10,15 @@ import { SalesBarChart } from '@/features/reports/components/SalesBarChart';
 import { SalesHeadline } from '@/features/reports/components/SalesHeadline';
 import { TopProducts } from '@/features/reports/components/TopProducts';
 import { useSalesOverview } from '@/features/reports/hooks/useSalesOverview';
-import { comparisonFor, parseCustomPeriod, presetPeriod, type PeriodPreset } from '@/features/reports/periods';
+import {
+  changeCustomPeriod,
+  comparisonFor,
+  defaultCustomPeriod,
+  fromApiDate,
+  presetPeriod,
+  toApiDate,
+  type PeriodPreset,
+} from '@/features/reports/periods';
 import { isMockApi } from '@/shared/api/apiClient';
 import { errorMessage } from '@/shared/api/errors';
 import { visibleLoadError } from '@/shared/api/queryPolicy';
@@ -18,13 +26,13 @@ import { messages } from '@/shared/i18n/messages';
 import { AppText } from '@/shared/ui/AppText';
 import { Button } from '@/shared/ui/Button';
 import { ChipGroup } from '@/shared/ui/ChipGroup';
+import { DateField } from '@/shared/ui/DateField';
 import { EmptyState } from '@/shared/ui/EmptyState';
 import { Banner } from '@/shared/ui/Feedback';
 import { Icon, type IconName } from '@/shared/ui/Icon';
 import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { Skeleton } from '@/shared/ui/Skeleton';
-import { TextField } from '@/shared/ui/TextField';
 import { theme } from '@/shared/ui/theme';
 
 const t = messages.reports;
@@ -45,28 +53,23 @@ const periodOptions: readonly { value: PeriodPreset; label: string }[] = [
 export default function ReportsScreen() {
   // La semana abre con varias barras para comparar y su propia comparación.
   const [preset, setPreset] = useState<PeriodPreset>('week');
-  const [customFrom, setCustomFrom] = useState('');
-  const [customTo, setCustomTo] = useState('');
+  // "Otro" arranca con los últimos 7 días; el calendario solo deja elegir períodos válidos.
+  const [customPeriod, setCustomPeriod] = useState(() => defaultCustomPeriod());
   const [busy, setBusy] = useState<ReportKind | null>(null);
   const [error, setError] = useState<string>();
 
-  // Un período a medio escribir no es un error hasta que estén las dos fechas.
-  const custom = preset === 'custom' ? parseCustomPeriod(customFrom, customTo) : null;
-  const period = preset === 'custom' ? (custom?.ok ? custom.period : null) : presetPeriod(preset);
-  const periodError =
-    custom && !custom.ok && customFrom.trim() && customTo.trim() ? t.periodErrors[custom.error] : undefined;
-  const comparison = period ? comparisonFor(preset, period) : null;
+  const period = preset === 'custom' ? customPeriod : presetPeriod(preset);
+  const comparison = comparisonFor(preset, period);
+  const today = new Date();
+  const changeDay = (field: 'from' | 'to') => (date: Date) =>
+    setCustomPeriod((current) => changeCustomPeriod(current, field, toApiDate(date)));
 
-  const overview = useSalesOverview(period, comparison?.period);
+  const overview = useSalesOverview(period, comparison.period);
   const overviewError = visibleLoadError(overview);
   const data = overview.data;
 
   const share = async (kind: ReportKind) => {
     setError(undefined);
-    if (kind !== 'inventory' && !period) {
-      setError(periodError ?? t.periodErrors.invalidDate);
-      return;
-    }
     setBusy(kind);
     try {
       if (!(await Sharing.isAvailableAsync())) {
@@ -110,33 +113,21 @@ export default function ReportsScreen() {
         <ChipGroup accessibilityLabel={t.periodLabel} options={periodOptions} value={preset} onChange={setPreset} />
         {preset === 'custom' ? (
           <View style={styles.dates}>
+            {/* Sin fechas futuras: todavía no hay ventas que mostrar. */}
             <View style={styles.flex}>
-              <TextField
-                label={t.from}
-                placeholder={t.datePlaceholder}
-                value={customFrom}
-                onChangeText={setCustomFrom}
-                keyboardType="numbers-and-punctuation"
-                error={periodError}
-              />
+              <DateField label={t.from} value={fromApiDate(customPeriod.from)} maximumDate={today} onChange={changeDay('from')} />
             </View>
             <View style={styles.flex}>
-              <TextField
-                label={t.to}
-                placeholder={t.datePlaceholder}
-                value={customTo}
-                onChangeText={setCustomTo}
-                keyboardType="numbers-and-punctuation"
-              />
+              <DateField label={t.to} value={fromApiDate(customPeriod.to)} maximumDate={today} onChange={changeDay('to')} />
             </View>
           </View>
         ) : null}
       </View>
 
-      {period && overview.isPending ? <Skeleton variant="stats" /> : null}
+      {overview.isPending ? <Skeleton variant="stats" /> : null}
       {overviewError ? <Banner message={errorMessage(overviewError, messages.errors.loadFailed)} /> : null}
 
-      {data && comparison ? (
+      {data ? (
         // Mientras llega el período nuevo, el anterior se ve atenuado.
         <View style={[styles.sections, overview.isPlaceholderData && styles.stale]}>
           <SalesHeadline overview={data} preset={preset} comparison={comparison} />
