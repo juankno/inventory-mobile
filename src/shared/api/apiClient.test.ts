@@ -70,6 +70,24 @@ describe('apiRequest', () => {
     abort.mockRestore();
   });
 
+  it('si la API responde, deja de marcar sin conexión', async () => {
+    process.env.EXPO_PUBLIC_USE_MOCK_API = 'false';
+    globalThis.fetch = (async () => ({ ok: true, status: 200, json: async () => ({}) })) as unknown as typeof fetch;
+    let client!: ApiClient;
+    let query!: typeof import('@tanstack/react-query');
+    jest.isolateModules(() => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      client = require('./apiClient');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      query = require('@tanstack/react-query');
+    });
+    query.onlineManager.setOnline(false);
+
+    await client.apiRequest('GET', '/products');
+
+    expect(query.onlineManager.isOnline()).toBe(true);
+  });
+
   it('entrega el código y el mensaje de los errores del backend', async () => {
     globalThis.fetch = (async () => ({
       ok: false,
