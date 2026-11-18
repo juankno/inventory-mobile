@@ -57,7 +57,12 @@ export function Button({
       ) : (
         <View style={styles.content}>
           {icon ? <Icon name={icon} size={compact ? 20 : 22} color={foreground} /> : null}
-          <AppText variant={compact ? 'body' : 'title'} style={[styles.label, { color: foreground }]} numberOfLines={1}>
+          {/* Con letra grande del sistema, el botón compacto pasa a dos líneas en vez de cortar el texto. */}
+          <AppText
+            variant={compact ? 'body' : 'title'}
+            style={[styles.label, compact && styles.compactLabel, { color: foreground }]}
+            numberOfLines={compact ? 2 : 1}
+          >
             {label}
           </AppText>
         </View>
@@ -82,4 +87,5 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.85 },
   content: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   label: { fontFamily: theme.fonts.bold },
+  compactLabel: { textAlign: 'center', flexShrink: 1 },
 });

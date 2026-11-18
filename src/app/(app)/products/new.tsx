@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 
 import { ProductFormFields } from '@/features/products/components/ProductFormFields';
@@ -49,6 +49,11 @@ export default function NewProductScreen() {
       costPrice: '',
     },
   });
+
+  // Si el usuario ya escribió un nombre, la sugerencia no aparece (ni se queda): no debe
+  // llegar tarde y mover el formulario mientras escribe.
+  const typedName = useWatch({ control, name: 'name' }).trim() !== '';
+  const showSuggestion = !!suggestion.data && suggestionChoice === null && !typedName;
 
   // Usar la sugerencia solo llena el nombre y la unidad; el resto lo escribe el usuario.
   const acceptSuggestion = () => {
@@ -130,7 +135,7 @@ export default function NewProductScreen() {
       {createMutation.error ? (
         <Banner message={errorMessage(createMutation.error, messages.errors.unexpected)} />
       ) : null}
-      {suggestion.data && suggestionChoice === null ? (
+      {showSuggestion && suggestion.data ? (
         <ProductSuggestionCard
           suggestion={suggestion.data}
           onAccept={acceptSuggestion}
