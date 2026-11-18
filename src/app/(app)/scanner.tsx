@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useRestoreProduct } from '@/features/products/hooks/useProducts';
 import { openScannedProduct, useCodeResolver, type ScanPurpose } from '@/features/scanner/hooks/useCodeResolver';
+import { confirmRead, type PendingRead } from '@/features/scanner/readConfirmation';
 import {
   classifyManualEntry,
   classifyScan,
@@ -89,6 +90,8 @@ function CameraScanner() {
   const restoreProduct = useRestoreProduct();
   const showToast = useToast();
   const busy = useRef(false);
+  // Código de barras leído una vez, esperando la segunda lectura que lo confirma.
+  const pendingRead = useRef<PendingRead>(null);
 
   const scanning = panel === 'idle' && !manualOpen;
 
@@ -132,6 +135,14 @@ function CameraScanner() {
       const scanned = classifyScan(type, data);
       // Una lectura con dígito de control incorrecto suele ser un error de la cámara: se sigue leyendo.
       if (scanned.kind === 'invalid') return;
+      // Un código de barras se acepta cuando se lee igual dos veces seguidas: una mala
+      // lectura puede tener un dígito de control válido. Los QR traen su propia
+      // corrección de errores y se aceptan a la primera.
+      if (scanned.kind === 'gtin') {
+        const read = confirmRead(pendingRead.current, scanned.code, Date.now());
+        pendingRead.current = read.pending;
+        if (!read.confirmed) return;
+      }
       // Vibra al leer, para saber que tomó el código sin mirar la pantalla.
       hapticSuccess();
       resolve(scanned);
