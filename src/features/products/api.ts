@@ -62,12 +62,20 @@ export type ProductSuggestion = {
   // el código es de ese producto; no se guarda en el inventario. Opcional porque un
   // backend anterior no la envía.
   imageUrl?: string | null;
+  // La misma foto en 400 px, para verla en pantalla completa.
+  imageLargeUrl?: string | null;
 };
+
+// Es opcional: si tarda más que esto, no aparece. Alcanza para el arranque en frío del
+// backend más la consulta a Open Food Facts.
+const SUGGESTION_TIMEOUT_MS = 5_000;
 
 // null si nadie conoce el código (404 SUGGESTION_NOT_FOUND).
 export async function getProductSuggestion(code: string): Promise<ProductSuggestion | null> {
   try {
-    return await apiRequest<ProductSuggestion>('GET', `/catalog/${encodeURIComponent(code)}`);
+    return await apiRequest<ProductSuggestion>('GET', `/catalog/${encodeURIComponent(code)}`, undefined, {
+      timeoutMs: SUGGESTION_TIMEOUT_MS,
+    });
   } catch (error) {
     if (hasErrorCode(error, 'SUGGESTION_NOT_FOUND')) return null;
     throw error;

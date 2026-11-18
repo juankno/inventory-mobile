@@ -266,7 +266,9 @@ export const messages = {
     // La licencia de Open Food Facts pide citarlo; va en la misma línea para no ocupar otra.
     suggestionPublicSource: 'Open Food Facts',
     suggestionImage: 'Foto del producto',
-    suggestionAccept: 'Usar estos datos',
+    suggestionImageOpen: 'Ver la foto del producto en grande',
+    // Responden a "¿Es este producto?": cortas para que quepan las dos lado a lado.
+    suggestionAccept: 'Sí, es este',
     suggestionReject: 'No, es otro',
     suggestionUsed: 'Revisa el nombre: puedes cambiarlo. El precio y el costo los pones tú.',
   },

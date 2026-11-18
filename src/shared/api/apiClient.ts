@@ -83,10 +83,17 @@ async function send<R extends HttpResponse>(
   return response;
 }
 
-export async function apiRequest<T>(method: Method, path: string, body?: unknown): Promise<T> {
+// timeoutMs: para consultas opcionales que no vale la pena esperar tanto (la sugerencia
+// de producto); las demás usan el límite general.
+export async function apiRequest<T>(
+  method: Method,
+  path: string,
+  body?: unknown,
+  { timeoutMs = REQUEST_TIMEOUT_MS }: { timeoutMs?: number } = {},
+): Promise<T> {
   if (isMockApi) return mockRequest<T>(method, path, body);
 
-  const response = await send(fetch, method, path, body);
+  const response = await send(fetch, method, path, body, timeoutMs);
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }
