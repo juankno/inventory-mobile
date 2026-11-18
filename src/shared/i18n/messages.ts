@@ -13,6 +13,9 @@ export const messages = {
     required: 'Este campo es obligatorio.',
     optional: '(opcional)',
     understood: 'Entendido',
+    done: 'Listo',
+    // "Desde, 3 nov. 2026. Toca para cambiar la fecha".
+    changeDate: (label: string, date: string) => `${label}, ${date}. Toca para cambiar la fecha`,
   },
   errors: {
     network: 'No hay conexión a internet. Revisa tu conexión e inténtalo de nuevo. Lo que escribiste se conserva.',
@@ -454,12 +457,6 @@ export const messages = {
     periodCustom: 'Otro',
     from: 'Desde',
     to: 'Hasta',
-    datePlaceholder: 'DD/MM/AAAA',
-    periodErrors: {
-      invalidDate: 'Escribe las dos fechas como DD/MM/AAAA.',
-      reversed: 'La fecha "Desde" debe ser anterior a "Hasta".',
-      tooLong: 'Elige un período de máximo un año.',
-    },
     salesBody: 'Cuánto vendiste, cuánto ganaste y qué se vende más.',
     salesReportTitle: 'Ventas',
     salesAction: 'Compartir ventas',

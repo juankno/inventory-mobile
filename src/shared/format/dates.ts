@@ -1,6 +1,10 @@
 // Fechas relativas en español: "Hoy, 3:40 p. m.", "Ayer, 7:30 a. m.", "20 oct., 6:10 p. m.".
 const timeFormat = new Intl.DateTimeFormat('es-CO', { hour: 'numeric', minute: '2-digit', hour12: true });
 const dayFormat = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short' });
+const fullDayFormat = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+
+// Un día con su año, para los campos de fecha: "3 nov. 2026".
+export const formatDay = (date: Date) => fullDayFormat.format(date);
 
 const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 
