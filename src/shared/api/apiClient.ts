@@ -1,3 +1,4 @@
+import { onlineManager } from '@tanstack/react-query';
 import { fetch as expoFetch } from 'expo/fetch';
 
 import { messages } from '@/shared/i18n/messages';
@@ -63,6 +64,10 @@ async function send<R extends HttpResponse>(
   } finally {
     clearTimeout(timer);
   }
+
+  // Si la API respondió, hay conexión, diga lo que diga el celular: así el aviso
+  // de "sin conexión" se quita al recargar o al registrar un movimiento.
+  if (!onlineManager.isOnline()) onlineManager.setOnline(true);
 
   if (response.status === 401 && token) onUnauthorized();
 
