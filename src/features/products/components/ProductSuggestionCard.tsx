@@ -25,6 +25,9 @@ export function ProductSuggestionCard({ suggestion, onAccept, onReject }: Props)
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = !!suggestion.imageUrl && !imageFailed;
   const [viewerOpen, setViewerOpen] = useState(false);
+  // Las bases públicas piden citarlas. Lo de otras tiendas (o una fuente que esta versión
+  // no conoce) no lleva nombre.
+  const publicSource = t.suggestionPublicSource[suggestion.source];
 
   return (
     <View style={styles.card} accessibilityRole="summary">
@@ -58,8 +61,8 @@ export function ProductSuggestionCard({ suggestion, onAccept, onReject }: Props)
           </AppText>
           <AppText variant="title">{suggestion.name}</AppText>
           <AppText variant="body" tone="secondary">
-            {suggestion.source === 'OPEN_FOOD_FACTS'
-              ? `${t.suggestionUnit(unitMeasure(suggestion.unit))} · ${t.suggestionPublicSource}`
+            {publicSource
+              ? `${t.suggestionUnit(unitMeasure(suggestion.unit))} · ${publicSource}`
               : t.suggestionUnit(unitMeasure(suggestion.unit))}
           </AppText>
         </View>

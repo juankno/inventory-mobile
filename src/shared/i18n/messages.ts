@@ -264,7 +264,10 @@ export const messages = {
     suggestionTitle: '¿Es este producto?',
     suggestionUnit: (measure: string) => `Se vende ${measure}`,
     // La licencia de Open Food Facts pide citarlo; va en la misma línea para no ocupar otra.
-    suggestionPublicSource: 'Open Food Facts',
+    suggestionPublicSource: {
+      OPEN_FOOD_FACTS: 'Open Food Facts',
+      OPEN_BEAUTY_FACTS: 'Open Beauty Facts',
+    } as Record<string, string | undefined>,
     suggestionImage: 'Foto del producto',
     suggestionImageOpen: 'Ver la foto del producto en grande',
     // Responden a "¿Es este producto?": cortas para que quepan las dos lado a lado.

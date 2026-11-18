@@ -57,7 +57,9 @@ export const listDeletedProducts = async () =>
 export type ProductSuggestion = {
   name: string;
   unit: Unit;
-  source: 'COMMUNITY' | 'OPEN_FOOD_FACTS';
+  // COMMUNITY: lo que usan otras tiendas. Las demás, la base pública que lo conocía:
+  // Open Food Facts (alimentos) u Open Beauty Facts (cuidado personal y cosméticos).
+  source: 'COMMUNITY' | 'OPEN_FOOD_FACTS' | 'OPEN_BEAUTY_FACTS';
   // Miniatura del frente del producto, solo de Open Food Facts. Ayuda a confirmar que
   // el código es de ese producto; no se guarda en el inventario. Opcional porque un
   // backend anterior no la envía.
