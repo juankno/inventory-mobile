@@ -1,4 +1,36 @@
-import { parseCustomPeriod, parseDayInput, presetPeriod } from './periods';
+import { comparisonFor, parseCustomPeriod, parseDayInput, presetPeriod } from './periods';
+
+describe('comparisonFor', () => {
+  // Miércoles 11 de noviembre de 2026.
+  const today = new Date(2026, 10, 11, 15);
+
+  it('compara hoy con ayer', () => {
+    expect(comparisonFor('today', presetPeriod('today', today)).period).toEqual({ from: '2026-11-10', to: '2026-11-10' });
+  });
+
+  it('compara la semana con los mismos días de la semana pasada', () => {
+    expect(comparisonFor('week', presetPeriod('week', today)).period).toEqual({ from: '2026-11-02', to: '2026-11-04' });
+  });
+
+  it('compara el mes con los mismos días del mes pasado, sin pasarse de su último día', () => {
+    expect(comparisonFor('month', presetPeriod('month', today)).period).toEqual({ from: '2026-10-01', to: '2026-10-11' });
+    expect(comparisonFor('month', { from: '2026-03-01', to: '2026-03-31' }).period).toEqual({
+      from: '2026-02-01',
+      to: '2026-02-28',
+    });
+  });
+
+  it('compara el mes pasado con el anterior, también al cambiar de año', () => {
+    expect(comparisonFor('lastMonth', { from: '2026-01-01', to: '2026-01-31' }).period).toEqual({
+      from: '2025-12-01',
+      to: '2025-12-31',
+    });
+  });
+
+  it('deja que el backend compare un período elegido con los días anteriores', () => {
+    expect(comparisonFor('custom', { from: '2026-11-01', to: '2026-11-10' })).toEqual({ kind: 'previousDays', days: 10 });
+  });
+});
 
 // Miércoles 11 de noviembre de 2026.
 const now = new Date(2026, 10, 11, 15);

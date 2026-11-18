@@ -63,6 +63,8 @@ export const messages = {
     policyBody:
       'Usamos tu nombre y tu correo solo para crear tu cuenta, permitirte ingresar y recuperar tu contraseña. ' +
       'Los datos de tu inventario son de tu negocio: no los vendemos ni los compartimos con terceros. ' +
+      'Para ayudar a registrar productos, si varias tiendas le dan el mismo nombre a un código de barras, ' +
+      'ese nombre se puede sugerir a otras; nunca se comparten precios, costos ni existencias. ' +
       'Puedes pedir que eliminemos tu cuenta y tus datos cuando quieras (Ley 1581 de 2012).',
     passwordChanged: 'Tu contraseña se cambió. Ingresa con la nueva.',
     demoTag: 'DEMO',
@@ -258,6 +260,15 @@ export const messages = {
     stockLocked: (quantity: string) =>
       [`Las existencias (`, quantity, `) no se editan aquí. Para cambiarlas registra una entrada, una salida o un ajuste por conteo, así queda en el historial.`] as const,
     registerMovement: 'Registrar un movimiento',
+    suggestionTitle: '¿Es este producto?',
+    suggestionUnit: (measure: string) => `Se vende ${measure}`,
+    suggestionSource: {
+      COMMUNITY: 'Así lo registran otras tiendas con este mismo código.',
+      OPEN_FOOD_FACTS: 'Según Open Food Facts, una base pública de productos.',
+    },
+    suggestionAccept: 'Usar estos datos',
+    suggestionReject: 'No, es otro',
+    suggestionUsed: 'Revisa el nombre: puedes cambiarlo. El precio y el costo los pones tú.',
   },
   movement: {
     title: 'Nuevo movimiento',
@@ -379,27 +390,58 @@ export const messages = {
   },
   reports: {
     title: 'Reportes',
-    salesTitle: 'Tus ventas',
-    today: 'Hoy',
-    thisWeek: 'Esta semana',
+    periodLabel: 'Período del reporte',
+    // "Hoy vendiste", encima de la cifra grande.
+    soldIn: {
+      today: 'Hoy vendiste',
+      week: 'Esta semana vendiste',
+      month: 'Este mes vendiste',
+      lastMonth: 'El mes pasado vendiste',
+      custom: 'En estas fechas vendiste',
+    },
     salesCount: (count: number) => (count === 1 ? '1 venta' : `${count} ventas`),
+    profit: (amount: string) => `Ganancia ${amount}`,
+    trendUp: (percent: number, name: string) => `${percent} % más que ${name}`,
+    trendDown: (percent: number, name: string) => `${percent} % menos que ${name}`,
+    trendSame: (name: string) => `Lo mismo que ${name}`,
+    // name ya viene con mayúscula inicial: "Ayer no hubo ventas para comparar".
+    trendNew: (name: string) => `${name} no hubo ventas para comparar`,
+    previousTotal: (name: string, amount: string) => `${name}: ${amount}`,
     withoutPrice: (count: number) =>
       count === 1
-        ? '1 venta de esta semana no suma porque el producto no tenía precio.'
-        : `${count} ventas de esta semana no suman porque el producto no tenía precio.`,
-    profit: (amount: string) => `Ganancia ${amount}`,
+        ? '1 venta de este período no suma porque el producto no tenía precio.'
+        : `${count} ventas de este período no suman porque el producto no tenía precio.`,
     withoutCost: (count: number) =>
       count === 1
-        ? '1 venta de esta semana no suma a la ganancia porque no tenía costo.'
-        : `${count} ventas de esta semana no suman a la ganancia porque no tenían costo.`,
-    topTitle: 'Lo más vendido esta semana',
-    topEmpty: 'Todavía no hay ventas esta semana.',
+        ? '1 venta de este período no suma a la ganancia porque no tenía costo.'
+        : `${count} ventas de este período no suman a la ganancia porque no tenían costo.`,
+    noSales: 'No hubo ventas en este período',
+    noSalesBody: 'Cuando registres ventas, aquí verás cuánto vendes, cuándo vendes más y qué se vende más.',
+    chartTitle: {
+      HOUR: '¿A qué hora vendiste más?',
+      DAY: '¿Qué día vendiste más?',
+      WEEK: '¿Qué semana vendiste más?',
+      MONTH: '¿Qué mes vendiste más?',
+    },
+    chartHint: 'Toca una barra para ver cuánto vendiste.',
+    chartBest: 'Lo más alto del período',
+    barLabel: (name: string, amount: string, sales: string) => `${name}: ${amount}, ${sales}`,
+    topTitle: 'Lo más vendido',
+    topQuantity: (quantity: string) => `${quantity} vendidos`,
+    stockTitle: 'Cómo está tu inventario hoy',
+    stockOk: 'Con existencias',
+    stockLow: 'Por agotarse',
+    stockOut: 'Agotados',
+    stockSummary: (ok: number, low: number, out: number) =>
+      `${ok} con existencias, ${low} por agotarse y ${out} agotados.`,
+    stockAllGood: 'Todos tus productos tienen existencias suficientes.',
+    stockAction: 'Ver qué reponer',
     excelTitle: 'Reportes en Excel',
+    excelIntro: 'Para guardar o enviar el detalle. Ventas y movimientos usan el período elegido arriba.',
     demoUnavailable: 'Los reportes en Excel no están disponibles en el modo demostración.',
     inventoryTitle: 'Inventario actual',
     inventoryBody: 'Qué tienes hoy y cuánto vale a costo y a precio de venta.',
     inventoryAction: 'Compartir inventario',
-    periodTitle: 'Ventas y movimientos',
     periodToday: 'Hoy',
     periodWeek: 'Semana',
     periodMonth: 'Este mes',

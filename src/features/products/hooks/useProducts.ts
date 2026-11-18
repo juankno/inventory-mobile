@@ -6,6 +6,7 @@ import {
   createProduct,
   deleteProduct,
   getProduct,
+  getProductSuggestion,
   listDeletedProducts,
   listProducts,
   restoreProduct,
@@ -82,4 +83,18 @@ export function useRestoreProduct() {
     ]);
     return product;
   };
+}
+
+const SUGGESTION_STALE_MS = 24 * 60 * 60 * 1000;
+
+// Sugerencia para un código de barras nuevo. Si falla o no hay conexión, simplemente
+// no aparece: la pantalla funciona igual sin ella, así que no se reintenta.
+export function useProductSuggestion(code: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.productSuggestion(code ?? ''),
+    queryFn: () => getProductSuggestion(code!),
+    enabled: !!code,
+    retry: false,
+    staleTime: SUGGESTION_STALE_MS,
+  });
 }

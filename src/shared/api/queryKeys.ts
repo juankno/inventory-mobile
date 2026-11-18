@@ -10,5 +10,9 @@ export const queryKeys = {
   recentMovements: (productId: string) => ['movements', productId, 'recent'] as const,
   movementHistory: (productId: string) => ['movements', productId, 'all'] as const,
   alerts: ['inventory', 'alerts'] as const,
-  salesSummary: ['reports', 'summary'] as const,
+  // Una venta cambia todos los resúmenes: se invalidan juntos con `reports`.
+  reports: ['reports'] as const,
+  salesOverview: (from: string, to: string, compareFrom: string, compareTo: string) =>
+    ['reports', 'overview', from, to, compareFrom, compareTo] as const,
+  productSuggestion: (code: string) => ['catalog', code] as const,
 };
