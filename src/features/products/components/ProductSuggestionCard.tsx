@@ -23,16 +23,16 @@ type Props = {
 export function ProductSuggestionCard({ suggestion, onAccept, onReject }: Props) {
   // Si la foto no carga (sin datos, servidor lento), queda el ícono de siempre.
   const [imageFailed, setImageFailed] = useState(false);
-  const showImage = !!suggestion.imageUrl && !imageFailed;
+  const imageUrl = imageFailed ? null : (suggestion.imageUrl ?? null);
   const [viewerOpen, setViewerOpen] = useState(false);
   // Las bases públicas piden citarlas. Lo de otras tiendas (o una fuente que esta versión
   // no conoce) no lleva nombre.
-  const publicSource = t.suggestionPublicSource[suggestion.source];
+  const publicSource = suggestion.source === 'COMMUNITY' ? undefined : t.suggestionPublicSource[suggestion.source];
 
   return (
     <View style={styles.card} accessibilityRole="summary">
       <View style={styles.header}>
-        {showImage ? (
+        {imageUrl ? (
           // Al tocarla se ve en pantalla completa, para leer la etiqueta.
           <Pressable
             accessibilityRole="imagebutton"
@@ -41,7 +41,7 @@ export function ProductSuggestionCard({ suggestion, onAccept, onReject }: Props)
             style={({ pressed }) => pressed && styles.pressed}
           >
             <Image
-              source={{ uri: suggestion.imageUrl! }}
+              source={{ uri: imageUrl }}
               style={styles.image}
               resizeMode="contain"
               onError={() => setImageFailed(true)}
@@ -71,10 +71,10 @@ export function ProductSuggestionCard({ suggestion, onAccept, onReject }: Props)
         <Button label={t.suggestionReject} variant="secondary" size="compact" onPress={onReject} style={styles.flex} />
         <Button label={t.suggestionAccept} size="compact" onPress={onAccept} style={styles.flex} />
       </View>
-      {showImage ? (
+      {imageUrl ? (
         <ProductImageViewer
           visible={viewerOpen}
-          smallUrl={suggestion.imageUrl!}
+          smallUrl={imageUrl}
           largeUrl={suggestion.imageLargeUrl}
           onClose={() => setViewerOpen(false)}
         />
