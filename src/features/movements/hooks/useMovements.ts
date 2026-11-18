@@ -36,7 +36,7 @@ export function useCreateMovement() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.products });
       void queryClient.invalidateQueries({ queryKey: queryKeys.movements(productId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.alerts });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.salesSummary });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.reports });
     },
   });
 }
@@ -59,7 +59,7 @@ export function useUndoMovement() {
       queryClient.invalidateQueries({ queryKey: queryKeys.products }),
       queryClient.invalidateQueries({ queryKey: queryKeys.movements(productId) }),
       queryClient.invalidateQueries({ queryKey: queryKeys.alerts }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.salesSummary }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.reports }),
     ]);
   };
 }

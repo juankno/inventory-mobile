@@ -10,16 +10,30 @@ Estos son los endpoints que consume la app móvil, todos bajo `/api/v1`, en `htt
 
 | Método y ruta | Respuesta |
 | --- | --- |
-| `GET /reports/summary` | `{ today, week, topProducts, salesWithoutPrice, salesWithoutCost }`, en hora de Colombia; la semana empieza el lunes. `today` y `week` traen `{ total, sales, profit }` |
+| `GET /reports/overview?from=…&to=…[&compareFrom=…&compareTo=…]` | `SalesOverview`: el resumen del período que muestra la pantalla de reportes |
+| `GET /reports/summary` | `{ today, week, topProducts, salesWithoutPrice, salesWithoutCost }`, en hora de Colombia; la semana empieza el lunes. La app ya no lo usa; se mantiene para versiones anteriores |
 | `GET /reports/inventory` | Archivo de Excel |
 | `GET /reports/movements?from=AAAA-MM-DD&to=AAAA-MM-DD` | Archivo de Excel |
 | `GET /reports/sales?from=AAAA-MM-DD&to=AAAA-MM-DD` | Archivo de Excel |
+
+`SalesOverview` tiene estos campos, en hora de Colombia:
+
+- `current` y `previous`: `{ total, sales, profit }` del período y del período con que se compara. `previous` trae también su `from` y `to`.
+  - La app envía con qué comparar: hoy con ayer, la semana con los mismos días de la semana pasada, el mes con los mismos días del mes pasado y el mes pasado con el anterior.
+  - Sin `compareFrom` y `compareTo` (período elegido a mano), el backend compara con los días justo antes.
+- `granularity` y `series`: las ventas repartidas en el tiempo, con todos los grupos aunque no tengan ventas.
+  - Un día va por horas (`HOUR`, 24 grupos, `start` = `AAAA-MM-DDTHH`).
+  - Hasta 31 días va por días (`DAY`), hasta 92 por semanas que empiezan el lunes (`WEEK`) y el resto por meses (`MONTH`).
+  - Un grupo que empezaría antes de `from` empieza en `from`.
+- `topProducts`: los 5 más vendidos del período.
+- `salesWithoutPrice` y `salesWithoutCost`: lo mismo que en el resumen, pero del período.
+- `inventory`: `{ products, lowStock, outOfStock }` de hoy, sin importar el período.
 
 - **Período:** `from` y `to` están incluidos y no pueden abarcar más de 366 días. Si hay demasiadas filas, responde `400 REPORT_TOO_LARGE`.
 - **Precio:** cada salida guarda el precio que tenía el producto. Las anteriores a este cambio no lo tienen: no suman al total y se cuentan como `salesWithoutPrice`.
 - **Costo y ganancia:** cada salida guarda también su costo unitario. `profit` suma `cantidad × (precio − costo)` de las ventas que tienen los dos; las que no tienen costo se cuentan como `salesWithoutCost`.
 - **Deshacer:** `POST /movements` acepta `revertsMovementId` en los ajustes, y la venta revertida deja de contar.
-- **Modo demostración:** tiene el resumen, pero no genera archivos de Excel.
+- **Modo demostración:** tiene el resumen por período, pero no genera archivos de Excel.
 
 ## Autenticación
 

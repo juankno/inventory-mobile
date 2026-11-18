@@ -1,7 +1,15 @@
 import { ApiError } from '@/shared/api/errors';
 import type { AuthResponse, DeletedProduct, Movement, MovementResult, Page, Product } from '@/shared/api/types';
-import type { SalesSummary } from '@/features/reports/api';
+import type { SalesOverview } from '@/features/reports/api';
 import { mockRequest } from './mockServer';
+
+const pad = (value: number) => String(value).padStart(2, '0');
+const todayKey = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+};
+// Resumen de hoy, como lo pide la pantalla de reportes.
+const todayOverview = () => mockRequest<SalesOverview>('GET', `/reports/overview?from=${todayKey()}&to=${todayKey()}`);
 
 const findByName = async (name: string) =>
   (await mockRequest<Product[]>('GET', '/products')).find((product) => product.name === name)!;
@@ -123,7 +131,7 @@ describe('API de demostración', () => {
       revertsMovementId: undone.movement?.id,
     });
 
-    const summary = await mockRequest<SalesSummary>('GET', '/reports/summary');
+    const summary = await todayOverview();
 
     expect(summary.topProducts.find((item) => item.name === 'Aceite 1 litro')).toMatchObject({
       quantity: 1,
@@ -134,15 +142,15 @@ describe('API de demostración', () => {
   it('guarda el costo de cada venta y deja el último como costo del producto', async () => {
     const cafe = await findByName('Café molido 250 g');
     const sale = { productId: cafe.id, type: 'OUTBOUND', reason: 'SALE', quantity: 1 };
-    const before = await mockRequest<SalesSummary>('GET', '/reports/summary');
+    const before = await todayOverview();
 
     await mockRequest('POST', '/movements', { ...sale, idempotencyKey: 'costo-1' });
     await mockRequest('POST', '/movements', { ...sale, idempotencyKey: 'costo-2', unitCost: 8000 });
 
-    const summary = await mockRequest<SalesSummary>('GET', '/reports/summary');
+    const summary = await todayOverview();
     const updated = await findByName('Café molido 250 g');
     expect(updated.costPrice).toBe(8000);
-    expect(summary.today.profit! - before.today.profit!).toBe(
+    expect(summary.current.profit - before.current.profit).toBe(
       cafe.salePrice! - cafe.costPrice! + (cafe.salePrice! - 8000),
     );
 
@@ -152,6 +160,32 @@ describe('API de demostración', () => {
       { unitPrice: cafe.salePrice, unitCost: 8000 },
       { unitPrice: cafe.salePrice, unitCost: cafe.costPrice },
     ]);
+  });
+
+  it('resume un período con su comparación, las ventas por día y el estado del inventario', async () => {
+    const week = await mockRequest<SalesOverview>('GET', '/reports/overview?from=2026-11-16&to=2026-11-22');
+    expect(week.granularity).toBe('DAY');
+    expect(week.series.map(({ start }) => start)).toEqual([
+      '2026-11-16',
+      '2026-11-17',
+      '2026-11-18',
+      '2026-11-19',
+      '2026-11-20',
+      '2026-11-21',
+      '2026-11-22',
+    ]);
+    expect(week.previous).toMatchObject({ from: '2026-11-09', to: '2026-11-15' });
+    expect(week.inventory.products).toBeGreaterThan(0);
+
+    const compared = await mockRequest<SalesOverview>(
+      'GET',
+      '/reports/overview?from=2026-11-01&to=2026-11-18&compareFrom=2026-10-01&compareTo=2026-10-18',
+    );
+    expect(compared.previous).toMatchObject({ from: '2026-10-01', to: '2026-10-18' });
+
+    const today = await todayOverview();
+    expect(today.granularity).toBe('HOUR');
+    expect(today.series).toHaveLength(24);
   });
 
   it('responde CODE_NOT_RECOGNIZED con un código desconocido', async () => {

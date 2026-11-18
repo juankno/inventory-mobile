@@ -3,14 +3,17 @@ import * as Sharing from 'expo-sharing';
 import { useState, type ReactNode } from 'react';
 import { RefreshControl, StyleSheet, View } from 'react-native';
 
-import { downloadReport, type ReportKind, type SalesSummary } from '@/features/reports/api';
-import { useSalesSummary } from '@/features/reports/hooks/useSalesSummary';
-import { parseCustomPeriod, presetPeriod, type PeriodPreset } from '@/features/reports/periods';
+import { downloadReport, type ReportKind } from '@/features/reports/api';
+import { visibleSeries } from '@/features/reports/chart';
+import { InventoryHealth } from '@/features/reports/components/InventoryHealth';
+import { SalesBarChart } from '@/features/reports/components/SalesBarChart';
+import { SalesHeadline } from '@/features/reports/components/SalesHeadline';
+import { TopProducts } from '@/features/reports/components/TopProducts';
+import { useSalesOverview } from '@/features/reports/hooks/useSalesOverview';
+import { comparisonFor, parseCustomPeriod, presetPeriod, type PeriodPreset } from '@/features/reports/periods';
 import { isMockApi } from '@/shared/api/apiClient';
 import { errorMessage } from '@/shared/api/errors';
 import { visibleLoadError } from '@/shared/api/queryPolicy';
-import { formatMoney } from '@/shared/format/dates';
-import { formatQuantity } from '@/shared/format/units';
 import { messages } from '@/shared/i18n/messages';
 import { AppText } from '@/shared/ui/AppText';
 import { Button } from '@/shared/ui/Button';
@@ -36,38 +39,41 @@ const periodOptions: readonly { value: PeriodPreset; label: string }[] = [
   { value: 'custom', label: t.periodCustom },
 ];
 
-// Resumen de ventas y reportes en Excel para compartir. Sigue el estilo del inicio:
-// cifras grandes en tarjetas, filas con borde y una tarjeta por reporte.
+// Reportes pensados para leerse de un vistazo: cuánto se vendió y si va mejor o peor
+// que antes, cuándo se vendió más, qué se vende más y cómo está el inventario. El
+// período elegido arriba sirve también para los reportes en Excel.
 export default function ReportsScreen() {
-  const summary = useSalesSummary();
-  const summaryError = visibleLoadError(summary);
-  const [preset, setPreset] = useState<PeriodPreset>('month');
+  // La semana abre con varias barras para comparar y su propia comparación.
+  const [preset, setPreset] = useState<PeriodPreset>('week');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
-  const [periodError, setPeriodError] = useState<string>();
   const [busy, setBusy] = useState<ReportKind | null>(null);
   const [error, setError] = useState<string>();
 
-  const selectedPeriod = () => {
-    if (preset !== 'custom') return presetPeriod(preset);
-    const result = parseCustomPeriod(customFrom, customTo);
-    if (result.ok) return result.period;
-    setPeriodError(t.periodErrors[result.error]);
-    return null;
-  };
+  // Un período a medio escribir no es un error hasta que estén las dos fechas.
+  const custom = preset === 'custom' ? parseCustomPeriod(customFrom, customTo) : null;
+  const period = custom ? (custom.ok ? custom.period : null) : presetPeriod(preset as Exclude<PeriodPreset, 'custom'>);
+  const periodError =
+    custom && !custom.ok && customFrom.trim() && customTo.trim() ? t.periodErrors[custom.error] : undefined;
+  const comparison = period ? comparisonFor(preset, period) : null;
+
+  const overview = useSalesOverview(period, comparison?.period);
+  const overviewError = visibleLoadError(overview);
+  const data = overview.data;
 
   const share = async (kind: ReportKind) => {
     setError(undefined);
-    setPeriodError(undefined);
-    const period = kind === 'inventory' ? null : selectedPeriod();
-    if (kind !== 'inventory' && !period) return;
+    if (kind !== 'inventory' && !period) {
+      setError(periodError ?? t.periodErrors.invalidDate);
+      return;
+    }
     setBusy(kind);
     try {
       if (!(await Sharing.isAvailableAsync())) {
         setError(messages.qr.shareUnavailable);
         return;
       }
-      const uri = await downloadReport(kind, period);
+      const uri = await downloadReport(kind, kind === 'inventory' ? null : period);
       await Sharing.shareAsync(uri, { mimeType: XLSX_TYPE, UTI: 'org.openxmlformats.spreadsheetml.sheet', dialogTitle: t.shareTitle });
     } catch (reason) {
       setError(errorMessage(reason, messages.errors.unexpected));
@@ -89,86 +95,19 @@ export default function ReportsScreen() {
     </ReportCard>
   );
 
-  const data = summary.data;
+  const series = data ? visibleSeries(data.series, data.granularity) : [];
 
   return (
     <PageLayout
       left={<IconButton icon="chevronLeft" accessibilityLabel={messages.common.back} onPress={() => router.back()} />}
       title={t.title}
       refreshControl={
-        <RefreshControl refreshing={summary.isRefetching} onRefresh={() => void summary.refetch()} tintColor={theme.colors.ink} />
+        <RefreshControl refreshing={overview.isRefetching} onRefresh={() => void overview.refetch()} tintColor={theme.colors.ink} />
       }
     >
-      <AppText variant="heading" accessibilityRole="header">
-        {t.salesTitle}
-      </AppText>
-      {summary.isPending ? <Skeleton variant="stats" /> : null}
-      {summaryError ? <Banner message={errorMessage(summaryError, messages.errors.loadFailed)} /> : null}
-
-      {data ? (
-        <>
-          <View style={styles.stats}>
-            <Stat label={t.today} period={data.today} />
-            <Stat label={t.thisWeek} period={data.week} />
-          </View>
-          {data.salesWithoutPrice > 0 ? (
-            <AppText variant="body" tone="secondary">
-              {t.withoutPrice(data.salesWithoutPrice)}
-            </AppText>
-          ) : null}
-          {data.salesWithoutCost > 0 ? (
-            <AppText variant="body" tone="secondary">
-              {t.withoutCost(data.salesWithoutCost)}
-            </AppText>
-          ) : null}
-
-          <View style={styles.group}>
-            <AppText variant="title" accessibilityRole="header">
-              {t.topTitle}
-            </AppText>
-            {data.topProducts.length === 0 ? (
-              <EmptyState icon="chart" title={t.topEmpty} />
-            ) : (
-              data.topProducts.map((product, index) => (
-                <View key={`${product.name}-${index}`} style={styles.row} accessible>
-                  <View style={styles.rank}>
-                    <AppText variant="bodyStrong">{index + 1}</AppText>
-                  </View>
-                  <View style={styles.flex}>
-                    <AppText variant="title" numberOfLines={1}>
-                      {product.name}
-                    </AppText>
-                    <AppText variant="body" tone="secondary">
-                      {formatQuantity(product.quantity, product.unit)}
-                    </AppText>
-                  </View>
-                  <AppText variant="title">{formatMoney(product.total)}</AppText>
-                </View>
-              ))
-            )}
-          </View>
-        </>
-      ) : null}
-
-      <AppText variant="heading" accessibilityRole="header" style={styles.section}>
-        {t.excelTitle}
-      </AppText>
-      {isMockApi ? <Banner tone="info" message={t.demoUnavailable} /> : null}
-      {error ? <Banner message={error} /> : null}
-
-      {reportCard('inventory', 'box', t.inventoryTitle, t.inventoryBody, t.inventoryAction)}
-
       <View style={styles.group}>
-        <AppText variant="title">{t.periodTitle}</AppText>
-        <ChipGroup
-          accessibilityLabel={t.periodTitle}
-          options={periodOptions}
-          value={preset}
-          onChange={(value) => {
-            setPreset(value);
-            setPeriodError(undefined);
-          }}
-        />
+        <AppText variant="label">{t.periodLabel}</AppText>
+        <ChipGroup accessibilityLabel={t.periodLabel} options={periodOptions} value={preset} onChange={setPreset} />
         {preset === 'custom' ? (
           <View style={styles.dates}>
             <View style={styles.flex}>
@@ -176,10 +115,7 @@ export default function ReportsScreen() {
                 label={t.from}
                 placeholder={t.datePlaceholder}
                 value={customFrom}
-                onChangeText={(text) => {
-                  setCustomFrom(text);
-                  setPeriodError(undefined);
-                }}
+                onChangeText={setCustomFrom}
                 keyboardType="numbers-and-punctuation"
                 error={periodError}
               />
@@ -189,10 +125,7 @@ export default function ReportsScreen() {
                 label={t.to}
                 placeholder={t.datePlaceholder}
                 value={customTo}
-                onChangeText={(text) => {
-                  setCustomTo(text);
-                  setPeriodError(undefined);
-                }}
+                onChangeText={setCustomTo}
                 keyboardType="numbers-and-punctuation"
               />
             </View>
@@ -200,28 +133,70 @@ export default function ReportsScreen() {
         ) : null}
       </View>
 
+      {period && overview.isPending ? <Skeleton variant="stats" /> : null}
+      {overviewError ? <Banner message={errorMessage(overviewError, messages.errors.loadFailed)} /> : null}
+
+      {data && comparison ? (
+        // Mientras llega el período nuevo, el anterior se ve atenuado.
+        <View style={[styles.sections, overview.isPlaceholderData && styles.stale]}>
+          <SalesHeadline overview={data} preset={preset} comparison={comparison} />
+          {data.salesWithoutPrice > 0 ? (
+            <AppText variant="body" tone="secondary">
+              {t.withoutPrice(data.salesWithoutPrice)}
+            </AppText>
+          ) : null}
+          {data.salesWithoutCost > 0 && data.salesWithoutCost < data.current.sales ? (
+            <AppText variant="body" tone="secondary">
+              {t.withoutCost(data.salesWithoutCost)}
+            </AppText>
+          ) : null}
+
+          {data.current.sales === 0 ? (
+            <EmptyState icon="chart" title={t.noSales} body={t.noSalesBody} />
+          ) : (
+            <>
+              <Section title={t.chartTitle[data.granularity]}>
+                <SalesBarChart key={`${data.from}-${data.to}`} series={series} granularity={data.granularity} />
+              </Section>
+              <Section title={t.topTitle}>
+                <TopProducts products={data.topProducts} />
+              </Section>
+            </>
+          )}
+
+          {data.inventory.products > 0 ? (
+            <Section title={t.stockTitle}>
+              <InventoryHealth inventory={data.inventory} />
+            </Section>
+          ) : null}
+        </View>
+      ) : null}
+
+      <View style={styles.group}>
+        <AppText variant="heading" accessibilityRole="header" style={styles.excelTitle}>
+          {t.excelTitle}
+        </AppText>
+        <AppText variant="body" tone="secondary">
+          {t.excelIntro}
+        </AppText>
+      </View>
+      {isMockApi ? <Banner tone="info" message={t.demoUnavailable} /> : null}
+      {error ? <Banner message={error} /> : null}
+
       {reportCard('sales', 'chart', t.salesReportTitle, t.salesBody, t.salesAction)}
       {reportCard('movements', 'history', t.movementsReportTitle, t.movementsBody, t.movementsAction)}
+      {reportCard('inventory', 'box', t.inventoryTitle, t.inventoryBody, t.inventoryAction)}
     </PageLayout>
   );
 }
 
-// Como las tarjetas "Productos registrados" y "Por reponer" del inicio.
-function Stat({ label, period }: { label: string; period: SalesSummary['today'] }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <View style={styles.stat} accessible>
-      <AppText variant="lead">{label}</AppText>
-      <AppText maxFontSizeMultiplier={theme.maxFontScale.number} numberOfLines={1} adjustsFontSizeToFit style={styles.statNumber}>
-        {formatMoney(period.total)}
+    <View style={styles.card}>
+      <AppText variant="title" accessibilityRole="header">
+        {title}
       </AppText>
-      <AppText variant="body" tone="secondary">
-        {t.salesCount(period.sales)}
-      </AppText>
-      {period.profit !== null ? (
-        <AppText variant="bodyStrong" tone={period.profit < 0 ? 'danger' : undefined}>
-          {t.profit(formatMoney(period.profit))}
-        </AppText>
-      ) : null}
+      {children}
     </View>
   );
 }
@@ -247,35 +222,10 @@ function ReportCard({ icon, title, body, children }: { icon: IconName; title: st
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  stats: { flexDirection: 'row', gap: theme.spacing.md },
-  stat: {
-    flex: 1,
-    gap: theme.spacing.sm,
-    minHeight: 130,
-    backgroundColor: theme.colors.field,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.lg,
-  },
-  statNumber: { fontFamily: theme.fonts.medium, fontSize: 32, lineHeight: 40, color: theme.colors.text },
   group: { gap: theme.spacing.md },
-  section: { marginTop: theme.spacing.md },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  rank: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.colors.field,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  sections: { gap: theme.spacing.lg },
+  stale: { opacity: 0.5 },
+  excelTitle: { marginTop: theme.spacing.md },
   card: {
     gap: theme.spacing.md,
     padding: theme.spacing.lg,
