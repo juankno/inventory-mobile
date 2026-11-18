@@ -72,6 +72,21 @@ Detalles de `DELETE /products/:id` (RF-08):
 
 `Product` tiene estos campos: `{ id, name, unit, salePrice, costPrice, stock, minStock, codeType, code }`. Las consultas agregan `status` (`OK`, `LOW_STOCK` u `OUT_OF_STOCK`); la app calcula el estado por su cuenta y lo ignora.
 
+## Sugerencias para productos nuevos
+
+| Método y ruta | Respuesta |
+| --- | --- |
+| `GET /catalog/:code` | `{ name, unit, source }`, o `404 SUGGESTION_NOT_FOUND` |
+
+Al registrar un código de barras nuevo, la app pregunta si se conoce. Si hay sugerencia, muestra "¿Es este producto?". Con "Usar estos datos" llena el nombre y la unidad, que se pueden editar. El precio, el costo y las existencias siempre los escribe el usuario.
+
+- **Solo GTIN:** los QR internos `INV-` y otros contenidos responden `404` sin consultar nada.
+- **`source: COMMUNITY`:** el nombre y la unidad que usan al menos 3 negocios distintos para ese código, sin contar el propio ni los productos eliminados. Con menos coincidencias no se sugiere.
+- **`source: OPEN_FOOD_FACTS`:** si no hay coincidencias, se consulta la base pública Open Food Facts. Si tarda más de 2,5 s, no hay sugerencia.
+- **Privacidad:** nunca trae precio, costo, existencias ni datos de otro negocio.
+- **Sin conexión o con error:** la tarjeta no aparece y el formulario funciona igual.
+- **Modo demostración:** conoce `7702004003508` (`COMMUNITY`) y `7707000000001` (`OPEN_FOOD_FACTS`).
+
 ## Movimientos e inventario
 
 | Método y ruta | Cuerpo | Respuesta |

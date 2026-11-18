@@ -63,6 +63,8 @@ export const messages = {
     policyBody:
       'Usamos tu nombre y tu correo solo para crear tu cuenta, permitirte ingresar y recuperar tu contraseña. ' +
       'Los datos de tu inventario son de tu negocio: no los vendemos ni los compartimos con terceros. ' +
+      'Para ayudar a registrar productos, si varias tiendas le dan el mismo nombre a un código de barras, ' +
+      'ese nombre se puede sugerir a otras; nunca se comparten precios, costos ni existencias. ' +
       'Puedes pedir que eliminemos tu cuenta y tus datos cuando quieras (Ley 1581 de 2012).',
     passwordChanged: 'Tu contraseña se cambió. Ingresa con la nueva.',
     demoTag: 'DEMO',
@@ -258,6 +260,15 @@ export const messages = {
     stockLocked: (quantity: string) =>
       [`Las existencias (`, quantity, `) no se editan aquí. Para cambiarlas registra una entrada, una salida o un ajuste por conteo, así queda en el historial.`] as const,
     registerMovement: 'Registrar un movimiento',
+    suggestionTitle: '¿Es este producto?',
+    suggestionUnit: (measure: string) => `Se vende ${measure}`,
+    suggestionSource: {
+      COMMUNITY: 'Así lo registran otras tiendas con este mismo código.',
+      OPEN_FOOD_FACTS: 'Según Open Food Facts, una base pública de productos.',
+    },
+    suggestionAccept: 'Usar estos datos',
+    suggestionReject: 'No, es otro',
+    suggestionUsed: 'Revisa el nombre: puedes cambiarlo. El precio y el costo los pones tú.',
   },
   movement: {
     title: 'Nuevo movimiento',
