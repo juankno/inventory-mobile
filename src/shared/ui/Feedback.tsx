@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { AppText } from './AppText';
 import { Icon } from './Icon';
@@ -36,10 +36,11 @@ export function StatusBadge({ label, tone }: { label: string; tone: 'warning' | 
   );
 }
 
-// Marca "Código leído" / "Sin código de barras" sobre el encabezado.
-export function Tag({ label, icon }: { label: string; icon: 'check' | 'qrCode' }) {
+// Marca "Código leído" / "Sin código de barras" sobre el encabezado. Sola queda a la
+// izquierda; en una fila, `style` permite centrarla con lo que tenga al lado.
+export function Tag({ label, icon, style }: { label: string; icon: 'check' | 'qrCode'; style?: StyleProp<ViewStyle> }) {
   return (
-    <View style={styles.tag}>
+    <View style={[styles.tag, style]}>
       <Icon name={icon} size={20} color={icon === 'check' ? theme.colors.success : theme.colors.ink} />
       <AppText variant="label" style={styles.tagText}>
         {label}

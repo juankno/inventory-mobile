@@ -95,7 +95,7 @@ export default function NewProductScreen() {
           // el espacio al formulario y a la sugerencia.
           <>
             <View style={styles.tagRow}>
-              <Tag icon="check" label={t.codeRead(code)} />
+              <Tag icon="check" label={t.codeRead(code)} style={styles.tagInRow} />
               <IconButton
                 icon="info"
                 accessibilityLabel={t.introToggle}
@@ -151,4 +151,6 @@ export default function NewProductScreen() {
 
 const styles = StyleSheet.create({
   tagRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: theme.spacing.sm },
+  // La etiqueta trae alignSelf: 'flex-start'; en la fila se centra con el ícono de información.
+  tagInRow: { alignSelf: 'center', flexShrink: 1 },
 });
