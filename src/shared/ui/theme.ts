@@ -20,6 +20,7 @@ export const theme = {
     dangerText: '#8E1B12',
     dangerDot: '#B3261E',
     success: '#1E7A4C',
+    successBg: '#DDEFE5',
     scannerBg: '#161616',
     scannerSurface: '#262626',
     scannerButton: '#333333',

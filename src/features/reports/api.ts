@@ -5,18 +5,33 @@ import type { Unit } from '@/shared/api/types';
 import { toApiDate, type ReportPeriod } from './periods';
 
 // Llamadas a la API de la funcionalidad reports.
-// profit: ganancia de las ventas que tienen precio y costo. Es null si el backend
-// todavía no la calcula (versión anterior al costo del producto).
-type PeriodSales = { total: number; sales: number; profit: number | null };
+// Resumen de un período para la pantalla de reportes (GET /reports/overview).
+// profit: ganancia de las ventas que tienen precio y costo.
+export type PeriodSales = { total: number; sales: number; profit: number };
 
-export type SalesSummary = {
-  today: PeriodSales;
-  week: PeriodSales;
-  topProducts: { name: string; unit: Unit; quantity: number; total: number }[];
-  // Ventas de la semana que no suman: el producto no tenía precio al venderse.
+export type SeriesGranularity = 'HOUR' | 'DAY' | 'WEEK' | 'MONTH';
+
+export type SeriesPoint = PeriodSales & {
+  // "AAAA-MM-DDTHH" por horas; "AAAA-MM-DD" por días, semanas (lunes) o meses (día 1).
+  start: string;
+};
+
+export type TopProduct = { name: string; unit: Unit; quantity: number; total: number };
+
+export type SalesOverview = {
+  from: string;
+  to: string;
+  current: PeriodSales;
+  previous: PeriodSales & { from: string; to: string };
+  granularity: SeriesGranularity;
+  series: SeriesPoint[];
+  topProducts: TopProduct[];
+  // Ventas del período que no suman: el producto no tenía precio al venderse.
   salesWithoutPrice: number;
-  // Ventas de la semana que no suman a la ganancia: no tenían costo.
+  // Ventas del período que no suman a la ganancia: no tenían costo.
   salesWithoutCost: number;
+  // Estado de hoy del inventario, sin importar el período.
+  inventory: { products: number; lowStock: number; outOfStock: number };
 };
 
 export type ReportKind = 'inventory' | 'sales' | 'movements';
@@ -27,25 +42,13 @@ const FILE_NAMES: Record<ReportKind, string> = {
   movements: 'movimientos',
 };
 
-type SalesSummaryDto = Omit<SalesSummary, 'today' | 'week' | 'salesWithoutCost'> & {
-  today: Omit<PeriodSales, 'profit'> & { profit?: number };
-  week: Omit<PeriodSales, 'profit'> & { profit?: number };
-  salesWithoutCost?: number;
-};
-
-const toPeriodSales = ({ profit, ...period }: SalesSummaryDto['today']): PeriodSales => ({
-  ...period,
-  profit: typeof profit === 'number' && Number.isFinite(profit) ? profit : null,
-});
-
-export async function getSalesSummary(): Promise<SalesSummary> {
-  const dto = await apiRequest<SalesSummaryDto>('GET', '/reports/summary');
-  return {
-    ...dto,
-    today: toPeriodSales(dto.today),
-    week: toPeriodSales(dto.week),
-    salesWithoutCost: dto.salesWithoutCost ?? 0,
-  };
+export function getSalesOverview(period: ReportPeriod, compare?: ReportPeriod): Promise<SalesOverview> {
+  const query = new URLSearchParams({ from: period.from, to: period.to });
+  if (compare) {
+    query.set('compareFrom', compare.from);
+    query.set('compareTo', compare.to);
+  }
+  return apiRequest<SalesOverview>('GET', `/reports/overview?${query.toString()}`);
 }
 
 // Descarga el Excel al almacenamiento temporal y devuelve su dirección para compartirlo.
