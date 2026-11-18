@@ -194,6 +194,7 @@ describe('API de demostración', () => {
       unit: 'UNIT',
       source: 'COMMUNITY',
       imageUrl: null,
+      imageLargeUrl: null,
     });
     await expect(mockRequest('GET', '/catalog/7702004003515')).rejects.toMatchObject({ code: 'SUGGESTION_NOT_FOUND' });
   });

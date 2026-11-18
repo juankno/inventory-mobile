@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import { unitMeasure } from '@/shared/format/units';
 import { messages } from '@/shared/i18n/messages';
@@ -8,6 +8,7 @@ import { Button } from '@/shared/ui/Button';
 import { Icon } from '@/shared/ui/Icon';
 import { theme } from '@/shared/ui/theme';
 import type { ProductSuggestion } from '../api';
+import { ProductImageViewer } from './ProductImageViewer';
 
 const t = messages.productForm;
 
@@ -23,18 +24,29 @@ export function ProductSuggestionCard({ suggestion, onAccept, onReject }: Props)
   // Si la foto no carga (sin datos, servidor lento), queda el ícono de siempre.
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = !!suggestion.imageUrl && !imageFailed;
+  const [viewerOpen, setViewerOpen] = useState(false);
 
   return (
     <View style={styles.card} accessibilityRole="summary">
       <View style={styles.header}>
         {showImage ? (
-          <Image
-            source={{ uri: suggestion.imageUrl! }}
-            style={styles.image}
-            resizeMode="contain"
-            accessibilityLabel={t.suggestionImage}
-            onError={() => setImageFailed(true)}
-          />
+          // Al tocarla se ve en pantalla completa, para leer la etiqueta.
+          <Pressable
+            accessibilityRole="imagebutton"
+            accessibilityLabel={t.suggestionImageOpen}
+            onPress={() => setViewerOpen(true)}
+            style={({ pressed }) => pressed && styles.pressed}
+          >
+            <Image
+              source={{ uri: suggestion.imageUrl! }}
+              style={styles.image}
+              resizeMode="contain"
+              onError={() => setImageFailed(true)}
+            />
+            <View style={styles.zoomBadge}>
+              <Icon name="resize" size={14} color={theme.colors.onInk} />
+            </View>
+          </Pressable>
         ) : (
           <View style={styles.icon}>
             <Icon name="barcode" />
@@ -54,8 +66,16 @@ export function ProductSuggestionCard({ suggestion, onAccept, onReject }: Props)
       </View>
       <View style={styles.actions}>
         <Button label={t.suggestionReject} variant="secondary" size="compact" onPress={onReject} style={styles.flex} />
-        <Button label={t.suggestionAccept} icon="check" size="compact" onPress={onAccept} style={styles.flex} />
+        <Button label={t.suggestionAccept} size="compact" onPress={onAccept} style={styles.flex} />
       </View>
+      {showImage ? (
+        <ProductImageViewer
+          visible={viewerOpen}
+          smallUrl={suggestion.imageUrl!}
+          largeUrl={suggestion.imageLargeUrl}
+          onClose={() => setViewerOpen(false)}
+        />
+      ) : null}
     </View>
   );
 }
@@ -87,5 +107,18 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
   },
+  // Señal de que la foto se puede ampliar.
+  zoomBadge: {
+    position: 'absolute',
+    right: 4,
+    bottom: 4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: theme.colors.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pressed: { opacity: 0.8 },
   actions: { flexDirection: 'row', gap: theme.spacing.sm },
 });
