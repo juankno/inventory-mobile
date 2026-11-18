@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { StyleSheet, View } from 'react-native';
 
 import { ProductFormFields } from '@/features/products/components/ProductFormFields';
 import { ProductSuggestionCard } from '@/features/products/components/ProductSuggestionCard';
@@ -20,6 +21,7 @@ import { Button } from '@/shared/ui/Button';
 import { Banner, Tag } from '@/shared/ui/Feedback';
 import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
+import { theme } from '@/shared/ui/theme';
 import { useToast } from '@/shared/ui/Toast';
 import { useDiscardGuard } from '@/shared/ui/useDiscardGuard';
 
@@ -34,6 +36,7 @@ export default function NewProductScreen() {
   const showToast = useToast();
   const suggestion = useProductSuggestion(hasBarcode ? code : undefined);
   const [suggestionChoice, setSuggestionChoice] = useState<'accepted' | 'rejected' | null>(null);
+  const [introOpen, setIntroOpen] = useState(false);
   const { control, handleSubmit, formState, setValue } = useForm<ProductForm>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
@@ -87,12 +90,34 @@ export default function NewProductScreen() {
       left={<IconButton icon="close" accessibilityLabel={messages.common.close} onPress={() => router.back()} />}
       title={t.newTitle}
       header={
-        <>
-          {hasBarcode ? <Tag icon="check" label={t.codeRead(code)} /> : <Tag icon="qrCode" label={t.withoutCode} />}
-          <AppText variant="lead" tone="secondary">
-            {hasBarcode ? t.withCodeIntro : t.withoutCodeIntro}
-          </AppText>
-        </>
+        hasBarcode ? (
+          // Con código, la explicación va detrás del ícono de información para dejarle
+          // el espacio al formulario y a la sugerencia.
+          <>
+            <View style={styles.tagRow}>
+              <Tag icon="check" label={t.codeRead(code)} style={styles.tagInRow} />
+              <IconButton
+                icon="info"
+                accessibilityLabel={t.introToggle}
+                active={introOpen}
+                onPress={() => setIntroOpen((open) => !open)}
+              />
+            </View>
+            {introOpen ? (
+              <AppText variant="lead" tone="secondary" accessibilityLiveRegion="polite">
+                {t.withCodeIntro}
+              </AppText>
+            ) : null}
+          </>
+        ) : (
+          // Sin código se deja a la vista: avisa que al guardar se crea un QR para pegar.
+          <>
+            <Tag icon="qrCode" label={t.withoutCode} />
+            <AppText variant="lead" tone="secondary">
+              {t.withoutCodeIntro}
+            </AppText>
+          </>
+        )
       }
       footer={
         <Button
@@ -123,3 +148,9 @@ export default function NewProductScreen() {
     </PageLayout>
   );
 }
+
+const styles = StyleSheet.create({
+  tagRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: theme.spacing.sm },
+  // La etiqueta trae alignSelf: 'flex-start'; en la fila se centra con el ícono de información.
+  tagInRow: { alignSelf: 'center', flexShrink: 1 },
+});

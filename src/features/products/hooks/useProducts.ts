@@ -11,6 +11,7 @@ import {
   listProducts,
   restoreProduct,
   updateProduct,
+  type ProductSuggestion,
   type UpdateProductInput,
 } from '../api';
 
@@ -87,6 +88,12 @@ export function useRestoreProduct() {
 
 const SUGGESTION_STALE_MS = 24 * 60 * 60 * 1000;
 
+// Una sugerencia encontrada se recuerda un día. "No hay sugerencia" se vuelve a
+// preguntar en cada escaneo: pudo deberse a una falla pasajera del backend, o alguien
+// pudo haber registrado el producto después, y al backend le cuesta poco responder.
+export const suggestionStaleTime = (data: ProductSuggestion | null | undefined) =>
+  data ? SUGGESTION_STALE_MS : 0;
+
 // Sugerencia para un código de barras nuevo. Si falla o no hay conexión, simplemente
 // no aparece: la pantalla funciona igual sin ella, así que no se reintenta.
 export function useProductSuggestion(code: string | undefined) {
@@ -95,6 +102,6 @@ export function useProductSuggestion(code: string | undefined) {
     queryFn: () => getProductSuggestion(code!),
     enabled: !!code,
     retry: false,
-    staleTime: SUGGESTION_STALE_MS,
+    staleTime: (query) => suggestionStaleTime(query.state.data),
   });
 }

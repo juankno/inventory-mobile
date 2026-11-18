@@ -193,6 +193,7 @@ describe('API de demostración', () => {
       name: 'Arroz Diana 500 g',
       unit: 'UNIT',
       source: 'COMMUNITY',
+      imageUrl: null,
     });
     await expect(mockRequest('GET', '/catalog/7702004003515')).rejects.toMatchObject({ code: 'SUGGESTION_NOT_FOUND' });
   });

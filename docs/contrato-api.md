@@ -90,13 +90,14 @@ Detalles de `DELETE /products/:id` (RF-08):
 
 | Método y ruta | Respuesta |
 | --- | --- |
-| `GET /catalog/:code` | `{ name, unit, source }`, o `404 SUGGESTION_NOT_FOUND` |
+| `GET /catalog/:code` | `{ name, unit, source, imageUrl }`, o `404 SUGGESTION_NOT_FOUND` |
 
 Al registrar un código de barras nuevo, la app pregunta si se conoce. Si hay sugerencia, muestra "¿Es este producto?". Con "Usar estos datos" llena el nombre y la unidad, que se pueden editar. El precio, el costo y las existencias siempre los escribe el usuario.
 
 - **Solo GTIN:** los QR internos `INV-` y otros contenidos responden `404` sin consultar nada.
 - **`source: COMMUNITY`:** el nombre y la unidad que usan al menos 3 negocios distintos para ese código, sin contar el propio ni los productos eliminados. Con menos coincidencias no se sugiere.
 - **`source: OPEN_FOOD_FACTS`:** si no hay coincidencias, se consulta la base pública Open Food Facts. Si tarda más de 2,5 s, no hay sugerencia.
+- **`imageUrl`:** miniatura del frente del producto en `https://images.openfoodfacts.org`, solo en sugerencias de Open Food Facts que tengan foto; si no, `null`. La tarjeta la muestra para confirmar que el código es de ese producto, y si no carga deja el ícono. No se guarda en el inventario.
 - **Privacidad:** nunca trae precio, costo, existencias ni datos de otro negocio.
 - **Sin conexión o con error:** la tarjeta no aparece y el formulario funciona igual.
 - **Modo demostración:** conoce `7702004003508` (`COMMUNITY`) y `7707000000001` (`OPEN_FOOD_FACTS`).

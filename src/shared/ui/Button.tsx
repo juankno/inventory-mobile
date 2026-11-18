@@ -8,6 +8,9 @@ type Props = {
   label: string;
   onPress?: () => void;
   variant?: 'primary' | 'secondary' | 'danger';
+  // compact: 48 dp, el mínimo táctil, para acciones secundarias dentro de una tarjeta
+  // que no deben pesar lo mismo que el botón principal de la pantalla.
+  size?: 'default' | 'compact';
   icon?: IconName;
   disabled?: boolean;
   loading?: boolean;
@@ -17,7 +20,18 @@ type Props = {
 };
 
 // Botón tipo píldora: negro (principal), gris claro (secundario) o rojo (eliminar).
-export function Button({ label, onPress, variant = 'primary', icon, disabled, loading, accessibilityLabel, style }: Props) {
+export function Button({
+  label,
+  onPress,
+  variant = 'primary',
+  size = 'default',
+  icon,
+  disabled,
+  loading,
+  accessibilityLabel,
+  style,
+}: Props) {
+  const compact = size === 'compact';
   const isPrimary = variant === 'primary';
   const inactive = disabled || loading;
   const foreground = variant === 'secondary' ? theme.colors.ink : theme.colors.onInk;
@@ -31,6 +45,7 @@ export function Button({ label, onPress, variant = 'primary', icon, disabled, lo
       disabled={inactive}
       style={({ pressed }) => [
         styles.base,
+        compact && styles.compact,
         styles[variant],
         disabled && isPrimary && styles.primaryDisabled,
         pressed && styles.pressed,
@@ -41,8 +56,8 @@ export function Button({ label, onPress, variant = 'primary', icon, disabled, lo
         <ActivityIndicator color={foreground} />
       ) : (
         <View style={styles.content}>
-          {icon ? <Icon name={icon} size={22} color={foreground} /> : null}
-          <AppText variant="title" style={[styles.label, { color: foreground }]} numberOfLines={1}>
+          {icon ? <Icon name={icon} size={compact ? 20 : 22} color={foreground} /> : null}
+          <AppText variant={compact ? 'body' : 'title'} style={[styles.label, { color: foreground }]} numberOfLines={1}>
             {label}
           </AppText>
         </View>
@@ -59,6 +74,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  compact: { minHeight: theme.minTouchSize, paddingHorizontal: theme.spacing.md },
   primary: { backgroundColor: theme.colors.ink },
   primaryDisabled: { backgroundColor: theme.colors.disabled },
   secondary: { backgroundColor: theme.colors.field },
