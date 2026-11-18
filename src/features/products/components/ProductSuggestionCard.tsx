@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Image, StyleSheet, View } from 'react-native';
 
 import { unitMeasure } from '@/shared/format/units';
 import { messages } from '@/shared/i18n/messages';
@@ -19,12 +20,26 @@ type Props = {
 // Ofrece el nombre y la unidad que ya se conocen para el código leído. No llena nada
 // por sí sola: el mismo código puede ser de otro producto, así que decide el usuario.
 export function ProductSuggestionCard({ suggestion, onAccept, onReject }: Props) {
+  // Si la foto no carga (sin datos, servidor lento), queda el ícono de siempre.
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = !!suggestion.imageUrl && !imageFailed;
+
   return (
     <View style={styles.card} accessibilityRole="summary">
       <View style={styles.header}>
-        <View style={styles.icon}>
-          <Icon name="barcode" />
-        </View>
+        {showImage ? (
+          <Image
+            source={{ uri: suggestion.imageUrl! }}
+            style={styles.image}
+            resizeMode="contain"
+            accessibilityLabel={t.suggestionImage}
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          <View style={styles.icon}>
+            <Icon name="barcode" />
+          </View>
+        )}
         <View style={styles.flex}>
           <AppText variant="label" tone="secondary">
             {t.suggestionTitle}
@@ -38,8 +53,8 @@ export function ProductSuggestionCard({ suggestion, onAccept, onReject }: Props)
         </View>
       </View>
       <View style={styles.actions}>
-        <Button label={t.suggestionReject} variant="secondary" onPress={onReject} style={styles.flex} />
-        <Button label={t.suggestionAccept} icon="check" onPress={onAccept} style={styles.flex} />
+        <Button label={t.suggestionReject} variant="secondary" size="compact" onPress={onReject} style={styles.flex} />
+        <Button label={t.suggestionAccept} icon="check" size="compact" onPress={onAccept} style={styles.flex} />
       </View>
     </View>
   );
@@ -63,5 +78,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actions: { flexDirection: 'row', gap: theme.spacing.md },
+  // Foto del frente del producto, sobre fondo blanco para que se vea su empaque.
+  image: {
+    width: 72,
+    height: 72,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+  },
+  actions: { flexDirection: 'row', gap: theme.spacing.sm },
 });

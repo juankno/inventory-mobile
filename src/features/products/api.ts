@@ -58,6 +58,10 @@ export type ProductSuggestion = {
   name: string;
   unit: Unit;
   source: 'COMMUNITY' | 'OPEN_FOOD_FACTS';
+  // Miniatura del frente del producto, solo de Open Food Facts. Ayuda a confirmar que
+  // el código es de ese producto; no se guarda en el inventario. Opcional porque un
+  // backend anterior no la envía.
+  imageUrl?: string | null;
 };
 
 // null si nadie conoce el código (404 SUGGESTION_NOT_FOUND).
