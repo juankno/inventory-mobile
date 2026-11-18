@@ -238,6 +238,7 @@ export const messages = {
     editTitle: 'Editar producto',
     codeRead: (code: string) => `Código leído · ${code}`,
     withCodeIntro: 'Este código aún no está en tu inventario. Escribe el nombre y cuántas unidades tienes hoy. Los campos con * son obligatorios.',
+    introToggle: 'Qué hacer en esta pantalla',
     withoutCode: 'Sin código de barras',
     withoutCodeIntro: 'Para productos a granel o que empacas tú. Al guardarlo te daremos un código QR para pegarlo en el producto o en su estante.',
     name: 'Nombre del producto *',
@@ -262,10 +263,8 @@ export const messages = {
     registerMovement: 'Registrar un movimiento',
     suggestionTitle: '¿Es este producto?',
     suggestionUnit: (measure: string) => `Se vende ${measure}`,
-    suggestionSource: {
-      COMMUNITY: 'Así lo registran otras tiendas con este mismo código.',
-      OPEN_FOOD_FACTS: 'Según Open Food Facts, una base pública de productos.',
-    },
+    // La licencia de Open Food Facts pide citarlo; va en la misma línea para no ocupar otra.
+    suggestionPublicSource: 'Open Food Facts',
     suggestionAccept: 'Usar estos datos',
     suggestionReject: 'No, es otro',
     suggestionUsed: 'Revisa el nombre: puedes cambiarlo. El precio y el costo los pones tú.',

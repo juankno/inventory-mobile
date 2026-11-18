@@ -31,13 +31,12 @@ export function ProductSuggestionCard({ suggestion, onAccept, onReject }: Props)
           </AppText>
           <AppText variant="title">{suggestion.name}</AppText>
           <AppText variant="body" tone="secondary">
-            {t.suggestionUnit(unitMeasure(suggestion.unit))}
+            {suggestion.source === 'OPEN_FOOD_FACTS'
+              ? `${t.suggestionUnit(unitMeasure(suggestion.unit))} · ${t.suggestionPublicSource}`
+              : t.suggestionUnit(unitMeasure(suggestion.unit))}
           </AppText>
         </View>
       </View>
-      <AppText variant="caption" tone="secondary">
-        {t.suggestionSource[suggestion.source]}
-      </AppText>
       <View style={styles.actions}>
         <Button label={t.suggestionReject} variant="secondary" onPress={onReject} style={styles.flex} />
         <Button label={t.suggestionAccept} icon="check" onPress={onAccept} style={styles.flex} />
