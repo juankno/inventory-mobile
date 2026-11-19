@@ -17,6 +17,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAlerts } from '@/features/inventory/hooks/useAlerts';
+import { ProductImage } from '@/features/products/components/ProductImage';
 import { useProducts } from '@/features/products/hooks/useProducts';
 import { errorMessage } from '@/shared/api/errors';
 import { visibleLoadError } from '@/shared/api/queryPolicy';
@@ -422,9 +423,8 @@ const ProductRow = memo(function ProductRow({ product }: { product: Product }) {
       onPress={() => router.push({ pathname: '/products/[id]', params: { id: product.id } })}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
-      <View style={styles.rowIcon}>
-        <Icon name="box" />
-      </View>
+      {/* La foto ayuda a reconocer el producto sin leer el nombre; sin foto, el ícono. */}
+      <ProductImage imageUrl={product.imageUrl} size={48} fallbackIcon="box" />
       <View style={styles.flex}>
         <AppText variant="title" numberOfLines={1}>
           {product.name}
@@ -512,14 +512,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
-  },
-  rowIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.colors.field,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   backToTop: { position: 'absolute', right: theme.spacing.lg },
   backToTopButton: {

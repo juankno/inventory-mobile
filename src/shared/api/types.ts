@@ -27,6 +27,10 @@ export type Product = {
   minStock: number | null;
   codeType: CodeType;
   code: string;
+  // Foto pública (Open Food Facts u Open Beauty Facts) si se registró aceptando una
+  // sugerencia con foto: miniatura y tamaño original.
+  imageUrl: string | null;
+  imageLargeUrl: string | null;
 };
 
 // GET /products/deleted: se puede restaurar con su existencia e historial (RF-08).
@@ -54,7 +58,10 @@ export type MovementResult = { movement: Movement | null; stock: number };
 // nextCursor es null cuando ya no hay movimientos más antiguos.
 export type Page<T> = { items: T[]; nextCursor: string | null };
 
-export type ProductDto = Omit<Product, 'salePrice' | 'costPrice' | 'stock' | 'minStock'> & {
+export type ProductDto = Omit<Product, 'salePrice' | 'costPrice' | 'stock' | 'minStock' | 'imageUrl' | 'imageLargeUrl'> & {
+  // Un backend anterior a las fotos no las envía.
+  imageUrl?: string | null;
+  imageLargeUrl?: string | null;
   salePrice: Decimal | null;
   costPrice: Decimal | null;
   stock: Decimal;
@@ -88,6 +95,8 @@ export function toProduct(dto: ProductDto): Product {
     costPrice: toNullableNumber(dto.costPrice),
     stock: toNumber(dto.stock),
     minStock: toNullableNumber(dto.minStock),
+    imageUrl: dto.imageUrl ?? null,
+    imageLargeUrl: dto.imageLargeUrl ?? null,
   };
 }
 
