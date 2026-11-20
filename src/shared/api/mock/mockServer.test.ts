@@ -75,6 +75,26 @@ describe('API de demostración', () => {
     ).rejects.toMatchObject({ code: 'INSUFFICIENT_STOCK' });
   });
 
+  it('guarda la foto de la sugerencia solo en productos con código de barras', async () => {
+    const imageUrl = 'https://images.openfoodfacts.org/images/products/770/381/200/4862/front_en.4.200.jpg';
+    const withCode = await mockRequest<Product>('POST', '/products', {
+      name: 'Refisal 130 g',
+      unit: 'UNIT',
+      stock: 2,
+      code: '7703812004862',
+      imageUrl,
+    });
+    expect(withCode.imageUrl).toBe(imageUrl);
+
+    const withoutCode = await mockRequest<Product>('POST', '/products', {
+      name: 'Sal a granel',
+      unit: 'KILOGRAM',
+      stock: 2,
+      imageUrl,
+    });
+    expect(withoutCode.imageUrl).toBeNull();
+  });
+
   it('crea un producto sin código con un identificador INV-', async () => {
     const product = await mockRequest<Product>('POST', '/products', {
       name: 'Lenteja roja',

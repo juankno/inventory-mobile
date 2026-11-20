@@ -11,6 +11,8 @@ const product = (overrides: Partial<Product>): Product => ({
   minStock: 4,
   codeType: 'INTERNAL',
   code: 'INV-1',
+  imageUrl: null,
+  imageLargeUrl: null,
   ...overrides,
 });
 

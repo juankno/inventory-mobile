@@ -6,6 +6,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { useCreateMovement, useUndoMovement } from '@/features/movements/hooks/useMovements';
 import { getLastChoice, rememberChoice } from '@/features/movements/lastChoice';
 import { movementQuantitySchema, resultingStock } from '@/features/movements/schemas';
+import { ProductImage } from '@/features/products/components/ProductImage';
 import { useProduct } from '@/features/products/hooks/useProducts';
 import { formatPriceInput, parsePrice, priceToInput } from '@/features/products/schemas';
 import { errorMessage, hasErrorCode } from '@/shared/api/errors';
@@ -212,7 +213,13 @@ export default function MovementScreen() {
               </Pressable>
             </View>
           ) : null}
-          <AppText variant="heading">{item.name}</AppText>
+          {/* La foto confirma de un vistazo que es el producto correcto antes de registrar. */}
+          <View style={styles.nameRow}>
+            <ProductImage imageUrl={item.imageUrl} imageLargeUrl={item.imageLargeUrl} size={56} zoomable />
+            <AppText variant="heading" style={styles.flexName}>
+              {item.name}
+            </AppText>
+          </View>
           <View style={styles.stock}>
             <AppText maxFontSizeMultiplier={theme.maxFontScale.number} style={styles.stockNumber}>{formatNumber(item.stock)}</AppText>
             <AppText variant="title" tone="secondary" style={styles.stockUnit}>
@@ -356,6 +363,8 @@ export default function MovementScreen() {
 }
 
 const styles = StyleSheet.create({
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
+  flexName: { flex: 1 },
   group: { gap: theme.spacing.md },
   total: {
     gap: theme.spacing.xs,

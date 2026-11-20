@@ -63,7 +63,7 @@ Detalles:
 | `GET /products` | | `Product[]` activos del negocio, ordenados por nombre |
 | `GET /products/:id` | | `Product`, o `404 PRODUCT_NOT_FOUND` si no existe o está eliminado |
 | `GET /products/code/:code` | | `Product`, o `404 CODE_NOT_RECOGNIZED` |
-| `POST /products` | `{ name, unit, stock, code?, minStock?, salePrice?, costPrice? }` | `201` + `Product` |
+| `POST /products` | `{ name, unit, stock, code?, minStock?, salePrice?, costPrice?, imageUrl?, imageLargeUrl? }` | `201` + `Product` |
 | `PATCH /products/:id` | `{ name, unit, minStock, salePrice, costPrice }` (`minStock`, `salePrice` y `costPrice` admiten `null`) | `Product` |
 | `DELETE /products/:id` | | `204`. Desactiva el producto y guarda la fecha en `deletedAt` |
 | `GET /products/deleted?code=…` | | `DeletedProduct[]`, del eliminado más reciente al más antiguo. `code` es opcional |
@@ -84,7 +84,7 @@ Detalles de `DELETE /products/:id` (RF-08):
 - Su código sigue ocupado por la restricción única.
 - `DeletedProduct` tiene los campos de `Product` y `deletedAt`.
 
-`Product` tiene estos campos: `{ id, name, unit, salePrice, costPrice, stock, minStock, codeType, code }`. Las consultas agregan `status` (`OK`, `LOW_STOCK` u `OUT_OF_STOCK`); la app calcula el estado por su cuenta y lo ignora.
+`Product` tiene estos campos: `{ id, name, unit, salePrice, costPrice, stock, minStock, codeType, code, imageUrl, imageLargeUrl }`. `imageUrl` e `imageLargeUrl` son la foto pública (Open Food Facts u Open Beauty Facts) que llegó con la sugerencia, si el usuario la aceptó al crear el producto: la app las envía en `POST /products` solo con código de barras, y el backend solo acepta direcciones de esos dos servidores. Son `null` si no hay foto. Las consultas agregan `status` (`OK`, `LOW_STOCK` u `OUT_OF_STOCK`); la app calcula el estado por su cuenta y lo ignora.
 
 ## Sugerencias para productos nuevos
 
