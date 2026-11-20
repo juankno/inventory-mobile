@@ -69,7 +69,8 @@ function seed() {
     const id = newId();
     // Costo de demostración: un 70 % del precio de venta, redondeado a la centena.
     const costPrice = item.salePrice === null ? null : Math.round((item.salePrice * 0.7) / 100) * 100;
-    const product: Product = { id, ...item, costPrice };
+    // La demostración funciona sin internet: sus productos no traen foto.
+    const product: Product = { id, ...item, costPrice, imageUrl: null, imageLargeUrl: null };
     products.set(id, product);
     const history =
       item.name === BUSY_PRODUCT
@@ -222,6 +223,9 @@ function handle(method: Method, path: string, body: Body): unknown {
       minStock: (body.minStock as number | undefined) ?? null,
       codeType,
       code,
+      // Igual que el backend: la foto de la sugerencia, solo con código de barras.
+      imageUrl: codeType === 'GTIN' ? ((body.imageUrl as string | undefined) ?? null) : null,
+      imageLargeUrl: codeType === 'GTIN' ? ((body.imageLargeUrl as string | undefined) ?? null) : null,
     };
     products.set(product.id, product);
     if (stock > 0) {

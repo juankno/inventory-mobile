@@ -12,6 +12,9 @@ export type CreateProductInput = {
   minStock: number | null;
   salePrice: number | null;
   costPrice: number | null;
+  // La foto que llegó con la sugerencia, si el usuario la aceptó.
+  imageUrl?: string | null;
+  imageLargeUrl?: string | null;
 };
 
 export type UpdateProductInput = {
@@ -28,13 +31,15 @@ export const listProducts = async () => (await apiRequest<ProductDto[]>('GET', '
 export const getProduct = async (id: string) => toProduct(await apiRequest<ProductDto>('GET', `/products/${id}`));
 
 // Al crear, el backend no acepta null: lo que no se definió no se envía.
-export const createProduct = async ({ minStock, salePrice, costPrice, ...input }: CreateProductInput) =>
+export const createProduct = async ({ minStock, salePrice, costPrice, imageUrl, imageLargeUrl, ...input }: CreateProductInput) =>
   toProduct(
     await apiRequest<ProductDto>('POST', '/products', {
       ...input,
       ...(minStock !== null && { minStock }),
       ...(salePrice !== null && { salePrice }),
       ...(costPrice !== null && { costPrice }),
+      ...(imageUrl && { imageUrl }),
+      ...(imageLargeUrl && { imageLargeUrl }),
     }),
   );
 

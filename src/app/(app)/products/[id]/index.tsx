@@ -4,6 +4,7 @@ import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-nativ
 
 import { MovementHistory } from '@/features/movements/components/MovementHistory';
 import { useRecentMovements } from '@/features/movements/hooks/useMovements';
+import { ProductImage } from '@/features/products/components/ProductImage';
 import { useDeleteProduct, useProduct, useRestoreProduct } from '@/features/products/hooks/useProducts';
 import { errorMessage } from '@/shared/api/errors';
 import { visibleLoadError } from '@/shared/api/queryPolicy';
@@ -71,6 +72,8 @@ export default function ProductDetailScreen() {
       right={<IconButton icon="more" accessibilityLabel={t.options} onPress={() => setSheet('options')} />}
       header={
         <>
+          {/* Solo si tiene foto; al tocarla se ve en pantalla completa. */}
+          <ProductImage imageUrl={item.imageUrl} imageLargeUrl={item.imageLargeUrl} size={96} zoomable />
           <AppText variant="display" accessibilityRole="header">
             {item.name}
           </AppText>

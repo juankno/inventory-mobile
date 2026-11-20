@@ -75,6 +75,11 @@ export default function NewProductScreen() {
         minStock: parseOptionalQuantity(form.minStock),
         salePrice: parsePrice(form.salePrice),
         costPrice: parsePrice(form.costPrice),
+        // La foto va solo si el usuario aceptó la sugerencia ("Sí, es este").
+        ...(suggestionChoice === 'accepted' && {
+          imageUrl: suggestion.data?.imageUrl,
+          imageLargeUrl: suggestion.data?.imageLargeUrl,
+        }),
       },
       {
         onSuccess: (product) => {
