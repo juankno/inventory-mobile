@@ -301,13 +301,17 @@ export const messages = {
     submit: { INBOUND: 'Registrar entrada', OUTBOUND: 'Registrar salida', ADJUSTMENT: 'Registrar ajuste' },
     insufficient: (quantity: string) => `Solo hay ${quantity} en existencias. Revisa la cantidad o, si contaste otra cifra, haz un ajuste.`,
     switchToAdjustment: 'Hacer un ajuste por conteo',
+    unitPrice: (unit: string) => `Precio por ${unit}`,
     unitCost: (unit: string) => `Costo por ${unit}`,
     saleProfit: (amount: string) => `Ganancia de esta venta: ${amount}.`,
-    saleLoss: (amount: string) => `Esta venta deja una pérdida de ${amount}.`,
+    // "pierdes $500 por unidad": el aviso dice cuánto subir el precio para no perder.
+    saleLoss: (amount: string, perUnit: string, unit: string) =>
+      `Esta venta deja una pérdida de ${amount}: el costo supera el precio en ${perUnit} por ${unit}. Revisa el precio.`,
+    newPrice: 'Este precio quedará guardado para las próximas ventas.',
     newCost: 'Este costo quedará guardado para las próximas ventas.',
+    newPriceAndCost: 'Este precio y este costo quedarán guardados para las próximas ventas.',
     noCost: 'Sin costo no podremos calcular la ganancia de esta venta.',
-    noPrice: 'Este producto no tiene precio de venta, así que no podemos calcular el total ni la ganancia.',
-    addPrice: 'Agregar precio',
+    noPrice: 'Escribe el precio para ver el total a cobrar y la ganancia.',
     saleTotal: 'Total a cobrar',
     // "3 kilos × $2.500": de dónde sale el total.
     saleBreakdown: (quantity: string, price: string) => `${quantity} × ${price}`,

@@ -182,6 +182,22 @@ describe('API de demostración', () => {
     ]);
   });
 
+  it('guarda el precio de cada venta y deja el último como precio del producto', async () => {
+    const leche = await findByName('Leche 1 litro');
+    const sale = { productId: leche.id, type: 'OUTBOUND', reason: 'SALE', quantity: 2 };
+    const before = await todayOverview();
+
+    await mockRequest('POST', '/movements', { ...sale, idempotencyKey: 'precio-1', unitPrice: 5200 });
+
+    const summary = await todayOverview();
+    const updated = await findByName('Leche 1 litro');
+    expect(updated.salePrice).toBe(5200);
+    expect(summary.current.total - before.current.total).toBe(2 * 5200);
+
+    const history = await mockRequest<Page<Movement>>('GET', `/products/${leche.id}/movements?limit=1`);
+    expect(history.items[0]?.unitPrice).toBe(5200);
+  });
+
   it('resume un período con su comparación, las ventas por día y el estado del inventario', async () => {
     const week = await mockRequest<SalesOverview>('GET', '/reports/overview?from=2026-11-16&to=2026-11-22');
     expect(week.granularity).toBe('DAY');

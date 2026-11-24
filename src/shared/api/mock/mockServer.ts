@@ -303,9 +303,10 @@ function handle(method: Method, path: string, body: Body): unknown {
     // En un ajuste se guarda la diferencia con signo; si no hay diferencia, no se registra nada.
     const change = type === 'ADJUSTMENT' ? resultingStock - product.stock : quantity;
     if (change === 0) return { movement: null, stock: product.stock };
-    // Igual que el backend: sin unitCost se usa el costo del producto, y uno distinto queda como el nuevo.
+    // Igual que el backend: sin unitCost ni unitPrice se usan los del producto, y uno distinto queda como el nuevo.
     const sentCost = body.unitCost as number | undefined;
     const unitCost = type === 'OUTBOUND' ? (sentCost ?? product.costPrice) : null;
+    const sentPrice = body.unitPrice as number | undefined;
     const movement: StoredMovement = {
       id: newId(),
       productId: product.id,
@@ -313,14 +314,19 @@ function handle(method: Method, path: string, body: Body): unknown {
       reason: type === 'OUTBOUND' ? (body.reason as OutboundReason) : null,
       quantity: change,
       resultingStock,
-      unitPrice: type === 'OUTBOUND' ? product.salePrice : null,
+      unitPrice: type === 'OUTBOUND' ? (sentPrice ?? product.salePrice) : null,
       unitCost,
       revertsMovementId: (body.revertsMovementId as string | undefined) ?? null,
       createdAt: new Date().toISOString(),
     };
     movements.push(movement);
     idempotencyKeys.set(key, movement);
-    products.set(product.id, { ...product, stock: resultingStock, costPrice: sentCost ?? product.costPrice });
+    products.set(product.id, {
+      ...product,
+      stock: resultingStock,
+      costPrice: sentCost ?? product.costPrice,
+      salePrice: sentPrice ?? product.salePrice,
+    });
     return { movement, stock: resultingStock };
   }
 
