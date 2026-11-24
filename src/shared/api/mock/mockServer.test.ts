@@ -260,6 +260,34 @@ describe('API de demostración', () => {
     expect(all[0].resultingStock).toBe(gaseosa.stock);
   });
 
+  it('marca la venta deshecha, enlaza su corrección y filtra el historial por tipo', async () => {
+    const pasta = await findByName('Pasta 500 g');
+    const path = `/products/${pasta.id}/movements`;
+    const sale = await mockRequest<MovementResult>('POST', '/movements', {
+      productId: pasta.id,
+      type: 'OUTBOUND',
+      reason: 'SALE',
+      quantity: 1,
+      idempotencyKey: 'historial-venta',
+    });
+    await mockRequest('POST', '/movements', {
+      productId: pasta.id,
+      type: 'ADJUSTMENT',
+      quantity: pasta.stock,
+      idempotencyKey: 'historial-deshacer',
+      revertsMovementId: sale.movement?.id,
+    });
+
+    const all = await mockRequest<Page<Movement>>('GET', path);
+    expect(all.items[0]).toMatchObject({ type: 'ADJUSTMENT', revertsMovementId: sale.movement?.id, reverted: false });
+    expect(all.items[1]).toMatchObject({ id: sale.movement?.id, reverted: true });
+
+    const sales = await mockRequest<Page<Movement>>('GET', `${path}?type=OUTBOUND&reason=SALE`);
+    expect(sales.items.map((movement) => movement.id)).toEqual([sale.movement?.id]);
+    const adjustments = await mockRequest<Page<Movement>>('GET', `${path}?type=ADJUSTMENT`);
+    expect(adjustments.items.every((movement) => movement.type === 'ADJUSTMENT')).toBe(true);
+  });
+
   it('guarda el ajuste como una diferencia con signo', async () => {
     const leche = await findByName('Leche 1 litro');
     const { movement, stock } = await mockRequest<MovementResult>('POST', '/movements', {

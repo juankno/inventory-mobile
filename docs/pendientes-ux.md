@@ -27,6 +27,13 @@ Mejoras que salieron de revisar la app pensando en un tendero que la usa en el m
 - **Foto del producto (fase 1):** si se acepta una sugerencia con foto, el producto la guarda y se ve en la lista, el detalle y al registrar un movimiento. Una fase 2, con fotos tomadas por el usuario, necesitaría guardar archivos (por ejemplo, en Supabase Storage); vale la pena solo si los tenderos la piden.
 - **Precio y costo en la venta:** al registrar una venta se pueden cambiar el precio y el costo; uno distinto queda guardado para las próximas ventas. Si el costo supera el precio, un aviso en rojo dice cuánto se pierde y por cuánto supera el costo al precio por unidad. No bloquea la venta, porque a veces se vende con pérdida a propósito (liquidar, producto por vencer).
 - **Carga con esqueletos:** mientras llegan los datos se ve la forma gris del contenido en lugar del indicador girando: filas en el inventario, las alertas, el historial y los productos eliminados; tarjetas de cifras en los reportes; y el encabezado del producto en el detalle, el movimiento, la edición y el código QR. El indicador girando queda solo para acciones en curso (buscar un código, cargar más historial, abrir una foto). Con "reducir movimiento" el esqueleto no parpadea.
+- **Historial rediseñado:**
+  - los movimientos se agrupan por día (Hoy, Ayer, 20 oct.) y cada fila muestra solo la hora;
+  - el título dice "Venta", "Consumo" o "Pérdida" sin repetir "Salida";
+  - cada tipo tiene su ícono: entrada rellena, salida gris, ajuste con borde y "Deshacer" con una flecha que vuelve;
+  - en las ventas se ve lo cobrado y lo que se ganó o perdió;
+  - lo deshecho se tacha con la marca "Se deshizo" y su corrección se llama "Deshacer venta" en vez de "Ajuste por conteo";
+  - el historial completo se filtra por Todos, Ventas, Entradas o Ajustes.
 - **Venta continua al reabrir la app:** el último tipo y motivo de movimiento se conservan.
 - **Eliminar es reversible:** nada se borra de forma permanente. Hay tres formas de recuperar un producto:
   - "Deshacer" en el aviso al eliminarlo;

@@ -199,14 +199,34 @@ export const messages = {
     historyEnd: 'Estos son todos los movimientos.',
     historyMoreFailed: 'No pudimos cargar más movimientos.',
     remaining: (quantity: string) => `Quedaron ${quantity}`,
-    // Detalle de una venta en el historial.
-    saleCharged: (amount: string) => `Cobrado ${amount}`,
-    salePrice: (amount: string) => `Precio ${amount}`,
-    saleCost: (amount: string) => `Costo ${amount}`,
-    saleNoPrice: 'Sin precio',
-    saleNoCost: 'Costo sin registrar',
-    saleProfit: (amount: string) => `Ganancia ${amount}`,
-    saleLoss: (amount: string) => `Pérdida ${amount}`,
+    // Filas del historial.
+    historyRow: {
+      // "Deshacer venta": la corrección que dejó el botón Deshacer del aviso.
+      undo: 'Deshacer',
+      undoOf: (what: string) => `Deshacer ${what}`,
+      undoTargets: {
+        INBOUND: 'entrada',
+        ADJUSTMENT: 'ajuste',
+        SALE: 'venta',
+        CONSUMPTION: 'consumo',
+        LOSS: 'pérdida',
+      },
+      undone: 'Se deshizo',
+      undoneSale: 'No cuenta en las ventas.',
+      // "Cobrado $6.000 · ganaste $1.600": lo que entró a la caja y lo que dejó la venta.
+      charged: (amount: string) => `Cobrado ${amount}`,
+      gained: (amount: string) => `ganaste ${amount}`,
+      lost: (amount: string) => `perdiste ${amount}`,
+      noCost: 'sin costo registrado',
+      noPrice: 'Sin precio: no suma a las ventas.',
+    },
+    historyFilterLabel: 'Ver en el historial',
+    historyFilters: { ALL: 'Todos', SALE: 'Ventas', INBOUND: 'Entradas', ADJUSTMENT: 'Ajustes' },
+    historyFilterEmpty: {
+      SALE: 'Todavía no hay ventas de este producto.',
+      INBOUND: 'Todavía no hay entradas de este producto.',
+      ADJUSTMENT: 'Todavía no hay ajustes de este producto.',
+    },
     options: 'Opciones del producto',
     edit: 'Editar producto',
     editHint: 'Nombre, unidad, mínimo y precio',

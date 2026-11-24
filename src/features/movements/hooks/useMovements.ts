@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import * as Crypto from 'expo-crypto';
 
 import { queryKeys } from '@/shared/api/queryKeys';
+import type { MovementFilter } from '@/shared/api/types';
 import { createMovement, listMovements } from '../api';
 
 // Movimientos que se ven en el detalle del producto; el resto, en "Ver todo el historial".
@@ -15,11 +16,22 @@ export function useRecentMovements(productId: string) {
   });
 }
 
+// Filtros del historial completo y lo que se le pide al backend en cada uno.
+export const HISTORY_FILTERS = {
+  ALL: {},
+  SALE: { type: 'OUTBOUND', reason: 'SALE' },
+  INBOUND: { type: 'INBOUND' },
+  ADJUSTMENT: { type: 'ADJUSTMENT' },
+} as const satisfies Record<string, MovementFilter>;
+
+export type HistoryFilter = keyof typeof HISTORY_FILTERS;
+
 // Historial completo: carga otra página al llegar al final de la lista.
-export function useMovementHistory(productId: string) {
+export function useMovementHistory(productId: string, filter: HistoryFilter = 'ALL') {
   return useInfiniteQuery({
-    queryKey: queryKeys.movementHistory(productId),
-    queryFn: ({ pageParam }) => listMovements(productId, { limit: HISTORY_PAGE_SIZE, cursor: pageParam }),
+    queryKey: queryKeys.movementHistory(productId, filter),
+    queryFn: ({ pageParam }) =>
+      listMovements(productId, { limit: HISTORY_PAGE_SIZE, cursor: pageParam, filter: HISTORY_FILTERS[filter] }),
     initialPageParam: null as string | null,
     getNextPageParam: (page) => page.nextCursor,
     select: (data) => data.pages.flatMap((page) => page.items),

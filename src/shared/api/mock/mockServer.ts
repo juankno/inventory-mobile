@@ -248,7 +248,20 @@ function handle(method: Method, path: string, body: Body): unknown {
   if ((match = pathname.match(/^\/products\/([^/]+)\/movements$/)) && method === 'GET') {
     getProductOrThrow(match[1]);
     // Se guardan en orden de registro: al revés quedan del más reciente al más antiguo.
-    const history = movements.filter((movement) => movement.productId === match![1]).reverse();
+    const type = query.get('type');
+    const reason = query.get('reason');
+    const history = movements
+      .filter(
+        (movement) =>
+          movement.productId === match![1] &&
+          (!type || movement.type === type) &&
+          (!reason || movement.reason === reason),
+      )
+      .reverse()
+      .map(({ productId: _productId, ...movement }) => ({
+        ...movement,
+        reverted: movements.some((other) => other.revertsMovementId === movement.id),
+      }));
     const limit = Math.min(Math.max(Number(query.get('limit')) || DEFAULT_PAGE_SIZE, 1), MAX_PAGE_SIZE);
     // El cursor es el id del último movimiento de la página anterior.
     const cursor = query.get('cursor');
@@ -320,14 +333,16 @@ function handle(method: Method, path: string, body: Body): unknown {
       createdAt: new Date().toISOString(),
     };
     movements.push(movement);
-    idempotencyKeys.set(key, movement);
+    const { productId: _productId, ...created } = movement;
+    const result: Movement = { ...created, reverted: false };
+    idempotencyKeys.set(key, result);
     products.set(product.id, {
       ...product,
       stock: resultingStock,
       costPrice: sentCost ?? product.costPrice,
       salePrice: sentPrice ?? product.salePrice,
     });
-    return { movement, stock: resultingStock };
+    return { movement: result, stock: resultingStock };
   }
 
   throw new ApiError(404, 'NOT_FOUND', `La API de demostración no conoce ${route}.`);

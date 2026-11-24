@@ -8,6 +8,21 @@ export const formatDay = (date: Date) => fullDayFormat.format(date);
 
 const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 
+// La hora sola, para las filas que ya van bajo el encabezado de su día: "3:40 p. m.".
+export const formatTime = (iso: string) => timeFormat.format(new Date(iso));
+
+// El día en la hora del celular, para saber si dos movimientos van bajo el mismo encabezado.
+export const localDayKey = (iso: string) => startOfDay(new Date(iso));
+
+// Encabezado de un día del historial: "Hoy", "Ayer", "20 oct." o, de otro año, "20 oct. 2025".
+export function formatDayHeading(iso: string, now = new Date()): string {
+  const date = new Date(iso);
+  const days = Math.round((startOfDay(now) - startOfDay(date)) / 86_400_000);
+  if (days === 0) return 'Hoy';
+  if (days === 1) return 'Ayer';
+  return date.getFullYear() === now.getFullYear() ? dayFormat.format(date) : fullDayFormat.format(date);
+}
+
 export function formatRelativeDateTime(iso: string, now = new Date()): string {
   const date = new Date(iso);
   const days = Math.round((startOfDay(now) - startOfDay(date)) / 86_400_000);
