@@ -107,13 +107,14 @@ Al registrar un código de barras nuevo, la app pregunta si se conoce. Si hay su
 | Método y ruta | Cuerpo | Respuesta |
 | --- | --- | --- |
 | `GET /products/:id/movements?limit=20&cursor=…` | | `{ items: Movement[], nextCursor }`, del más reciente al más antiguo |
-| `POST /movements` | `{ productId, type, reason?, quantity, idempotencyKey, unitCost? }` | `{ movement, stock }`: `201` si se registró, `200` si no |
+| `POST /movements` | `{ productId, type, reason?, quantity, idempotencyKey, unitPrice?, unitCost? }` | `{ movement, stock }`: `201` si se registró, `200` si no |
 | `GET /products/low-stock` | | `Product[]` agotados o con `stock <= minStock`, los agotados primero |
 
 Reglas de `POST /movements`:
 
 - **`reason`:** solo va en las salidas (`SALE`, `CONSUMPTION` o `LOSS`). En entradas y ajustes no se envía.
 - **`quantity` al enviar:** en una entrada o una salida es lo que suma o resta. En un ajuste es la **existencia contada**, que queda como la nueva existencia del producto.
+- **`unitPrice`:** solo en las salidas. Es el precio de venta unitario de esa venta; sin él, el backend usa el precio del producto. Si es distinto, queda como el nuevo precio del producto. La app lo envía en las ventas.
 - **`unitCost`:** solo en las salidas. Es el costo unitario de esa venta; sin él, el backend usa el costo del producto. Si es distinto, queda como el nuevo costo del producto. La app lo envía en las ventas.
 - **`idempotencyKey`:** es un UUID que se repite en los reintentos. Si ya existe, el backend responde `200` con el movimiento que ya está registrado.
 - **Ajuste sin cambios:** si la existencia contada es igual a la actual, responde `200` con `movement: null`.

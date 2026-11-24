@@ -26,6 +26,9 @@ export type CreateMovementInput = {
   // Solo en las salidas: el costo unitario de esta venta. Sin él, el backend usa el costo
   // del producto; si es distinto, queda como el nuevo costo del producto.
   unitCost?: number;
+  // Solo en las salidas: el precio de venta unitario de esta venta. Sin él, el backend usa el
+  // precio del producto; si es distinto, queda como el nuevo precio del producto.
+  unitPrice?: number;
 };
 
 // Historial del producto por páginas, del más reciente al más antiguo (RF-15).

@@ -25,6 +25,7 @@ Mejoras que salieron de revisar la app pensando en un tendero que la usa en el m
 - **Reportes:** el menú ☰ tiene el resumen del período elegido (hoy, semana, mes, mes pasado u otro con calendario), con la comparación contra el período anterior, las ventas por hora, día, semana o mes, la ganancia, lo más vendido y el estado del inventario. Los reportes en Excel de inventario, ventas y movimientos usan el mismo período.
 - **Sugerencia al registrar un código de barras:** propone el nombre, la unidad y la foto que usan otras tiendas, o los de Open Food Facts y Open Beauty Facts.
 - **Foto del producto (fase 1):** si se acepta una sugerencia con foto, el producto la guarda y se ve en la lista, el detalle y al registrar un movimiento. Una fase 2, con fotos tomadas por el usuario, necesitaría guardar archivos (por ejemplo, en Supabase Storage); vale la pena solo si los tenderos la piden.
+- **Precio y costo en la venta:** al registrar una venta se pueden cambiar el precio y el costo; uno distinto queda guardado para las próximas ventas. Si el costo supera el precio, un aviso en rojo dice cuánto se pierde y por cuánto supera el costo al precio por unidad. No bloquea la venta, porque a veces se vende con pérdida a propósito (liquidar, producto por vencer).
 - **Venta continua al reabrir la app:** el último tipo y motivo de movimiento se conservan.
 - **Eliminar es reversible:** nada se borra de forma permanente. Hay tres formas de recuperar un producto:
   - "Deshacer" en el aviso al eliminarlo;
