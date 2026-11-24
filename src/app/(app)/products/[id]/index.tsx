@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 
 import { MovementHistory } from '@/features/movements/components/MovementHistory';
 import { useRecentMovements } from '@/features/movements/hooks/useMovements';
@@ -49,7 +49,7 @@ export default function ProductDetailScreen() {
         {product.error ? (
           <Banner message={errorMessage(product.error, messages.errors.loadFailed)} />
         ) : (
-          <ActivityIndicator color={theme.colors.ink} />
+          <Skeleton variant="product" />
         )}
       </PageLayout>
     );

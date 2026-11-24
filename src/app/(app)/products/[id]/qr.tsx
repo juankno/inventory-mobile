@@ -2,7 +2,7 @@ import * as Print from 'expo-print';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View, type ViewInstance } from 'react-native';
+import { StyleSheet, View, type ViewInstance } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { captureRef } from 'react-native-view-shot';
 
@@ -15,6 +15,7 @@ import { Button } from '@/shared/ui/Button';
 import { Banner } from '@/shared/ui/Feedback';
 import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
+import { Skeleton } from '@/shared/ui/Skeleton';
 import { theme } from '@/shared/ui/theme';
 
 const t = messages.qr;
@@ -42,7 +43,7 @@ export default function ProductQrScreen() {
         {product.error ? (
           <Banner message={errorMessage(product.error, messages.errors.loadFailed)} />
         ) : (
-          <ActivityIndicator color={theme.colors.ink} />
+          <Skeleton variant="productTitle" />
         )}
       </PageLayout>
     );
