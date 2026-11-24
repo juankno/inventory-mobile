@@ -34,7 +34,13 @@ export function Button({
   const compact = size === 'compact';
   const isPrimary = variant === 'primary';
   const inactive = disabled || loading;
-  const foreground = variant === 'secondary' ? theme.colors.ink : theme.colors.onInk;
+  // Deshabilitado, el texto dice qué falta ("Elige el motivo de la salida"): se tiene que leer.
+  const primaryDisabled = !!disabled && isPrimary;
+  const foreground = primaryDisabled
+    ? theme.colors.secondary
+    : variant === 'secondary'
+      ? theme.colors.ink
+      : theme.colors.onInk;
 
   return (
     <Pressable
@@ -47,7 +53,7 @@ export function Button({
         styles.base,
         compact && styles.compact,
         styles[variant],
-        disabled && isPrimary && styles.primaryDisabled,
+        primaryDisabled && styles.primaryDisabled,
         pressed && styles.pressed,
         style,
       ]}
@@ -81,7 +87,7 @@ const styles = StyleSheet.create({
   },
   compact: { minHeight: theme.minTouchSize, paddingHorizontal: theme.spacing.md },
   primary: { backgroundColor: theme.colors.ink },
-  primaryDisabled: { backgroundColor: theme.colors.disabled },
+  primaryDisabled: { backgroundColor: theme.colors.field },
   secondary: { backgroundColor: theme.colors.field },
   danger: { backgroundColor: theme.colors.dangerDot },
   pressed: { opacity: 0.85 },

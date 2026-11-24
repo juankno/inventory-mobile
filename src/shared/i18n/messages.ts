@@ -108,7 +108,7 @@ export const messages = {
     menu: 'Menú',
     alerts: (count: number) => `Alertas: ${count} productos por reponer`,
     emptyTitle: 'Aún no tienes productos',
-    emptyBody: 'Toca «Escanear código», abajo, para agregar el primero.',
+    emptyBody: 'Toca "Escanear código", abajo, para agregar el primero.',
     noResults: (query: string) => `No hay productos que coincidan con "${query}".`,
     filterLabel: 'Filtrar por existencias',
     filterAll: 'Todos',

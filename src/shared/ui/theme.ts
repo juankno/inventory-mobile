@@ -11,7 +11,8 @@ export const theme = {
     onInk: '#FFFFFF',
     text: '#1F1F1E',
     secondary: '#6B6A66',
-    muted: '#8C8B85',
+    // 4.5:1 sobre el fondo y los campos: se usa en textos de ejemplo y en la segunda línea de los títulos.
+    muted: '#6E6D68',
     disabled: '#A3A29D',
     warningBg: '#FDEFD9',
     warningText: '#8A4B00',
