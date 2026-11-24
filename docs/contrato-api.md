@@ -106,7 +106,7 @@ Al registrar un código de barras nuevo, la app pregunta si se conoce. Si hay su
 
 | Método y ruta | Cuerpo | Respuesta |
 | --- | --- | --- |
-| `GET /products/:id/movements?limit=20&cursor=…` | | `{ items: Movement[], nextCursor }`, del más reciente al más antiguo |
+| `GET /products/:id/movements?limit=20&cursor=…&type=…&reason=…` | | `{ items: Movement[], nextCursor }`, del más reciente al más antiguo |
 | `POST /movements` | `{ productId, type, reason?, quantity, idempotencyKey, unitPrice?, unitCost? }` | `{ movement, stock }`: `201` si se registró, `200` si no |
 | `GET /products/low-stock` | | `Product[]` agotados o con `stock <= minStock`, los agotados primero |
 
@@ -124,6 +124,8 @@ Reglas de `POST /movements`:
 
 - **`quantity` al leer:** en una entrada o una salida es positivo. En un ajuste es la **diferencia con signo** frente a la existencia anterior. Por eso cada fila del historial calcula su diferencia sin depender de las demás páginas.
 - **`unitPrice` y `unitCost`:** el historial los trae en cada movimiento. Son el precio y el costo unitarios con que se registró la salida. Son `null` en entradas y ajustes, o si no había precio o costo, por ejemplo en ventas anteriores al costo del producto. La respuesta de `POST /movements` no los trae.
+- **`reverted` y `revertsMovementId`:** el historial dice si cada movimiento se deshizo con "Deshacer" (`reverted`) y, en la corrección, a qué movimiento revierte (`revertsMovementId`). La app tacha lo deshecho y llama "Deshacer venta" a su corrección. Un backend anterior no los envía, y la app los toma como `false` y `null`.
+- **`type` y `reason`:** filtran el historial (Ventas: `type=OUTBOUND&reason=SALE`; Entradas: `type=INBOUND`; Ajustes: `type=ADJUSTMENT`). El cursor sigue sirviendo con el mismo filtro.
 
 Paginación de `GET /products/:id/movements` (RF-15):
 

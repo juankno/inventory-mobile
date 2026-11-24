@@ -6,9 +6,9 @@ import type { Movement, Product, Unit } from '@/shared/api/types';
 const DAY_MS = 86_400_000;
 
 // Un movimiento como lo guarda la API de demostración.
-export type StoredMovement = Movement & {
+// reverted no se guarda: se calcula con los demás movimientos, como en la base de datos.
+export type StoredMovement = Omit<Movement, 'reverted'> & {
   productId: string;
-  revertsMovementId: string | null;
 };
 
 // Fechas AAAA-MM-DD en la hora del celular, para el resumen por período.
