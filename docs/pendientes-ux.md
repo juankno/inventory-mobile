@@ -26,6 +26,7 @@ Mejoras que salieron de revisar la app pensando en un tendero que la usa en el m
 - **Sugerencia al registrar un código de barras:** propone el nombre, la unidad y la foto que usan otras tiendas, o los de Open Food Facts y Open Beauty Facts.
 - **Foto del producto (fase 1):** si se acepta una sugerencia con foto, el producto la guarda y se ve en la lista, el detalle y al registrar un movimiento. Una fase 2, con fotos tomadas por el usuario, necesitaría guardar archivos (por ejemplo, en Supabase Storage); vale la pena solo si los tenderos la piden.
 - **Precio y costo en la venta:** al registrar una venta se pueden cambiar el precio y el costo; uno distinto queda guardado para las próximas ventas. Si el costo supera el precio, un aviso en rojo dice cuánto se pierde y por cuánto supera el costo al precio por unidad. No bloquea la venta, porque a veces se vende con pérdida a propósito (liquidar, producto por vencer).
+- **Carga con esqueletos:** mientras llegan los datos se ve la forma gris del contenido en lugar del indicador girando: filas en el inventario, las alertas, el historial y los productos eliminados; tarjetas de cifras en los reportes; y el encabezado del producto en el detalle, el movimiento, la edición y el código QR. El indicador girando queda solo para acciones en curso (buscar un código, cargar más historial, abrir una foto). Con "reducir movimiento" el esqueleto no parpadea.
 - **Venta continua al reabrir la app:** el último tipo y motivo de movimiento se conservan.
 - **Eliminar es reversible:** nada se borra de forma permanente. Hay tres formas de recuperar un producto:
   - "Deshacer" en el aviso al eliminarlo;
@@ -59,7 +60,6 @@ Por ahora no se recomiendan:
 ### 3. Detalles de uso diario (impacto bajo a medio)
 
 - **Cantidades a granel:** atajos de ½ kg, 1 kg y 2 kg, porque los botones − y + van de 1 en 1.
-- **Carga con tarjetas de esqueleto** en lugar del indicador girando.
 - **Volver a ver la presentación:** una opción "Cómo usar la app" en el menú ☰.
 - **Tablets:** limitar el ancho del contenido (por ejemplo, 600 dp centrados). Hoy campos y botones se estiran a todo el ancho; es de baja prioridad porque la app está pensada para celular.
 - **Deshacer con un endpoint propio:** hoy "Deshacer" registra un ajuste. Si el ERS pide que el historial no muestre la corrección, el backend necesitaría anular movimientos.

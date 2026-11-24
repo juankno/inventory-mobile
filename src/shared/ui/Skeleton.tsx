@@ -30,10 +30,12 @@ function usePulse() {
   return opacity;
 }
 
-type Variant = 'card' | 'row' | 'stats';
+type Variant = 'card' | 'row' | 'stats' | 'product' | 'productTitle';
 
 type Props = {
-  // card: filas con borde del inventario; row: filas del historial; stats: dos tarjetas de cifras.
+  // card: filas con borde del inventario; row: filas del historial; stats: dos tarjetas de cifras;
+  // product: encabezado del detalle y del movimiento (foto, nombre y existencias);
+  // productTitle: solo el nombre y una línea, como en editar y en el código QR.
   variant: Variant;
   count?: number;
 };
@@ -41,7 +43,8 @@ type Props = {
 // Forma gris del contenido que viene: la pantalla no salta cuando llega.
 export function Skeleton({ variant, count = 3 }: Props) {
   const opacity = usePulse();
-  const items = variant === 'stats' ? 1 : count;
+  const single = variant === 'stats' || variant === 'product' || variant === 'productTitle';
+  const items = single ? 1 : count;
 
   return (
     <Animated.View
@@ -51,7 +54,14 @@ export function Skeleton({ variant, count = 3 }: Props) {
       style={[styles.group, variant === 'card' && styles.cardGroup, { opacity }]}
     >
       {Array.from({ length: items }, (_, index) =>
-        variant === 'stats' ? (
+        variant === 'product' || variant === 'productTitle' ? (
+          <View key={index} style={styles.product}>
+            {variant === 'product' ? <Block style={styles.productImage} /> : null}
+            <Block style={styles.productName} />
+            <Block style={styles.productCode} />
+            {variant === 'product' ? <Block style={styles.productStock} /> : null}
+          </View>
+        ) : variant === 'stats' ? (
           <View key={index} style={styles.stats}>
             <Block style={styles.stat} />
             <Block style={styles.stat} />
@@ -95,4 +105,10 @@ const styles = StyleSheet.create({
   subtitle: { height: 14, width: '35%' },
   stats: { flexDirection: 'row', gap: theme.spacing.md },
   stat: { flex: 1, height: 130, borderRadius: theme.radius.lg },
+  // Mismas medidas que el detalle: foto de 96, nombre en display y la cifra de existencias.
+  product: { gap: theme.spacing.md },
+  productImage: { width: 96, height: 96, borderRadius: theme.radius.lg },
+  productName: { height: 32, width: '70%' },
+  productCode: { height: 18, width: '45%' },
+  productStock: { height: 72, width: '35%', marginTop: theme.spacing.sm },
 });

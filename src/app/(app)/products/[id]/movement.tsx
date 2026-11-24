@@ -1,7 +1,7 @@
 import * as Crypto from 'expo-crypto';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useCreateMovement, useUndoMovement } from '@/features/movements/hooks/useMovements';
 import { getLastChoice, rememberChoice } from '@/features/movements/lastChoice';
@@ -24,6 +24,7 @@ import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { QuantityStepper } from '@/shared/ui/QuantityStepper';
 import { TextField } from '@/shared/ui/TextField';
+import { Skeleton } from '@/shared/ui/Skeleton';
 import { theme } from '@/shared/ui/theme';
 import { useToast } from '@/shared/ui/Toast';
 
@@ -81,7 +82,7 @@ export default function MovementScreen() {
         {product.error ? (
           <Banner message={errorMessage(product.error, messages.errors.loadFailed)} />
         ) : (
-          <ActivityIndicator color={theme.colors.ink} />
+          <Skeleton variant="product" />
         )}
       </PageLayout>
     );
