@@ -5,13 +5,13 @@ const config: ExpoConfig = {
   name: 'Surtido',
   slug: 'inventory-mobile',
   scheme: 'inventory',
-  version: '0.4.3',
+  version: '0.4.4',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'light',
   android: {
     package: 'co.edu.poligran.inventory',
-    versionCode: 8,
+    versionCode: 9,
     adaptiveIcon: {
       backgroundColor: '#1F1F1E',
       foregroundImage: './assets/android-icon-foreground.png',
