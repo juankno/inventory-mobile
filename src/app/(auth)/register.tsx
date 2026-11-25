@@ -217,7 +217,7 @@ export default function RegisterScreen() {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <View style={styles.section}>
-      <AppText variant="bodyStrong" tone="secondary" accessibilityRole="header" style={styles.sectionTitle}>
+      <AppText variant="bodyStrong" tone="secondary" accessibilityRole="header">
         {title}
       </AppText>
       {children}
@@ -227,7 +227,6 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 const styles = StyleSheet.create({
   section: { gap: theme.spacing.md, marginTop: theme.spacing.sm },
-  sectionTitle: { textTransform: 'uppercase', letterSpacing: 1 },
   policy: { gap: theme.spacing.sm },
   policyRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, minHeight: 48 },
   checkbox: {

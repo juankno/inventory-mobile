@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ProductFormFields } from '@/features/products/components/ProductFormFields';
 import { useProduct, useUpdateProduct } from '@/features/products/hooks/useProducts';
@@ -23,6 +23,7 @@ import { Banner } from '@/shared/ui/Feedback';
 import { Icon } from '@/shared/ui/Icon';
 import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
+import { Skeleton } from '@/shared/ui/Skeleton';
 import { theme } from '@/shared/ui/theme';
 import { useToast } from '@/shared/ui/Toast';
 import { useDiscardGuard } from '@/shared/ui/useDiscardGuard';
@@ -65,7 +66,7 @@ export default function EditProductScreen() {
         {product.error ? (
           <Banner message={errorMessage(product.error, messages.errors.loadFailed)} />
         ) : (
-          <ActivityIndicator color={theme.colors.ink} />
+          <Skeleton variant="productTitle" />
         )}
       </PageLayout>
     );

@@ -48,8 +48,15 @@ export type Movement = {
   // entradas y ajustes, o si no los había (ventas anteriores al costo del producto).
   unitPrice: number | null;
   unitCost: number | null;
+  // Solo en los ajustes de "Deshacer": el movimiento que este ajuste revierte.
+  revertsMovementId: string | null;
+  // Si se deshizo con "Deshacer": una venta deshecha no cuenta en los reportes.
+  reverted: boolean;
   createdAt: string;
 };
+
+// Para ver solo un tipo de movimiento en el historial, por ejemplo las ventas.
+export type MovementFilter = { type?: MovementType; reason?: OutboundReason };
 
 // POST /movements. movement es null si un ajuste no cambió la existencia.
 export type MovementResult = { movement: Movement | null; stock: number };
@@ -70,12 +77,17 @@ export type ProductDto = Omit<Product, 'salePrice' | 'costPrice' | 'stock' | 'mi
 
 export type DeletedProductDto = ProductDto & { deletedAt: string };
 
-// POST /movements no trae unitPrice ni unitCost; el historial sí.
-export type MovementDto = Omit<Movement, 'quantity' | 'resultingStock' | 'unitPrice' | 'unitCost'> & {
+// POST /movements no trae unitPrice, unitCost, revertsMovementId ni reverted; el historial sí.
+export type MovementDto = Omit<
+  Movement,
+  'quantity' | 'resultingStock' | 'unitPrice' | 'unitCost' | 'revertsMovementId' | 'reverted'
+> & {
   quantity: Decimal;
   resultingStock: Decimal;
   unitPrice?: Decimal | null;
   unitCost?: Decimal | null;
+  revertsMovementId?: string | null;
+  reverted?: boolean;
 };
 
 export type MovementResultDto = { movement: MovementDto | null; stock: Decimal };
@@ -111,6 +123,8 @@ export function toMovement(dto: MovementDto): Movement {
     resultingStock: toNumber(dto.resultingStock),
     unitPrice: toNullableNumber(dto.unitPrice),
     unitCost: toNullableNumber(dto.unitCost),
+    revertsMovementId: dto.revertsMovementId ?? null,
+    reverted: dto.reverted ?? false,
   };
 }
 

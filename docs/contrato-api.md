@@ -106,14 +106,15 @@ Al registrar un código de barras nuevo, la app pregunta si se conoce. Si hay su
 
 | Método y ruta | Cuerpo | Respuesta |
 | --- | --- | --- |
-| `GET /products/:id/movements?limit=20&cursor=…` | | `{ items: Movement[], nextCursor }`, del más reciente al más antiguo |
-| `POST /movements` | `{ productId, type, reason?, quantity, idempotencyKey, unitCost? }` | `{ movement, stock }`: `201` si se registró, `200` si no |
+| `GET /products/:id/movements?limit=20&cursor=…&type=…&reason=…` | | `{ items: Movement[], nextCursor }`, del más reciente al más antiguo |
+| `POST /movements` | `{ productId, type, reason?, quantity, idempotencyKey, unitPrice?, unitCost? }` | `{ movement, stock }`: `201` si se registró, `200` si no |
 | `GET /products/low-stock` | | `Product[]` agotados o con `stock <= minStock`, los agotados primero |
 
 Reglas de `POST /movements`:
 
 - **`reason`:** solo va en las salidas (`SALE`, `CONSUMPTION` o `LOSS`). En entradas y ajustes no se envía.
 - **`quantity` al enviar:** en una entrada o una salida es lo que suma o resta. En un ajuste es la **existencia contada**, que queda como la nueva existencia del producto.
+- **`unitPrice`:** solo en las salidas. Es el precio de venta unitario de esa venta; sin él, el backend usa el precio del producto. Si es distinto, queda como el nuevo precio del producto. La app lo envía en las ventas.
 - **`unitCost`:** solo en las salidas. Es el costo unitario de esa venta; sin él, el backend usa el costo del producto. Si es distinto, queda como el nuevo costo del producto. La app lo envía en las ventas.
 - **`idempotencyKey`:** es un UUID que se repite en los reintentos. Si ya existe, el backend responde `200` con el movimiento que ya está registrado.
 - **Ajuste sin cambios:** si la existencia contada es igual a la actual, responde `200` con `movement: null`.
@@ -123,6 +124,8 @@ Reglas de `POST /movements`:
 
 - **`quantity` al leer:** en una entrada o una salida es positivo. En un ajuste es la **diferencia con signo** frente a la existencia anterior. Por eso cada fila del historial calcula su diferencia sin depender de las demás páginas.
 - **`unitPrice` y `unitCost`:** el historial los trae en cada movimiento. Son el precio y el costo unitarios con que se registró la salida. Son `null` en entradas y ajustes, o si no había precio o costo, por ejemplo en ventas anteriores al costo del producto. La respuesta de `POST /movements` no los trae.
+- **`reverted` y `revertsMovementId`:** el historial dice si cada movimiento se deshizo con "Deshacer" (`reverted`) y, en la corrección, a qué movimiento revierte (`revertsMovementId`). La app tacha lo deshecho y llama "Deshacer venta" a su corrección. Un backend anterior no los envía, y la app los toma como `false` y `null`.
+- **`type` y `reason`:** filtran el historial (Ventas: `type=OUTBOUND&reason=SALE`; Entradas: `type=INBOUND`; Ajustes: `type=ADJUSTMENT`). El cursor sigue sirviendo con el mismo filtro.
 
 Paginación de `GET /products/:id/movements` (RF-15):
 

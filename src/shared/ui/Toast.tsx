@@ -132,14 +132,14 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },
   },
-  message: { flex: 1, fontFamily: theme.fonts.semibold, fontSize: 14, lineHeight: 19 },
+  message: { flex: 1, fontFamily: theme.fonts.semibold, fontSize: theme.fontSize.body, lineHeight: 22 },
   action: {
     minHeight: BUTTON_SIZE,
     paddingHorizontal: theme.spacing.sm,
     justifyContent: 'center',
     borderRadius: theme.radius.pill,
   },
-  actionText: { color: theme.colors.warningDot, fontFamily: theme.fonts.extrabold, fontSize: 14, lineHeight: 19 },
+  actionText: { color: theme.colors.warningDot, fontFamily: theme.fonts.extrabold, fontSize: theme.fontSize.body, lineHeight: 22 },
   close: {
     width: BUTTON_SIZE,
     height: BUTTON_SIZE,

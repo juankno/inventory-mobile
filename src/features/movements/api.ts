@@ -4,6 +4,7 @@ import {
   toMovementResult,
   type Movement,
   type MovementDto,
+  type MovementFilter,
   type MovementResultDto,
   type MovementType,
   type OutboundReason,
@@ -26,16 +27,22 @@ export type CreateMovementInput = {
   // Solo en las salidas: el costo unitario de esta venta. Sin él, el backend usa el costo
   // del producto; si es distinto, queda como el nuevo costo del producto.
   unitCost?: number;
+  // Solo en las salidas: el precio de venta unitario de esta venta. Sin él, el backend usa el
+  // precio del producto; si es distinto, queda como el nuevo precio del producto.
+  unitPrice?: number;
 };
 
 // Historial del producto por páginas, del más reciente al más antiguo (RF-15).
-// cursor es el nextCursor de la página anterior; sin él se pide la primera.
+// cursor es el nextCursor de la página anterior; sin él se pide la primera. Con filter,
+// solo ese tipo de movimiento (el cursor sigue sirviendo con el mismo filtro).
 export async function listMovements(
   productId: string,
-  { limit, cursor }: { limit: number; cursor?: string | null },
+  { limit, cursor, filter }: { limit: number; cursor?: string | null; filter?: MovementFilter },
 ): Promise<Page<Movement>> {
   const params = new URLSearchParams({ limit: String(limit) });
   if (cursor) params.set('cursor', cursor);
+  if (filter?.type) params.set('type', filter.type);
+  if (filter?.reason) params.set('reason', filter.reason);
   const page = await apiRequest<Page<MovementDto>>('GET', `/products/${productId}/movements?${params}`);
   return { items: page.items.map(toMovement), nextCursor: page.nextCursor };
 }

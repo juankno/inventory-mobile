@@ -8,7 +8,8 @@ export const queryKeys = {
   // Invalidar movements(id) refresca el resumen del detalle y el historial completo.
   movements: (productId: string) => ['movements', productId] as const,
   recentMovements: (productId: string) => ['movements', productId, 'recent'] as const,
-  movementHistory: (productId: string) => ['movements', productId, 'all'] as const,
+  // filter: 'ALL', 'SALE', 'INBOUND' o 'ADJUSTMENT', según el filtro del historial completo.
+  movementHistory: (productId: string, filter = 'ALL') => ['movements', productId, 'all', filter] as const,
   alerts: ['inventory', 'alerts'] as const,
   // Una venta cambia todos los resúmenes: se invalidan juntos con `reports`.
   reports: ['reports'] as const,

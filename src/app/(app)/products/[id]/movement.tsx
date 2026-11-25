@@ -1,7 +1,7 @@
 import * as Crypto from 'expo-crypto';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useCreateMovement, useUndoMovement } from '@/features/movements/hooks/useMovements';
 import { getLastChoice, rememberChoice } from '@/features/movements/lastChoice';
@@ -24,6 +24,7 @@ import { IconButton } from '@/shared/ui/IconButton';
 import { PageLayout } from '@/shared/ui/PageLayout';
 import { QuantityStepper } from '@/shared/ui/QuantityStepper';
 import { TextField } from '@/shared/ui/TextField';
+import { Skeleton } from '@/shared/ui/Skeleton';
 import { theme } from '@/shared/ui/theme';
 import { useToast } from '@/shared/ui/Toast';
 
@@ -65,7 +66,8 @@ export default function MovementScreen() {
   const [type, setType] = useState<MovementType | null>(initial.type);
   const [reason, setReason] = useState<OutboundReason | null>(initial.reason);
   const [quantity, setQuantity] = useState('1');
-  // Costo de esta venta. null: todavía no se editó y se muestra el del producto.
+  // Precio y costo de esta venta. null: todavía no se editaron y se muestran los del producto.
+  const [priceText, setPriceText] = useState<string | null>(null);
   const [costText, setCostText] = useState<string | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   // La misma clave en cada reintento evita registrar dos veces el movimiento (RU-01).
@@ -80,7 +82,7 @@ export default function MovementScreen() {
         {product.error ? (
           <Banner message={errorMessage(product.error, messages.errors.loadFailed)} />
         ) : (
-          <ActivityIndicator color={theme.colors.ink} />
+          <Skeleton variant="product" />
         )}
       </PageLayout>
     );
@@ -111,38 +113,40 @@ export default function MovementScreen() {
       : unchanged
         ? t.noChange
         : null;
-  // En las ventas se puede cambiar el costo; uno distinto queda como el nuevo costo del producto.
+  // En las ventas se pueden cambiar el precio y el costo; uno distinto queda como el nuevo
+  // precio o costo del producto.
   const isSale = type === 'OUTBOUND' && reason === 'SALE';
+  const price = priceText ?? priceToInput(item.salePrice);
+  const unitPrice = parsePrice(price);
+  const priceError = amountError(price, unitPrice, item.salePrice);
+  const priceChanged = unitPrice !== null && unitPrice !== item.salePrice;
   const cost = costText ?? priceToInput(item.costPrice);
   const unitCost = parsePrice(cost);
-  // Vacío, el backend usaría el costo guardado: si el producto ya tiene uno, se pide escribirlo.
-  const costError =
-    cost.trim() === ''
-      ? item.costPrice !== null
-        ? messages.common.required
-        : undefined
-      : unitCost === null
-        ? messages.validation.number
-        : undefined;
+  const costError = amountError(cost, unitCost, item.costPrice);
   const costChanged = unitCost !== null && unitCost !== item.costPrice;
   const saleProfit =
-    item.salePrice !== null && unitCost !== null && value !== null ? value * (item.salePrice - unitCost) : null;
-  // Lo que hay que cobrar: la cantidad por el precio del producto (el precio no cambia en la venta).
-  const saleTotal = item.salePrice !== null && value !== null ? value * item.salePrice : null;
+    unitPrice !== null && unitCost !== null && value !== null ? value * (unitPrice - unitCost) : null;
+  // Lo que hay que cobrar: la cantidad por el precio de esta venta.
+  const saleTotal = unitPrice !== null && value !== null ? value * unitPrice : null;
   const saleQuantity = value !== null ? `${formatNumber(value)} ${unitWord(value, item.unit)}` : '';
-  // Sin precio, el aviso del resumen ya explica que no hay total ni ganancia.
-  const costHint =
-    item.salePrice === null
+  // Vender por debajo del costo se permite (liquidar, producto por vencer), pero se avisa.
+  const losing = saleProfit !== null && saleProfit < 0;
+  const saleHint =
+    priceError || costError
       ? null
-      : unitCost === null
-        ? t.noCost
-        : saleProfit === null
-          ? null
-          : saleProfit >= 0
-            ? t.saleProfit(formatMoney(saleProfit))
-            : t.saleLoss(formatMoney(-saleProfit));
+      : unitPrice === null
+        ? t.noPrice
+        : unitCost === null
+          ? t.noCost
+          : saleProfit === null
+            ? null
+            : saleProfit >= 0
+              ? t.saleProfit(formatMoney(saleProfit))
+              : t.saleLoss(formatMoney(-saleProfit), formatMoney(unitCost - unitPrice), unitWord(1, item.unit));
+  const savedNote =
+    priceChanged && costChanged ? t.newPriceAndCost : priceChanged ? t.newPrice : costChanged ? t.newCost : null;
 
-  const canSubmit = !disabledLabel && value !== null && !insufficient && !(isSale && costError);
+  const canSubmit = !disabledLabel && value !== null && !insufficient && !(isSale && (priceError || costError));
 
   const submit = () => {
     if (!type || value === null || !canSubmit) return;
@@ -155,6 +159,7 @@ export default function MovementScreen() {
         reason: movementReason,
         quantity: value,
         idempotencyKey,
+        ...(isSale && unitPrice !== null && { unitPrice }),
         ...(isSale && unitCost !== null && { unitCost }),
       },
       {
@@ -287,22 +292,12 @@ export default function MovementScreen() {
         ) : null}
       </View>
 
-      {isSale && item.salePrice === null ? (
-        <View style={styles.group}>
-          <Banner tone="info" message={t.noPrice} />
-          <Button
-            label={t.addPrice}
-            variant="secondary"
-            icon="pencil"
-            onPress={() => router.push({ pathname: '/products/[id]/edit', params: { id: item.id } })}
-          />
-        </View>
-      ) : isSale && saleTotal !== null ? (
-        // Lo primero que necesita quien vende: cuánto cobrar. Se actualiza con la cantidad.
+      {isSale && saleTotal !== null ? (
+        // Lo primero que necesita quien vende: cuánto cobrar. Se actualiza con la cantidad y el precio.
         <View
           style={styles.total}
           accessible
-          accessibilityLabel={t.saleTotalLabel(formatMoney(saleTotal), saleQuantity, formatMoney(item.salePrice!), unitWord(1, item.unit))}
+          accessibilityLabel={t.saleTotalLabel(formatMoney(saleTotal), saleQuantity, formatMoney(unitPrice!), unitWord(1, item.unit))}
           accessibilityLiveRegion="polite"
         >
           <View style={styles.totalRow}>
@@ -317,13 +312,22 @@ export default function MovementScreen() {
             </AppText>
           </View>
           <AppText variant="body" tone="secondary">
-            {t.saleBreakdown(saleQuantity, formatMoney(item.salePrice!))}
+            {t.saleBreakdown(saleQuantity, formatMoney(unitPrice!))}
           </AppText>
         </View>
       ) : null}
 
       {isSale ? (
         <View style={styles.group}>
+          <TextField
+            label={t.unitPrice(unitWord(1, item.unit))}
+            prefix="$"
+            placeholder="0"
+            value={price}
+            onChangeText={(text) => setPriceText(formatPriceInput(text))}
+            error={priceError}
+            keyboardType="number-pad"
+          />
           <TextField
             label={t.unitCost(unitWord(1, item.unit))}
             prefix="$"
@@ -333,14 +337,10 @@ export default function MovementScreen() {
             error={costError}
             keyboardType="number-pad"
           />
-          {!costError && costHint ? (
-            <AppText
-              variant="body"
-              tone={saleProfit !== null && saleProfit < 0 ? 'danger' : 'secondary'}
-              accessibilityLiveRegion="polite"
-            >
-              {costHint}
-              {costChanged ? ` ${t.newCost}` : ''}
+          {saleHint ? (
+            <AppText variant="body" tone={losing ? 'danger' : 'secondary'} accessibilityLiveRegion="polite">
+              {saleHint}
+              {savedNote ? ` ${savedNote}` : ''}
             </AppText>
           ) : null}
         </View>
@@ -360,6 +360,12 @@ export default function MovementScreen() {
       </BottomSheet>
     </PageLayout>
   );
+}
+
+// Vacío, el backend usaría el valor guardado: si el producto ya tiene uno, se pide escribirlo.
+function amountError(text: string, amount: number | null, saved: number | null): string | undefined {
+  if (text.trim() === '') return saved !== null ? messages.common.required : undefined;
+  return amount === null ? messages.validation.number : undefined;
 }
 
 const styles = StyleSheet.create({
