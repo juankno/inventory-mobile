@@ -24,6 +24,7 @@ import { errorMessage } from '@/shared/api/errors';
 import { visibleLoadError } from '@/shared/api/queryPolicy';
 import { messages } from '@/shared/i18n/messages';
 import { AppText } from '@/shared/ui/AppText';
+import { BottomSheet, SheetAction } from '@/shared/ui/BottomSheet';
 import { Button } from '@/shared/ui/Button';
 import { ChipGroup } from '@/shared/ui/ChipGroup';
 import { DateField } from '@/shared/ui/DateField';
@@ -48,8 +49,8 @@ const periodOptions: readonly { value: PeriodPreset; label: string }[] = [
 ];
 
 // Reportes pensados para leerse de un vistazo: cuánto se vendió y si va mejor o peor
-// que antes, cuándo se vendió más, qué se vende más y cómo está el inventario. El
-// período elegido arriba sirve también para los reportes en Excel.
+// que antes, cuándo se vendió más, qué se vende más y cómo está el inventario. Los
+// reportes en Excel salen del botón de compartir de arriba y usan el mismo período.
 export default function ReportsScreen() {
   // La semana abre con varias barras para comparar y su propia comparación.
   const [preset, setPreset] = useState<PeriodPreset>('week');
@@ -57,6 +58,13 @@ export default function ReportsScreen() {
   const [customPeriod, setCustomPeriod] = useState(() => defaultCustomPeriod());
   const [busy, setBusy] = useState<ReportKind | null>(null);
   const [error, setError] = useState<string>();
+  const [exportOpen, setExportOpen] = useState(false);
+  const closeExport = () => {
+    // No se cierra a mitad de una descarga: la hoja muestra el progreso.
+    if (busy) return;
+    setExportOpen(false);
+    setError(undefined);
+  };
 
   const period = preset === 'custom' ? customPeriod : presetPeriod(preset);
   const comparison = comparisonFor(preset, period);
@@ -77,7 +85,10 @@ export default function ReportsScreen() {
         return;
       }
       const uri = await downloadReport(kind, kind === 'inventory' ? null : period);
+      // Se comparte con la hoja abierta (en iOS no se puede abrir el menú de compartir
+      // mientras se cierra otra ventana) y se cierra al volver.
       await Sharing.shareAsync(uri, { mimeType: XLSX_TYPE, UTI: 'org.openxmlformats.spreadsheetml.sheet', dialogTitle: t.shareTitle });
+      setExportOpen(false);
     } catch (reason) {
       setError(errorMessage(reason, messages.errors.unexpected));
     } finally {
@@ -85,25 +96,30 @@ export default function ReportsScreen() {
     }
   };
 
-  const reportCard = (kind: ReportKind, icon: IconName, title: string, body: string, action: string) => (
-    <ReportCard icon={icon} title={title} body={body}>
-      <Button
-        label={action}
-        icon="share"
-        variant="secondary"
-        loading={busy === kind}
-        disabled={isMockApi || (busy !== null && busy !== kind)}
-        onPress={() => void share(kind)}
-      />
-    </ReportCard>
+  const reportAction = (kind: ReportKind, icon: IconName, title: string, body: string) => (
+    <SheetAction
+      icon={icon}
+      label={title}
+      description={body}
+      loading={busy === kind}
+      disabled={isMockApi || (busy !== null && busy !== kind)}
+      onPress={() => void share(kind)}
+    />
   );
 
   const series = data ? visibleSeries(data.series, data.granularity) : [];
+  const notes = data
+    ? [
+        data.salesWithoutPrice > 0 ? t.withoutPrice(data.salesWithoutPrice) : null,
+        data.salesWithoutCost > 0 && data.salesWithoutCost < data.current.sales ? t.withoutCost(data.salesWithoutCost) : null,
+      ].filter((note): note is string => note !== null)
+    : [];
 
   return (
     <PageLayout
       left={<IconButton icon="chevronLeft" accessibilityLabel={messages.common.back} onPress={() => router.back()} />}
       title={t.title}
+      right={<IconButton icon="share" accessibilityLabel={t.excelTitle} onPress={() => setExportOpen(true)} />}
       refreshControl={
         <RefreshControl refreshing={overview.isRefetching} onRefresh={() => void overview.refetch()} tintColor={theme.colors.ink} />
       }
@@ -131,15 +147,18 @@ export default function ReportsScreen() {
         // Mientras llega el período nuevo, el anterior se ve atenuado.
         <View style={[styles.sections, overview.isPlaceholderData && styles.stale]}>
           <SalesHeadline overview={data} preset={preset} comparison={comparison} />
-          {data.salesWithoutPrice > 0 ? (
-            <AppText variant="body" tone="secondary">
-              {t.withoutPrice(data.salesWithoutPrice)}
-            </AppText>
-          ) : null}
-          {data.salesWithoutCost > 0 && data.salesWithoutCost < data.current.sales ? (
-            <AppText variant="body" tone="secondary">
-              {t.withoutCost(data.salesWithoutCost)}
-            </AppText>
+          {/* Avisos de datos incompletos, juntos y discretos bajo el total que afectan. */}
+          {notes.length > 0 ? (
+            <View style={styles.notes}>
+              <Icon name="info" size={20} color={theme.colors.secondary} />
+              <View style={styles.flex}>
+                {notes.map((note) => (
+                  <AppText key={note} variant="body" tone="secondary">
+                    {note}
+                  </AppText>
+                ))}
+              </View>
+            </View>
           ) : null}
 
           {data.current.sales === 0 ? (
@@ -163,20 +182,20 @@ export default function ReportsScreen() {
         </View>
       ) : null}
 
-      <View style={styles.group}>
-        <AppText variant="heading" accessibilityRole="header" style={styles.excelTitle}>
-          {t.excelTitle}
-        </AppText>
-        <AppText variant="body" tone="secondary">
-          {t.excelIntro}
-        </AppText>
-      </View>
-      {isMockApi ? <Banner tone="info" message={t.demoUnavailable} /> : null}
-      {error ? <Banner message={error} /> : null}
-
-      {reportCard('sales', 'chart', t.salesReportTitle, t.salesBody, t.salesAction)}
-      {reportCard('movements', 'history', t.movementsReportTitle, t.movementsBody, t.movementsAction)}
-      {reportCard('inventory', 'box', t.inventoryTitle, t.inventoryBody, t.inventoryAction)}
+      <BottomSheet visible={exportOpen} onClose={closeExport}>
+        <View>
+          <AppText variant="heading">{t.excelTitle}</AppText>
+          <AppText variant="body" tone="secondary">
+            {t.excelIntro}
+          </AppText>
+        </View>
+        {isMockApi ? <Banner tone="info" message={t.demoUnavailable} /> : null}
+        {error ? <Banner message={error} /> : null}
+        {reportAction('sales', 'chart', t.salesReportTitle, t.salesBody)}
+        {reportAction('movements', 'history', t.movementsReportTitle, t.movementsBody)}
+        {reportAction('inventory', 'box', t.inventoryTitle, t.inventoryBody)}
+        <Button label={messages.common.close} variant="secondary" disabled={busy !== null} onPress={closeExport} />
+      </BottomSheet>
     </PageLayout>
   );
 }
@@ -192,46 +211,18 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function ReportCard({ icon, title, body, children }: { icon: IconName; title: string; body: string; children: ReactNode }) {
-  return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.cardIcon}>
-          <Icon name={icon} />
-        </View>
-        <View style={styles.flex}>
-          <AppText variant="title">{title}</AppText>
-          <AppText variant="body" tone="secondary">
-            {body}
-          </AppText>
-        </View>
-      </View>
-      {children}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   group: { gap: theme.spacing.md },
   sections: { gap: theme.spacing.lg },
   stale: { opacity: 0.5 },
-  excelTitle: { marginTop: theme.spacing.md },
+  notes: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm },
   card: {
     gap: theme.spacing.md,
     padding: theme.spacing.lg,
     borderRadius: theme.radius.lg,
     borderWidth: 1,
     borderColor: theme.colors.border,
-  },
-  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.md },
-  cardIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.colors.field,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   dates: { flexDirection: 'row', gap: theme.spacing.md, alignItems: 'flex-start' },
 });

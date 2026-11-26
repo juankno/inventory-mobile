@@ -37,7 +37,12 @@ export function FilterChips<T extends string>({ options, value, onChange, access
             accessibilityLabel={option.count === undefined ? option.label : `${option.label}: ${option.count}`}
             onPress={() => onChange(option.value)}
             hitSlop={{ top: TOUCH_SLOP, bottom: TOUCH_SLOP }}
-            style={({ pressed }) => [styles.chip, selected && styles.selected, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.chip,
+              option.count === undefined && styles.chipNoCount,
+              selected && styles.selected,
+              pressed && styles.pressed,
+            ]}
           >
             <AppText variant="body" style={[styles.label, selected && styles.selectedText]}>
               {option.label}
@@ -69,6 +74,9 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.pill,
     backgroundColor: theme.colors.field,
   },
+  // El borde derecho corto deja sitio al globo del número; sin él, el texto
+  // lleva el mismo margen a los dos lados.
+  chipNoCount: { paddingRight: 14 },
   selected: { backgroundColor: theme.colors.ink },
   pressed: { opacity: 0.85 },
   label: { fontFamily: theme.fonts.medium },
