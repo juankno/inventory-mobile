@@ -190,6 +190,9 @@ export const messages = {
     price: 'Precio',
     cost: 'Costo',
     noValue: 'Sin definir',
+    // Lo que deja cada venta con el precio y el costo guardados.
+    gainPerUnit: (unit: string) => `Ganas por ${unit}`,
+    lossPerUnit: (unit: string) => `Pierdes por ${unit}`,
     inbound: 'Entrada',
     outbound: 'Salida',
     history: 'Historial de movimientos',
@@ -319,6 +322,11 @@ export const messages = {
     chooseReason: 'Elige el motivo de la salida',
     noChange: 'La cantidad contada es igual a la actual',
     submit: { INBOUND: 'Registrar entrada', OUTBOUND: 'Registrar salida', ADJUSTMENT: 'Registrar ajuste' },
+    // El botón repite el total para confirmar lo que se cobra sin volver a subir.
+    submitSale: (total: string) => `Registrar venta · ${total}`,
+    // El costo casi no cambia al vender: queda plegado detrás de este enlace.
+    editCost: (cost: string, unit: string) => `Costo ${cost} por ${unit} · Cambiar`,
+    addCost: 'Agregar costo para ver la ganancia',
     insufficient: (quantity: string) => `Solo hay ${quantity} en existencias. Revisa la cantidad o, si contaste otra cifra, haz un ajuste.`,
     switchToAdjustment: 'Hacer un ajuste por conteo',
     unitPrice: (unit: string) => `Precio por ${unit}`,
@@ -326,11 +334,10 @@ export const messages = {
     saleProfit: (amount: string) => `Ganancia de esta venta: ${amount}.`,
     // "pierdes $500 por unidad": el aviso dice cuánto subir el precio para no perder.
     saleLoss: (amount: string, perUnit: string, unit: string) =>
-      `Esta venta deja una pérdida de ${amount}: el costo supera el precio en ${perUnit} por ${unit}. Revisa el precio.`,
-    newPrice: 'Este precio quedará guardado para las próximas ventas.',
-    newCost: 'Este costo quedará guardado para las próximas ventas.',
-    newPriceAndCost: 'Este precio y este costo quedarán guardados para las próximas ventas.',
-    noCost: 'Sin costo no podremos calcular la ganancia de esta venta.',
+      `Pérdida de ${amount}: el costo supera el precio en ${perUnit} por ${unit}.`,
+    newPrice: 'Se guardará como el nuevo precio.',
+    newCost: 'Se guardará como el nuevo costo.',
+    newPriceAndCost: 'Se guardarán como el nuevo precio y costo.',
     noPrice: 'Escribe el precio para ver el total a cobrar y la ganancia.',
     saleTotal: 'Total a cobrar',
     // "3 kilos × $2.500": de dónde sale el total.
@@ -469,11 +476,10 @@ export const messages = {
     stockAllGood: 'Todos tus productos tienen existencias suficientes.',
     stockAction: 'Ver qué reponer',
     excelTitle: 'Reportes en Excel',
-    excelIntro: 'Para guardar o enviar el detalle. Ventas y movimientos usan el período elegido arriba.',
+    excelIntro: 'Para guardar o enviar el detalle. Ventas y movimientos usan el período que tienes elegido.',
     demoUnavailable: 'Los reportes en Excel no están disponibles en el modo demostración.',
     inventoryTitle: 'Inventario actual',
     inventoryBody: 'Qué tienes hoy y cuánto vale a costo y a precio de venta.',
-    inventoryAction: 'Compartir inventario',
     periodToday: 'Hoy',
     periodWeek: 'Semana',
     periodMonth: 'Este mes',
@@ -483,10 +489,8 @@ export const messages = {
     to: 'Hasta',
     salesBody: 'Cuánto vendiste, cuánto ganaste y qué se vende más.',
     salesReportTitle: 'Ventas',
-    salesAction: 'Compartir ventas',
     movementsBody: 'Todas las entradas, salidas y ajustes del período.',
     movementsReportTitle: 'Movimientos',
-    movementsAction: 'Compartir movimientos',
     shareTitle: 'Compartir reporte',
   },
   quickAccess: {

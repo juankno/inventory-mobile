@@ -152,6 +152,7 @@ export default function NewProductScreen() {
         control={control}
         errors={formState.errors}
         mode="create"
+        onSubmit={onSubmit}
         namePlaceholder={hasBarcode ? t.namePlaceholderCode : t.namePlaceholderBulk}
       />
       {discardSheet}
