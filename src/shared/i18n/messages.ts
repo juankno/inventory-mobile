@@ -190,6 +190,9 @@ export const messages = {
     price: 'Precio',
     cost: 'Costo',
     noValue: 'Sin definir',
+    // Lo que deja cada venta con el precio y el costo guardados.
+    gainPerUnit: (unit: string) => `Ganas por ${unit}`,
+    lossPerUnit: (unit: string) => `Pierdes por ${unit}`,
     inbound: 'Entrada',
     outbound: 'Salida',
     history: 'Historial de movimientos',

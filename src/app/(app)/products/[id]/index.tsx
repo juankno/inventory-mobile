@@ -57,6 +57,7 @@ export default function ProductDetailScreen() {
 
   const item = product.data;
   const status = stockStatus(item);
+  const unitGain = item.salePrice !== null && item.costPrice !== null ? item.salePrice - item.costPrice : null;
   const stockWarning = t.deleteBodyWithStock(`${formatNumber(item.stock)} ${unitWord(item.stock, item.unit)}`);
   const registerMovement = (type: MovementType) =>
     router.push({ pathname: '/products/[id]/movement', params: { id, type } });
@@ -72,14 +73,19 @@ export default function ProductDetailScreen() {
       right={<IconButton icon="more" accessibilityLabel={t.options} onPress={() => setSheet('options')} />}
       header={
         <>
-          {/* Solo si tiene foto; al tocarla se ve en pantalla completa. */}
-          <ProductImage imageUrl={item.imageUrl} imageLargeUrl={item.imageLargeUrl} size={96} zoomable />
-          <AppText variant="display" accessibilityRole="header">
-            {item.name}
-          </AppText>
-          <AppText variant="lead" tone="secondary" selectable>
-            {item.codeType === 'GTIN' ? t.barcode(item.code) : t.internalCode(item.code)}
-          </AppText>
+          {/* La foto (solo si tiene) va al lado del nombre para que la cabecera no crezca;
+              al tocarla se ve en pantalla completa. */}
+          <View style={styles.titleRow}>
+            <ProductImage imageUrl={item.imageUrl} imageLargeUrl={item.imageLargeUrl} size={72} zoomable />
+            <View style={styles.flex}>
+              <AppText variant="display" accessibilityRole="header">
+                {item.name}
+              </AppText>
+              <AppText variant="lead" tone="secondary" selectable>
+                {item.codeType === 'GTIN' ? t.barcode(item.code) : t.internalCode(item.code)}
+              </AppText>
+            </View>
+          </View>
           <View style={styles.stockLabel}>
             <AppText variant="lead" tone="secondary">
               {t.stock}
@@ -95,6 +101,19 @@ export default function ProductDetailScreen() {
             </AppText>
           </View>
         </>
+      }
+      // Entrada y salida son lo que más se hace aquí: quedan fijas abajo, siempre a mano.
+      footer={
+        <View style={styles.actions}>
+          <Button label={t.inbound} icon="plus" onPress={() => registerMovement('INBOUND')} style={styles.flex} />
+          <Button
+            label={t.outbound}
+            icon="minus"
+            variant="secondary"
+            onPress={() => registerMovement('OUTBOUND')}
+            style={styles.flex}
+          />
+        </View>
       }
       refreshControl={
         <RefreshControl
@@ -112,17 +131,14 @@ export default function ProductDetailScreen() {
         <Fact label={t.minimum} value={item.minStock === null ? t.noValue : formatQuantity(item.minStock, item.unit)} />
         <Fact label={t.cost} value={item.costPrice === null ? t.noValue : formatMoney(item.costPrice)} />
         <Fact label={t.price} value={item.salePrice === null ? t.noValue : formatMoney(item.salePrice)} />
-      </View>
-
-      <View style={styles.actions}>
-        <Button label={t.inbound} icon="plus" onPress={() => registerMovement('INBOUND')} style={styles.flex} />
-        <Button
-          label={t.outbound}
-          icon="minus"
-          variant="secondary"
-          onPress={() => registerMovement('OUTBOUND')}
-          style={styles.flex}
-        />
+        {/* Ocupa la fila entera; solo si hay precio y costo para calcularlo. */}
+        {unitGain !== null ? (
+          <Fact
+            label={unitGain >= 0 ? t.gainPerUnit(unitWord(1, item.unit)) : t.lossPerUnit(unitWord(1, item.unit))}
+            value={formatMoney(Math.abs(unitGain))}
+            danger={unitGain < 0}
+          />
+        ) : null}
       </View>
 
       <AppText variant="heading" accessibilityRole="header">
@@ -227,13 +243,13 @@ export default function ProductDetailScreen() {
   );
 }
 
-function Fact({ label, value }: { label: string; value: string }) {
+function Fact({ label, value, danger }: { label: string; value: string; danger?: boolean }) {
   return (
-    <View style={styles.fact}>
-      <AppText variant="caption" tone="secondary">
+    <View style={[styles.fact, danger && styles.factDanger]}>
+      <AppText variant="caption" tone={danger ? 'danger' : 'secondary'}>
         {label}
       </AppText>
-      <AppText variant="title" numberOfLines={1} adjustsFontSizeToFit>
+      <AppText variant="title" tone={danger ? 'danger' : undefined} numberOfLines={1} adjustsFontSizeToFit>
         {value}
       </AppText>
     </View>
@@ -245,7 +261,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   stockLabel: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, marginTop: theme.spacing.sm },
   stock: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', columnGap: theme.spacing.sm },
-  stockNumber: { fontFamily: theme.fonts.medium, fontSize: 72, lineHeight: 80, color: theme.colors.text },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
+  stockNumber: { fontFamily: theme.fonts.medium, fontSize: 56, lineHeight: 64, color: theme.colors.text },
   stockUnit: { marginBottom: theme.spacing.md, fontFamily: theme.fonts.medium },
   facts: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },
   fact: {
@@ -258,5 +275,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     gap: 2,
   },
+  factDanger: { backgroundColor: theme.colors.dangerBg },
   actions: { flexDirection: 'row', gap: theme.spacing.md },
 });
