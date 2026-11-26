@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from './AppText';
@@ -29,7 +29,8 @@ export function BottomSheet({ visible, onClose, children }: Props) {
 }
 
 // Fila de acción de un menú dentro de la hoja. destructive la separa y la pinta de
-// rojo claro; navigates muestra una flecha porque abre otra pantalla.
+// rojo claro; navigates muestra una flecha porque abre otra pantalla. loading pone
+// un indicador en lugar de la flecha mientras la acción trabaja.
 export function SheetAction({
   icon,
   label,
@@ -37,6 +38,8 @@ export function SheetAction({
   onPress,
   destructive,
   navigates,
+  loading,
+  disabled,
 }: {
   icon: IconName;
   label: string;
@@ -45,14 +48,23 @@ export function SheetAction({
   onPress: () => void;
   destructive?: boolean;
   navigates?: boolean;
+  loading?: boolean;
+  disabled?: boolean;
 }) {
   const color = destructive ? theme.colors.dangerText : theme.colors.ink;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityHint={description}
+      accessibilityState={{ disabled: !!disabled, busy: !!loading }}
       onPress={onPress}
-      style={({ pressed }) => [styles.action, destructive && styles.destructive, pressed && styles.pressed]}
+      disabled={disabled || loading}
+      style={({ pressed }) => [
+        styles.action,
+        destructive && styles.destructive,
+        disabled && styles.disabled,
+        pressed && styles.pressed,
+      ]}
     >
       <View style={styles.actionIcon}>
         <Icon name={icon} color={color} size={22} />
@@ -67,7 +79,11 @@ export function SheetAction({
           </AppText>
         ) : null}
       </View>
-      {navigates ? <Icon name="chevronRight" color={theme.colors.secondary} size={22} /> : null}
+      {loading ? (
+        <ActivityIndicator color={theme.colors.ink} />
+      ) : navigates ? (
+        <Icon name="chevronRight" color={theme.colors.secondary} size={22} />
+      ) : null}
     </Pressable>
   );
 }
@@ -104,6 +120,7 @@ const styles = StyleSheet.create({
   // Separada de las demás para no tocarla por error.
   destructive: { backgroundColor: theme.colors.dangerBg, marginTop: theme.spacing.sm },
   pressed: { opacity: 0.85 },
+  disabled: { opacity: 0.5 },
   actionIcon: {
     width: 40,
     height: 40,
