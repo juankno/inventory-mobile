@@ -69,6 +69,8 @@ export default function MovementScreen() {
   // Precio y costo de esta venta. null: todavía no se editaron y se muestran los del producto.
   const [priceText, setPriceText] = useState<string | null>(null);
   const [costText, setCostText] = useState<string | null>(null);
+  // El costo queda plegado: al vender casi nunca se cambia.
+  const [costOpen, setCostOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   // La misma clave en cada reintento evita registrar dos veces el movimiento (RU-01).
   const [idempotencyKey] = useState(() => Crypto.randomUUID());
@@ -131,18 +133,17 @@ export default function MovementScreen() {
   const saleQuantity = value !== null ? `${formatNumber(value)} ${unitWord(value, item.unit)}` : '';
   // Vender por debajo del costo se permite (liquidar, producto por vencer), pero se avisa.
   const losing = saleProfit !== null && saleProfit < 0;
+  // Sin costo no hay ganancia que mostrar: lo dice el enlace "Agregar costo".
   const saleHint =
     priceError || costError
       ? null
       : unitPrice === null
         ? t.noPrice
-        : unitCost === null
-          ? t.noCost
-          : saleProfit === null
-            ? null
-            : saleProfit >= 0
-              ? t.saleProfit(formatMoney(saleProfit))
-              : t.saleLoss(formatMoney(-saleProfit), formatMoney(unitCost - unitPrice), unitWord(1, item.unit));
+        : saleProfit === null || unitCost === null
+          ? null
+          : saleProfit >= 0
+            ? t.saleProfit(formatMoney(saleProfit))
+            : t.saleLoss(formatMoney(-saleProfit), formatMoney(unitCost - unitPrice), unitWord(1, item.unit));
   const savedNote =
     priceChanged && costChanged ? t.newPriceAndCost : priceChanged ? t.newPrice : costChanged ? t.newCost : null;
 
@@ -218,24 +219,26 @@ export default function MovementScreen() {
               </Pressable>
             </View>
           ) : null}
-          {/* La foto confirma de un vistazo que es el producto correcto antes de registrar. */}
+          {/* La foto confirma de un vistazo que es el producto correcto antes de registrar.
+              La existencia va en una línea: aquí es contexto; lo principal es la cantidad y el total. */}
           <View style={styles.nameRow}>
             <ProductImage imageUrl={item.imageUrl} imageLargeUrl={item.imageLargeUrl} size={56} zoomable />
-            <AppText variant="heading" style={styles.flexName}>
-              {item.name}
-            </AppText>
-          </View>
-          <View style={styles.stock}>
-            <AppText maxFontSizeMultiplier={theme.maxFontScale.number} style={styles.stockNumber}>{formatNumber(item.stock)}</AppText>
-            <AppText variant="title" tone="secondary" style={styles.stockUnit}>
-              {t.inStock(unitWord(item.stock, item.unit))}
-            </AppText>
+            <View style={styles.flexName}>
+              <AppText variant="heading">{item.name}</AppText>
+              <AppText variant="body" tone="secondary">
+                {`${formatNumber(item.stock)} ${t.inStock(unitWord(item.stock, item.unit))}`}
+              </AppText>
+            </View>
           </View>
         </>
       }
       footer={
         <Button
-          label={disabledLabel ?? t.submit[type!]}
+          label={
+            isSale && canSubmit && saleTotal !== null
+              ? t.submitSale(formatMoney(saleTotal))
+              : (disabledLabel ?? t.submit[type!])
+          }
           disabled={!canSubmit}
           onPress={submit}
           loading={createMutation.isPending}
@@ -328,20 +331,39 @@ export default function MovementScreen() {
             error={priceError}
             keyboardType="number-pad"
           />
-          <TextField
-            label={t.unitCost(unitWord(1, item.unit))}
-            prefix="$"
-            placeholder="0"
-            value={cost}
-            onChangeText={(text) => setCostText(formatPriceInput(text))}
-            error={costError}
-            keyboardType="number-pad"
-          />
-          {saleHint ? (
-            <AppText variant="body" tone={losing ? 'danger' : 'secondary'} accessibilityLiveRegion="polite">
-              {saleHint}
-              {savedNote ? ` ${savedNote}` : ''}
-            </AppText>
+          {costOpen ? (
+            <TextField
+              label={t.unitCost(unitWord(1, item.unit))}
+              prefix="$"
+              placeholder="0"
+              value={cost}
+              onChangeText={(text) => setCostText(formatPriceInput(text))}
+              error={costError}
+              keyboardType="number-pad"
+              autoFocus
+            />
+          ) : (
+            <Pressable accessibilityRole="button" onPress={() => setCostOpen(true)} style={styles.costLink}>
+              <AppText variant="bodyStrong" style={styles.underline}>
+                {item.costPrice === null
+                  ? t.addCost
+                  : t.editCost(formatMoney(item.costPrice), unitWord(1, item.unit))}
+              </AppText>
+            </Pressable>
+          )}
+          {saleHint || savedNote ? (
+            <View style={styles.hints} accessibilityLiveRegion="polite">
+              {saleHint ? (
+                <AppText variant="body" tone={losing ? 'danger' : 'secondary'}>
+                  {saleHint}
+                </AppText>
+              ) : null}
+              {savedNote ? (
+                <AppText variant="caption" tone="secondary">
+                  {savedNote}
+                </AppText>
+              ) : null}
+            </View>
           ) : null}
         </View>
       ) : null}
@@ -384,7 +406,6 @@ const styles = StyleSheet.create({
   detailLink: { minHeight: theme.minTouchSize, justifyContent: 'center' },
   underline: { textDecorationLine: 'underline' },
   bold: { fontFamily: theme.fonts.bold, color: theme.colors.text },
-  stock: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', columnGap: theme.spacing.sm },
-  stockNumber: { fontFamily: theme.fonts.medium, fontSize: 64, lineHeight: 72, color: theme.colors.text },
-  stockUnit: { marginBottom: theme.spacing.md, fontFamily: theme.fonts.medium },
+  costLink: { alignSelf: 'flex-start', minHeight: theme.minTouchSize, justifyContent: 'center' },
+  hints: { gap: theme.spacing.xs },
 });
