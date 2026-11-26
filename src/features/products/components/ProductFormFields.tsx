@@ -1,5 +1,6 @@
 import { Controller, useWatch, type Control, type FieldErrors } from 'react-hook-form';
-import { StyleSheet, View } from 'react-native';
+import { useRef, type RefObject } from 'react';
+import { StyleSheet, View, type TextInputInstance } from 'react-native';
 
 import { formatMoney } from '@/shared/format/dates';
 import { allowsDecimals, formatNumber, parseQuantity, unitOptions, unitWord } from '@/shared/format/units';
@@ -15,13 +16,25 @@ type Props = {
   errors: FieldErrors<ProductForm>;
   mode: 'create' | 'edit';
   namePlaceholder?: string;
+  // Lo que hace la tecla del teclado en el último campo (el precio): guardar.
+  onSubmit?: () => void;
 };
 
 const t = messages.productForm;
 
 // Campos del producto (diseños "Producto nuevo" y "Editar producto").
 // Al crear se piden las existencias de hoy; al editar no, porque solo cambian con movimientos.
-export function ProductFormFields({ control, errors, mode, namePlaceholder }: Props) {
+// La tecla del teclado pasa al campo siguiente (nombre, existencias, mínimo, costo, precio)
+// sin cerrarlo; en el precio guarda.
+export function ProductFormFields({ control, errors, mode, namePlaceholder, onSubmit }: Props) {
+  const stockRef = useRef<TextInputInstance>(null);
+  const minStockRef = useRef<TextInputInstance>(null);
+  const costRef = useRef<TextInputInstance>(null);
+  const priceRef = useRef<TextInputInstance>(null);
+  // Mantiene el teclado abierto al pasar al siguiente.
+  const next = (ref: RefObject<TextInputInstance | null>) =>
+    ({ returnKeyType: 'next', submitBehavior: 'submit', onSubmitEditing: () => ref.current?.focus() }) as const;
+
   const unit = useWatch({ control, name: 'unit' });
   const minStock = useWatch({ control, name: 'minStock' });
   const salePrice = parsePrice(useWatch({ control, name: 'salePrice' }));
@@ -35,7 +48,9 @@ export function ProductFormFields({ control, errors, mode, namePlaceholder }: Pr
       name="minStock"
       render={({ field }) => (
         <TextField
+          ref={minStockRef}
           label={t.minStock}
+          {...next(costRef)}
           value={field.value}
           onChangeText={field.onChange}
           onBlur={field.onBlur}
@@ -53,6 +68,10 @@ export function ProductFormFields({ control, errors, mode, namePlaceholder }: Pr
       name={name}
       render={({ field }) => (
         <TextField
+          ref={name === 'costPrice' ? costRef : priceRef}
+          {...(name === 'costPrice'
+            ? next(priceRef)
+            : { returnKeyType: 'done' as const, onSubmitEditing: onSubmit })}
           label={label}
           prefix="$"
           placeholder="0"
@@ -112,6 +131,7 @@ export function ProductFormFields({ control, errors, mode, namePlaceholder }: Pr
         render={({ field }) => (
           <TextField
             label={t.name}
+            {...next(mode === 'create' ? stockRef : minStockRef)}
             placeholder={namePlaceholder}
             value={field.value}
             onChangeText={field.onChange}
@@ -149,7 +169,9 @@ export function ProductFormFields({ control, errors, mode, namePlaceholder }: Pr
                   name="stock"
                   render={({ field }) => (
                     <TextField
+                      ref={stockRef}
                       label={t.stock}
+                      {...next(minStockRef)}
                       value={field.value}
                       onChangeText={field.onChange}
                       onBlur={field.onBlur}
