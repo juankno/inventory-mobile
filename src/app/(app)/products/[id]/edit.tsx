@@ -98,23 +98,21 @@ export default function EditProductScreen() {
     <PageLayout
       left={close}
       title={t.editTitle}
+      // El nombre ya está en su campo; aquí solo queda lo que no se puede cambiar.
       header={
-        <>
-          <AppText variant="display">{item.name}</AppText>
-          <View style={styles.locked}>
-            <Icon name="lock" size={20} color={theme.colors.secondary} />
-            <AppText variant="lead" tone="secondary" style={styles.flex}>
-              {t.lockedCode(item.code)}
-            </AppText>
-          </View>
-        </>
+        <View style={styles.locked}>
+          <Icon name="lock" size={20} color={theme.colors.secondary} />
+          <AppText variant="lead" tone="secondary" style={styles.flex}>
+            {t.lockedCode(item.code)}
+          </AppText>
+        </View>
       }
       footer={<Button label={t.saveChanges} onPress={onSubmit} loading={updateMutation.isPending} />}
     >
       {updateMutation.error ? (
         <Banner message={errorMessage(updateMutation.error, messages.errors.unexpected)} />
       ) : null}
-      <ProductFormFields control={control} errors={formState.errors} mode="edit" />
+      <ProductFormFields control={control} errors={formState.errors} mode="edit" onSubmit={onSubmit} />
 
       <View style={styles.notice}>
         <AppText variant="lead" tone="secondary">
